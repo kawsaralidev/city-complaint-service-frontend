@@ -37,3 +37,25 @@ export const logoutUser = async (): Promise<ApiResponse<null>> => {
     method: "POST",
   });
 };
+
+export const verifyRegisterEmail = async (data: {
+  email: string;
+  otp: string;
+}): Promise<
+  ApiResponse<{
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      role: string;
+      status: string;
+      emailVerified: boolean;
+    };
+    message: string;
+  }>
+> => {
+  return api("/auth/verify-register-email", {
+    method: "POST",
+    body: data,
+  });
+};

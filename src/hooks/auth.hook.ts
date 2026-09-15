@@ -5,6 +5,7 @@ import {
   loginUser,
   logoutUser,
   registerUser,
+  verifyRegisterEmail,
 } from "@/services/auth.service";
 
 export function useLogin() {
@@ -23,6 +24,12 @@ export function useLogin() {
 export function useRegister() {
   return useMutation({
     mutationFn: registerUser,
+  });
+}
+
+export function useVerifyRegisterEmail() {
+  return useMutation({
+    mutationFn: verifyRegisterEmail,
   });
 }
 

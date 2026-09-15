@@ -13,13 +13,24 @@ export default function HomePage() {
     return <div>Failed to load user</div>;
   }
 
+  const user = data?.data;
+
+  if (!user) {
+    return (
+      <main className="p-8">
+        <h1 className="text-2xl font-bold">Welcome to CityCare</h1>
+        <p className="mt-2">Please log in to continue.</p>
+      </main>
+    );
+  }
+
   return (
     <main className="p-8">
-      <h1 className="text-2xl font-bold">Welcome, {data?.data.name}</h1>
+      <h1 className="text-2xl font-bold">Welcome, {user.name}</h1>
 
-      <p className="mt-2">Email: {data?.data.email}</p>
+      <p className="mt-2">Email: {user.email}</p>
 
-      <p className="mt-2">Role: {data?.data.role}</p>
+      <p className="mt-2">Role: {user.role}</p>
     </main>
   );
 }
