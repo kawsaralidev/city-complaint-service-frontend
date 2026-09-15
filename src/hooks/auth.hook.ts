@@ -20,29 +20,29 @@ export function useLogin() {
   });
 }
 
-// export function useCurrentUser() {
-//   return useQuery({
-//     queryKey: ["current-user"],
-//     queryFn: getCurrentUser,
-//     enabled: !!getAccessToken(),
-//     retry: false,
-//   });
-// }
+export function useCurrentUser() {
+  return useQuery({
+    queryKey: ["current-user"],
+    queryFn: getCurrentUser,
+    enabled: !!getAccessToken(),
+    retry: false,
+  });
+}
 
-// export function useLogout() {
-//   const queryClient = useQueryClient();
+export function useLogout() {
+  const queryClient = useQueryClient();
 
-//   return useMutation({
-//     mutationFn: logoutUser,
+  return useMutation({
+    mutationFn: logoutUser,
 
-//     onSuccess: () => {
-//       // Remove access token
-//       setAccessToken(null);
+    onSuccess: () => {
+      // Remove access token
+      setAccessToken(null);
 
-//       // Remove logged-in user from cache
-//       queryClient.removeQueries({
-//         queryKey: ["current-user"],
-//       });
-//     },
-//   });
-// }
+      // Remove logged-in user from cache
+      queryClient.removeQueries({
+        queryKey: ["current-user"],
+      });
+    },
+  });
+}
