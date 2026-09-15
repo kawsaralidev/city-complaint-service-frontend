@@ -1,23 +1,10 @@
 import { ofetch, type FetchOptions } from "ofetch";
-import { getAccessToken, setAccessToken } from "./auth.token";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const fetchApi = ofetch.create({
   baseURL: API_URL,
   credentials: "include",
-
-  onRequest({ options }) {
-    const accessToken = getAccessToken();
-
-    if (accessToken) {
-      const headers = new Headers(options.headers);
-
-      headers.set("Authorization", `Bearer ${accessToken}`);
-
-      options.headers = headers;
-    }
-  },
 });
 
 export async function api<T>(
@@ -27,48 +14,26 @@ export async function api<T>(
   try {
     return await fetchApi<T>(request, options);
   } catch (error: any) {
-    const accessToken = getAccessToken();
-
-    // Refresh only when an existing access token has expired
+    // Only try to refresh after an unauthorized response
     if (
-      error?.response?.status === 401 &&
-      accessToken &&
-      !request.includes("/auth/refresh-token")
+      error?.response?.status !== 401 ||
+      request.includes("/auth/refresh-token") ||
+      request.includes("/auth/me")
     ) {
-      try {
-        // Request a new access token using the refresh token cookie
-        const refreshResponse = await fetchApi<{
-          success: boolean;
-          message: string;
-          data: {
-            accessToken: string;
-          };
-        }>("/auth/refresh-token", {
-          method: "POST",
-        });
-
-        const newAccessToken = refreshResponse.data.accessToken;
-
-        // Store the new access token in memory
-        setAccessToken(newAccessToken);
-
-        // Retry the original request with the new access token
-        const headers = new Headers(options?.headers);
-
-        headers.set("Authorization", `Bearer ${newAccessToken}`);
-
-        return await fetchApi<T>(request, {
-          ...options,
-          headers,
-        });
-      } catch (refreshError) {
-        // Clear access token when refresh fails
-        setAccessToken(null);
-
-        throw refreshError;
-      }
+      throw error;
     }
 
-    throw error;
+    try {
+      // Get a new access token from the refresh token cookie
+      await fetchApi("/auth/refresh-token", {
+        method: "POST",
+      });
+
+      // Retry the original request
+      return await fetchApi<T>(request, options);
+    } catch {
+      // User is not authenticated anymore
+      return Promise.reject(error);
+    }
   }
 }

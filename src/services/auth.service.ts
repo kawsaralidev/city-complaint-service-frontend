@@ -1,6 +1,12 @@
 import { api } from "@/lib/api";
 import { ApiResponse } from "@/types/api";
-import { LoginInput, LoginResponse, User } from "@/types/auth";
+import {
+  LoginInput,
+  LoginResponse,
+  RegisterInput,
+  RegisterResponse,
+  User,
+} from "@/types/auth";
 
 export const loginUser = async (
   data: LoginInput,
@@ -11,22 +17,21 @@ export const loginUser = async (
   });
 };
 
-// Refresh access token
-export const refreshAccessToken = async (): Promise<
-  ApiResponse<{ accessToken: string }>
-> => {
-  return api<ApiResponse<{ accessToken: string }>>("/auth/refresh-token", {
+export const registerUser = async (
+  data: RegisterInput,
+): Promise<ApiResponse<RegisterResponse>> => {
+  return api<ApiResponse<RegisterResponse>>("/auth/register", {
     method: "POST",
+    body: data,
   });
 };
-// Get current user
+
 export const getCurrentUser = async (): Promise<ApiResponse<User>> => {
   return api<ApiResponse<User>>("/auth/me", {
     method: "GET",
   });
 };
 
-// Logout current user
 export const logoutUser = async (): Promise<ApiResponse<null>> => {
   return api<ApiResponse<null>>("/auth/logout", {
     method: "POST",

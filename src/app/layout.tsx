@@ -3,8 +3,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import { QueryProvider } from "@/providers/query-provider";
 import { Header } from "@/components/shared/header";
-import { SessionProvider } from "@/providers/session-provider";
-
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 const geistSans = Geist({
@@ -31,10 +29,8 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <QueryProvider>
-          <SessionProvider>
-            <Header></Header>
-            {children}
-          </SessionProvider>
+          <Header></Header>
+          {children}
         </QueryProvider>
       </body>
     </html>
