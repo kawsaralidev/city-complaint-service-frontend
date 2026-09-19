@@ -4,9 +4,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth.schema";
-import { loginUser } from "@/services/auth.service";
 import { useLogin } from "@/hooks/auth.hook";
 import { useRouter } from "next/navigation";
+import GoogleAuthButton from "@/app/(public)/(authentication)/google-auth/google-auth-button";
+import { Separator } from "@/components/ui/separator";
 
 export function LoginForm() {
   const router = useRouter();
@@ -106,6 +107,9 @@ export function LoginForm() {
               Create an account
             </a>
           </p>
+          <Separator></Separator>
+
+          <GoogleAuthButton />
         </div>
 
         <p className="mt-6 text-center text-xs text-slate-400">

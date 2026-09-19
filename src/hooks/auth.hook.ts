@@ -8,6 +8,8 @@ import {
   verifyRegisterEmail,
 } from "@/services/auth.service";
 
+const currentUserQueryKey = ["current-user"];
+
 export function useLogin() {
   const queryClient = useQueryClient();
 
@@ -15,8 +17,11 @@ export function useLogin() {
     mutationFn: loginUser,
 
     onSuccess: (response) => {
-      // Store the logged-in user in React Query cache
-      queryClient.setQueryData(["current-user"], response);
+      queryClient.setQueryData(currentUserQueryKey, {
+        success: response.success,
+        message: response.message,
+        data: response.data.user,
+      });
     },
   });
 }
@@ -28,14 +33,20 @@ export function useRegister() {
 }
 
 export function useVerifyRegisterEmail() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: verifyRegisterEmail,
+
+    onSuccess: (response) => {
+      queryClient.setQueryData(currentUserQueryKey, response);
+    },
   });
 }
 
 export function useCurrentUser() {
   return useQuery({
-    queryKey: ["current-user"],
+    queryKey: currentUserQueryKey,
     queryFn: getCurrentUser,
     retry: false,
   });
@@ -48,9 +59,10 @@ export function useLogout() {
     mutationFn: logoutUser,
 
     onSuccess: () => {
-      // Remove the logged-in user from React Query cache
-      queryClient.removeQueries({
-        queryKey: ["current-user"],
+      queryClient.setQueryData(currentUserQueryKey, {
+        success: true,
+        message: "Logout successful.",
+        data: null,
       });
     },
   });

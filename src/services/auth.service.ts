@@ -1,6 +1,6 @@
 import { api } from "@/lib/api";
-import { ApiResponse } from "@/types/api";
-import {
+import type { ApiResponse } from "@/types/api";
+import type {
   LoginInput,
   LoginResponse,
   RegisterInput,
@@ -26,8 +26,8 @@ export const registerUser = async (
   });
 };
 
-export const getCurrentUser = async (): Promise<ApiResponse<User>> => {
-  return api<ApiResponse<User>>("/auth/me", {
+export const getCurrentUser = async (): Promise<ApiResponse<User | null>> => {
+  return api<ApiResponse<User | null>>("/auth/me", {
     method: "GET",
   });
 };
@@ -41,20 +41,8 @@ export const logoutUser = async (): Promise<ApiResponse<null>> => {
 export const verifyRegisterEmail = async (data: {
   email: string;
   otp: string;
-}): Promise<
-  ApiResponse<{
-    user: {
-      id: string;
-      name: string;
-      email: string;
-      role: string;
-      status: string;
-      emailVerified: boolean;
-    };
-    message: string;
-  }>
-> => {
-  return api("/auth/verify-register-email", {
+}): Promise<ApiResponse<User>> => {
+  return api<ApiResponse<User>>("/auth/verify-register-email", {
     method: "POST",
     body: data,
   });

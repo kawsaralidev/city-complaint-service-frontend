@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
+import { Separator } from "@/components/ui/separator";
 import {
   registerSchema,
   type RegisterFormData,
 } from "@/lib/validations/auth.schema";
 import { useRegister } from "@/hooks/auth.hook";
+import GoogleAuthButton from "@/app/(public)/(authentication)/google-auth/google-auth-button";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -145,6 +146,9 @@ export function RegisterForm() {
           Login
         </Link>
       </p>
+      <Separator></Separator>
+
+      <GoogleAuthButton />
     </form>
   );
 }

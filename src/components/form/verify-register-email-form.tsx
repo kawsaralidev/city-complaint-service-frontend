@@ -4,11 +4,9 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useVerifyRegisterEmail } from "@/hooks/auth.hook";
-import { useQueryClient } from "@tanstack/react-query";
 
 export function VerifyRegisterEmailForm() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const verifyMutation = useVerifyRegisterEmail();
 
   const [email, setEmail] = useState("");
@@ -41,13 +39,6 @@ export function VerifyRegisterEmailForm() {
       const response = await verifyMutation.mutateAsync({
         email,
         otp,
-      });
-
-      // Store the newly verified user in React Query cache
-      queryClient.setQueryData(["current-user"], {
-        success: true,
-        message: response.message,
-        data: response.data,
       });
 
       sessionStorage.removeItem("registrationEmail");

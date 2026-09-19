@@ -120,9 +120,9 @@ export function Header() {
                 className="flex items-center gap-2 rounded-full p-1 transition hover:bg-muted"
                 aria-label="Open profile menu"
               >
-                {user.image ? (
+                {user.imageUrl ? (
                   <img
-                    src={user.image}
+                    src={user.imageUrl}
                     alt={user.name}
                     className="h-10 w-10 rounded-full object-cover ring-2 ring-secondary/20"
                   />

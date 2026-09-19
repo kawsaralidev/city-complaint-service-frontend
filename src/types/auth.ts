@@ -1,15 +1,23 @@
 export type UserRole = "CITIZEN" | "OFFICER" | "ADMIN";
 
+export type UserStatus = "ACTIVE" | "BLOCKED" | "DELETED";
+
+export type AuthProvider = "GOOGLE" | "CREDENTIALS";
+
 export interface User {
   id: string;
   name: string;
   email: string;
   role: UserRole;
-  image?: string | null;
+  status: UserStatus;
+  emailVerified: boolean;
+  authProvider?: AuthProvider;
+  imageUrl?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface LoginResponse {
-  accessToken: string;
   user: User;
 }
 
