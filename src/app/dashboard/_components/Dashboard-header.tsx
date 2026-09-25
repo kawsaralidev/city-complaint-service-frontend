@@ -8,7 +8,7 @@ interface DashboardHeaderProps {
 
 const DashboardHeader = ({ onMenuClick }: DashboardHeaderProps) => {
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border bg-background px-4 sm:px-6">
+    <header className="flex h-16 items-center justify-between border-b border-secondary bg-background px-4 sm:px-6">
       {/* Left Side */}
       <div className="flex items-center gap-3">
         {/* Mobile Menu */}
