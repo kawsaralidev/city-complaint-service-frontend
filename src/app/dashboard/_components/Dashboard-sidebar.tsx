@@ -8,6 +8,7 @@ import {
   ClipboardList,
   CreditCard,
   FolderTree,
+  House,
   LayoutDashboard,
   MessageSquareWarning,
   Settings,
@@ -79,7 +80,16 @@ const DashboardSidebar = ({ open, onClose }: DashboardSidebarProps) => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-5">
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
+          {/* Home */}
+          <Link
+            href="/"
+            onClick={onClose}
+            className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <House className="h-[18px] w-[18px]" />
+            <span>Home</span>
+          </Link>
           {/* Dashboard */}
           <Link
             href="/dashboard"
