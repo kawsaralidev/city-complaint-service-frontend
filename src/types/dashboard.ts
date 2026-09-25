@@ -56,3 +56,12 @@ export interface AdminDashboardAnalytics {
     paidAmount: string;
   }[];
 }
+
+export interface Category {
+  id: string;
+  name: string;
+  type: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

@@ -8,10 +8,14 @@ import {
 } from "lucide-react";
 
 import RoleGuard from "@/app/dashboard/guard/role-guard";
-import { useAdminDashboardOverview } from "@/hooks/dashboard.hook";
+import {
+  useCategories,
+  useAdminDashboardOverview,
+} from "@/hooks/dashboard.hook";
 
 const AdminDashboardPage = () => {
   const { data, isLoading, isError } = useAdminDashboardOverview();
+  const { data: categories = [] } = useCategories();
 
   if (isLoading) {
     return (
@@ -69,7 +73,9 @@ const AdminDashboardPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Categories</p>
-                <p className="mt-2 text-2xl font-semibold text-foreground">0</p>
+                <p className="mt-2 text-2xl font-semibold text-foreground">
+                  {categories.length}
+                </p>
               </div>
 
               <div className="rounded-lg bg-secondary/10 p-3 text-secondary">

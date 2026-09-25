@@ -2,29 +2,18 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
-import {
-  ChevronDown,
-  CircleUserRound,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  X,
-} from "lucide-react";
+import { Menu, X } from "lucide-react";
 
-import { useCurrentUser, useLogout } from "@/hooks/auth.hook";
+import { useCurrentUser } from "@/hooks/auth.hook";
+import UserMenu from "@/components/shared/user-menu";
 
 export function Header() {
-  const router = useRouter();
   const pathname = usePathname();
-
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const { data: userResponse, isLoading } = useCurrentUser();
-  const logoutMutation = useLogout();
-
   const user = userResponse?.data;
 
   // Check active navigation item
@@ -33,18 +22,6 @@ export function Header() {
   // Close mobile menu
   const closeMobileMenu = () => {
     setIsMenuOpen(false);
-  };
-
-  // Handle logout
-  const handleLogout = async () => {
-    try {
-      await logoutMutation.mutateAsync();
-
-      setIsProfileOpen(false);
-      router.push("/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
   };
 
   return (
@@ -111,69 +88,7 @@ export function Header() {
           )}
 
           {/* Logged In */}
-          {!isLoading && user && (
-            <div className="relative">
-              {/* User Avatar */}
-              <button
-                type="button"
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="flex items-center gap-2 rounded-full p-1 transition hover:bg-muted"
-                aria-label="Open profile menu"
-              >
-                {user.imageUrl ? (
-                  <img
-                    src={user.imageUrl}
-                    alt={user.name}
-                    className="h-10 w-10 rounded-full object-cover ring-2 ring-secondary/20"
-                  />
-                ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10 text-secondary ring-2 ring-secondary/20">
-                    <CircleUserRound className="h-6 w-6" />
-                  </div>
-                )}
-
-                <ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:block" />
-              </button>
-
-              {/* Profile Dropdown */}
-              {isProfileOpen && (
-                <div className="absolute right-0 top-12 w-64 rounded-xl border border-border bg-background p-2 shadow-xl">
-                  {/* User Information */}
-                  <div className="border-b border-border px-3 py-3">
-                    <p className="text-sm font-semibold text-foreground">
-                      {user.name}
-                    </p>
-
-                    <p className="mt-1 truncate text-xs text-muted-foreground">
-                      {user.email}
-                    </p>
-                  </div>
-
-                  {/* Dashboard */}
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setIsProfileOpen(false)}
-                    className="mt-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground/80 transition hover:bg-secondary/10 hover:text-secondary"
-                  >
-                    <LayoutDashboard className="h-4 w-4" />
-                    Dashboard
-                  </Link>
-
-                  {/* Logout */}
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    disabled={logoutMutation.isPending}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive transition hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <LogOut className="h-4 w-4" />
-
-                    {logoutMutation.isPending ? "Logging out..." : "Logout"}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+          {!isLoading && user && <UserMenu />}
 
           {/* Mobile Menu Button */}
           <button

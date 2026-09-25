@@ -1,6 +1,8 @@
 "use client";
 
-import { Bell, ChevronDown, Menu } from "lucide-react";
+import { Bell, Menu } from "lucide-react";
+
+import UserMenu from "@/components/shared/user-menu";
 
 interface DashboardHeaderProps {
   onMenuClick: () => void;
@@ -9,9 +11,7 @@ interface DashboardHeaderProps {
 const DashboardHeader = ({ onMenuClick }: DashboardHeaderProps) => {
   return (
     <header className="flex h-16 items-center justify-between border-b border-secondary bg-background px-4 sm:px-6">
-      {/* Left Side */}
       <div className="flex items-center gap-3">
-        {/* Mobile Menu */}
         <button
           type="button"
           onClick={onMenuClick}
@@ -32,9 +32,7 @@ const DashboardHeader = ({ onMenuClick }: DashboardHeaderProps) => {
         </div>
       </div>
 
-      {/* Right Side */}
       <div className="flex items-center gap-2 sm:gap-4">
-        {/* Notification */}
         <button
           type="button"
           aria-label="Notifications"
@@ -45,23 +43,7 @@ const DashboardHeader = ({ onMenuClick }: DashboardHeaderProps) => {
           <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive" />
         </button>
 
-        {/* User */}
-        <button
-          type="button"
-          className="flex items-center gap-2 rounded-md p-1.5 transition-colors hover:bg-muted"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-secondary-foreground">
-            U
-          </div>
-
-          <div className="hidden text-left sm:block">
-            <p className="text-sm font-medium text-foreground">User</p>
-
-            <p className="text-xs text-muted-foreground">Citizen</p>
-          </div>
-
-          <ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:block" />
-        </button>
+        <UserMenu />
       </div>
     </header>
   );
