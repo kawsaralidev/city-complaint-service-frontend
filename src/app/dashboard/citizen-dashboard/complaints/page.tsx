@@ -1,7 +1,14 @@
 "use client";
 
-import { CalendarDays, ClipboardList, Eye, MapPin } from "lucide-react";
-
+import { CalendarDays, ClipboardList, Eye, MapPin, Plus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -15,6 +22,8 @@ import { useMyComplaints } from "@/hooks/complaint.hook";
 
 import type { ComplaintStatus } from "@/types/complaint";
 import Link from "next/link";
+import { useState } from "react";
+import ComplaintForm from "@/components/form/complaintForm";
 
 const getStatusStyle = (status: ComplaintStatus) => {
   switch (status) {
@@ -60,6 +69,7 @@ const formatDate = (date: string) => {
 };
 
 const CitizenComplaintsPage = () => {
+  const [isCreateComplaintOpen, setIsCreateComplaintOpen] = useState(false);
   const { data: complaintsResponse, isLoading, error } = useMyComplaints();
 
   const complaints = complaintsResponse?.data ?? [];
@@ -89,18 +99,52 @@ const CitizenComplaintsPage = () => {
       {/* Complaints Table */}
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         {/* Table Header */}
-        <div className="border-b border-border px-5 py-4">
-          <h2 className="text-base font-semibold text-foreground">
-            Your Complaints
-          </h2>
+        <div className=" flex items-center justify-between border-b border-border px-5 py-4">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">
+              Your Complaints
+            </h2>
 
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {isLoading
-              ? "Loading your submitted complaints..."
-              : `${complaints.length} complaint${
-                  complaints.length === 1 ? "" : "s"
-                } found`}
-          </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {isLoading
+                ? "Loading your submitted complaints..."
+                : `${complaints.length} complaint${
+                    complaints.length === 1 ? "" : "s"
+                  } found`}
+            </p>
+          </div>
+          <div>
+            <Dialog
+              open={isCreateComplaintOpen}
+              onOpenChange={setIsCreateComplaintOpen}
+            >
+              <DialogTrigger>
+                <button
+                  type="button"
+                  className="group inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-lg"
+                >
+                  <Plus className="h-4 w-4 transition-transform duration-200 group-hover:rotate-90" />
+                  Create Complaint
+                </button>
+              </DialogTrigger>
+
+              <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-bold">
+                    Create a Complaint
+                  </DialogTitle>
+
+                  <DialogDescription>
+                    Provide the details below to submit your complaint.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <ComplaintForm
+                  onCancel={() => setIsCreateComplaintOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Loading State */}

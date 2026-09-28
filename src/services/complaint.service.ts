@@ -47,3 +47,16 @@ export const getComplaintById = async (
 ): Promise<ApiResponse<Complaint>> => {
   return api<ApiResponse<Complaint>>(`/complaints/${complaintId}`);
 };
+
+// Create complaint
+export const createComplaint = async (data: {
+  title: string;
+  description: string;
+  location: string;
+  categoryId: string;
+}): Promise<ApiResponse<Complaint>> => {
+  return api<ApiResponse<Complaint>>("/complaints", {
+    method: "POST",
+    body: data,
+  });
+};
