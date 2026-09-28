@@ -57,6 +57,7 @@ export interface AdminDashboardAnalytics {
   }[];
 }
 
+export type CategoryType = "COMPLAINT" | "SERVICE";
 export interface Category {
   id: string;
   name: string;
