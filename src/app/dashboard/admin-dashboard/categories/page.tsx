@@ -88,9 +88,9 @@ const AdminCategoriesPage = () => {
         <button
           type="button"
           onClick={handleAdd}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-secondary px-4 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-secondary/90"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-4 w-4 text-white" />
           Add Category
         </button>
       </div>
@@ -173,7 +173,7 @@ const AdminCategoriesPage = () => {
                         className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
                           category.isActive
                             ? "bg-secondary/10 text-secondary"
-                            : "bg-muted text-muted-foreground"
+                            : "bg-muted text-destructive "
                         }`}
                       >
                         {category.isActive ? "Active" : "Inactive"}
