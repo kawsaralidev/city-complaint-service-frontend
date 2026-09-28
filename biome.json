@@ -19,7 +19,7 @@
     "rules": {
       "recommended": true,
       "suspicious": {
-        "noUnknownAtRules": "off"
+        "noArrayIndexKey": "off"
       }
     },
     "domains": {
