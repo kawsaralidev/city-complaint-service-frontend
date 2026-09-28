@@ -35,3 +35,15 @@ export const getComplaints = async (
     `/complaints${queryString ? `?${queryString}` : ""}`,
   );
 };
+
+// Get current citizen's complaints
+export const getMyComplaints = async (): Promise<ApiResponse<Complaint[]>> => {
+  return api<ApiResponse<Complaint[]>>("/complaints/my");
+};
+
+// Get single complaint by ID
+export const getComplaintById = async (
+  complaintId: string,
+): Promise<ApiResponse<Complaint>> => {
+  return api<ApiResponse<Complaint>>(`/complaints/${complaintId}`);
+};
