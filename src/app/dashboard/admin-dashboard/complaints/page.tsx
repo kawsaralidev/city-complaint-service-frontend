@@ -1,12 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   AlertCircle,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  Eye,
   MapPin,
   Search,
   UserRound,
@@ -15,17 +25,21 @@ import {
 import { useCategories } from "@/hooks/category.hook";
 import { useComplaints } from "@/hooks/complaint.hook";
 
-import type { ComplaintStatus } from "@/types/complaint";
+import type { Complaint, ComplaintStatus } from "@/types/complaint";
 
 const PAGE_LIMIT = 10;
 
 const statusOptions: {
-  value: ComplaintStatus;
+  value: string;
   label: string;
 }[] = [
   {
     value: "PENDING",
     label: "Pending",
+  },
+  {
+    value: "APPROVED",
+    label: "Approved",
   },
   {
     value: "ASSIGNED",
@@ -36,30 +50,40 @@ const statusOptions: {
     label: "In Progress",
   },
   {
-    value: "RESOLVED",
-    label: "Resolved",
+    value: "COMPLETED",
+    label: "Completed",
   },
   {
-    value: "CLOSED",
-    label: "Closed",
+    value: "REJECTED",
+    label: "Rejected",
+  },
+  {
+    value: "CANCELED",
+    label: "Canceled",
   },
 ];
 
-const getStatusStyle = (status: ComplaintStatus) => {
+const getStatusStyle = (status: string) => {
   switch (status) {
     case "PENDING":
       return "border-[#fdba2d]/30 bg-[#fdba2d]/10 text-[#b77900]";
 
-    case "ASSIGNED":
+    case "APPROVED":
       return "border-blue-200 bg-blue-50 text-blue-600";
 
-    case "IN_PROGRESS":
-      return "border-secondary/20 bg-secondary/10 text-secondary";
+    case "ASSIGNED":
+      return "border-purple-200 bg-purple-50 text-purple-600";
 
-    case "RESOLVED":
+    case "IN_PROGRESS":
+      return "border-primary/20 bg-primary/10 text-primary";
+
+    case "COMPLETED":
       return "border-[#08a85b]/20 bg-[#08a85b]/10 text-[#07834a]";
 
-    case "CLOSED":
+    case "REJECTED":
+      return "border-red-200 bg-red-50 text-red-600";
+
+    case "CANCELED":
       return "border-gray-200 bg-gray-100 text-gray-600";
 
     default:
@@ -67,7 +91,7 @@ const getStatusStyle = (status: ComplaintStatus) => {
   }
 };
 
-const formatStatus = (status: ComplaintStatus) => {
+const formatStatus = (status: string) => {
   return status
     .toLowerCase()
     .replace("_", " ")
@@ -119,7 +143,19 @@ const ComplaintsPage = () => {
   // Get categories for category filter
   const { data: categories, isLoading: categoriesLoading } = useCategories();
 
-  // Backend returns complaints in data and pagination in meta
+  /*
+   * Backend response can reach the frontend in two possible forms:
+   *
+   * 1. data = complaints[]
+   *    meta = pagination
+   *
+   * 2. data = {
+   *      complaints: [],
+   *      pagination: {}
+   *    }
+   *
+   * Handle both formats here.
+   */
   const complaints = complaintsResponse?.data ?? [];
 
   const pagination = complaintsResponse?.meta;
@@ -130,10 +166,6 @@ const ComplaintsPage = () => {
 
   const complaintCategories =
     categories?.filter((category) => category.type === "COMPLAINT") ?? [];
-
-  const selectedCategory = complaintCategories.find(
-    (category) => category.id === categoryId,
-  );
 
   const handleStatusChange = (value: string) => {
     setStatus(value ? (value as ComplaintStatus) : undefined);
@@ -163,11 +195,11 @@ const ComplaintsPage = () => {
       {/* Page Header */}
       <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm">
         {/* Decorative background */}
-        <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-secondary/10 blur-3xl" />
+        <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
 
         <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-secondary/15 bg-secondary/5 px-3 py-1.5 text-xs font-medium text-secondary">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-xs font-medium text-secondary">
               <ClipboardList className="h-3.5 w-3.5" />
               Complaint Management
             </div>
@@ -181,7 +213,7 @@ const ComplaintsPage = () => {
             </p>
           </div>
 
-          {/* Total complaints */}
+          {/* Total Complaints */}
           <div className="flex w-fit items-center gap-3 rounded-xl border border-border bg-background/80 px-4 py-3 shadow-sm backdrop-blur">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
               <ClipboardList className="h-5 w-5" />
@@ -212,12 +244,12 @@ const ComplaintsPage = () => {
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
               placeholder="Search complaints..."
-              className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-10 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-secondary focus:ring-4 focus:ring-secondary/10"
+              className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-10 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10"
             />
 
             {isFetching && (
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-secondary/20 border-t-secondary" />
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
               </div>
             )}
           </div>
@@ -226,7 +258,7 @@ const ComplaintsPage = () => {
           <select
             value={status ?? ""}
             onChange={(event) => handleStatusChange(event.target.value)}
-            className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm text-foreground outline-none transition-all focus:border-secondary focus:ring-4 focus:ring-secondary/10 lg:w-44"
+            className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 lg:w-44"
           >
             <option value="">All Status</option>
 
@@ -242,7 +274,7 @@ const ComplaintsPage = () => {
             value={categoryId ?? ""}
             onChange={(event) => handleCategoryChange(event.target.value)}
             disabled={categoriesLoading}
-            className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm text-foreground outline-none transition-all focus:border-secondary focus:ring-4 focus:ring-secondary/10 disabled:cursor-not-allowed disabled:opacity-60 lg:w-48"
+            className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-60 lg:w-48"
           >
             <option value="">
               {categoriesLoading ? "Loading categories..." : "All Categories"}
@@ -256,7 +288,7 @@ const ComplaintsPage = () => {
           </select>
         </div>
 
-        {/* Active filter information */}
+        {/* Active Filters */}
         {(search || status || categoryId) && (
           <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
             <span className="text-xs text-muted-foreground">
@@ -264,20 +296,20 @@ const ComplaintsPage = () => {
             </span>
 
             {search && (
-              <span className="rounded-full bg-secondary/10 px-2.5 py-1 text-xs font-medium text-secondary">
+              <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
                 Search: {search}
               </span>
             )}
 
             {status && (
-              <span className="rounded-full bg-secondary/10 px-2.5 py-1 text-xs font-medium text-secondary">
+              <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
                 Status: {formatStatus(status)}
               </span>
             )}
 
             {categoryId && (
-              <span className="rounded-full bg-secondary/10 px-2.5 py-1 text-xs font-medium text-secondary">
-                Category: {selectedCategory?.name ?? "Selected"}
+              <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                Category
               </span>
             )}
           </div>
@@ -318,17 +350,16 @@ const ComplaintsPage = () => {
           </div>
 
           {isFetching && !isLoading && (
-            <span className="text-xs font-medium text-secondary">
+            <span className="text-xs font-medium text-primary">
               Updating...
             </span>
           )}
         </div>
 
-        {/* Loading State */}
+        {/* Loading */}
         {isLoading ? (
           <div className="space-y-3 p-5">
             {Array.from({ length: 6 }).map((_, index) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: Loading skeleton items are static
               <div
                 key={index}
                 className="h-16 animate-pulse rounded-xl bg-muted"
@@ -356,43 +387,47 @@ const ComplaintsPage = () => {
           <>
             {/* Responsive Table */}
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[1050px] border-collapse">
-                <thead>
-                  <tr className="border-b border-border bg-muted/30">
-                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Table className="min-w-[1150px]">
+                <TableHeader>
+                  <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                    <TableHead className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Complaint
-                    </th>
+                    </TableHead>
 
-                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <TableHead className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Category
-                    </th>
+                    </TableHead>
 
-                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <TableHead className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Citizen
-                    </th>
+                    </TableHead>
 
-                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <TableHead className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Location
-                    </th>
+                    </TableHead>
 
-                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <TableHead className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Status
-                    </th>
+                    </TableHead>
 
-                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <TableHead className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Created
-                    </th>
-                  </tr>
-                </thead>
+                    </TableHead>
 
-                <tbody>
-                  {complaints.map((complaint) => (
-                    <tr
+                    <TableHead className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                  {complaints.map((complaint: Complaint) => (
+                    <TableRow
                       key={complaint.id}
-                      className="group border-b border-border last:border-b-0 transition-colors hover:bg-muted/20"
+                      className="group border-b border-border transition-colors hover:bg-muted/20"
                     >
                       {/* Complaint */}
-                      <td className="px-5 py-4">
+                      <TableCell className="px-5 py-4">
                         <div className="flex max-w-[280px] items-start gap-3">
                           <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary transition-colors group-hover:bg-secondary group-hover:text-secondary-foreground">
                             <ClipboardList className="h-4 w-4" />
@@ -408,17 +443,17 @@ const ComplaintsPage = () => {
                             </p>
                           </div>
                         </div>
-                      </td>
+                      </TableCell>
 
                       {/* Category */}
-                      <td className="px-5 py-4">
+                      <TableCell className="px-5 py-4">
                         <span className="inline-flex rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground">
-                          {complaint.category.name}
+                          {complaint.category?.name ?? "—"}
                         </span>
-                      </td>
+                      </TableCell>
 
                       {/* Citizen */}
-                      <td className="px-5 py-4">
+                      <TableCell className="px-5 py-4">
                         <div className="flex items-center gap-2.5">
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary">
                             <UserRound className="h-3.5 w-3.5" />
@@ -426,29 +461,29 @@ const ComplaintsPage = () => {
 
                           <div className="min-w-0">
                             <p className="max-w-[160px] truncate text-sm font-medium text-foreground">
-                              {complaint.citizen.name}
+                              {complaint.citizen?.name ?? "—"}
                             </p>
 
                             <p className="max-w-[180px] truncate text-xs text-muted-foreground">
-                              {complaint.citizen.email}
+                              {complaint.citizen?.email ?? "—"}
                             </p>
                           </div>
                         </div>
-                      </td>
+                      </TableCell>
 
                       {/* Location */}
-                      <td className="px-5 py-4">
+                      <TableCell className="px-5 py-4">
                         <div className="flex max-w-[180px] items-start gap-1.5 text-muted-foreground">
-                          <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-secondary" />
+                          <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
 
                           <span className="line-clamp-2 text-xs leading-5">
                             {complaint.location}
                           </span>
                         </div>
-                      </td>
+                      </TableCell>
 
                       {/* Status */}
-                      <td className="px-5 py-4">
+                      <TableCell className="px-5 py-4">
                         <span
                           className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusStyle(
                             complaint.status,
@@ -458,20 +493,33 @@ const ComplaintsPage = () => {
 
                           {formatStatus(complaint.status)}
                         </span>
-                      </td>
+                      </TableCell>
 
                       {/* Created */}
-                      <td className="px-5 py-4">
+                      <TableCell className="px-5 py-4">
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <CalendarDays className="h-3.5 w-3.5" />
 
                           {formatDate(complaint.createdAt)}
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+
+                      {/* Actions */}
+                      <TableCell className="px-5 py-4 text-center">
+                        <div className="flex justify-center">
+                          <Link
+                            href={`/dashboard/admin-dashboard/complaints/${complaint.id}`}
+                            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            View
+                          </Link>
+                        </div>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
 
             {/* Pagination */}
@@ -495,7 +543,7 @@ const ComplaintsPage = () => {
                   Previous
                 </button>
 
-                <div className="flex h-9 min-w-9 items-center justify-center rounded-lg bg-secondary px-3 text-xs font-semibold text-secondary-foreground">
+                <div className="flex h-9 min-w-9 items-center justify-center rounded-lg bg-secondary px-3 text-xs font-semibold text-primary-foreground">
                   {page}
                 </div>
 

@@ -1,9 +1,11 @@
 export type ComplaintStatus =
   | "PENDING"
+  | "APPROVED"
   | "ASSIGNED"
   | "IN_PROGRESS"
-  | "RESOLVED"
-  | "CLOSED";
+  | "COMPLETED"
+  | "REJECTED"
+  | "CANCELED";
 
 export interface ComplaintQueryParams {
   page?: number;
