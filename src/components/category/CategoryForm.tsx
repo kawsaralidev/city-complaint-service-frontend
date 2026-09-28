@@ -22,7 +22,8 @@ const CategoryForm = ({ category, onSuccess }: CategoryFormProps) => {
   const isPending =
     createCategoryMutation.isPending || updateCategoryMutation.isPending;
 
-  // Set existing category name when editing
+  const error = createCategoryMutation.error || updateCategoryMutation.error;
+
   useEffect(() => {
     setName(category?.name || "");
   }, [category]);
@@ -34,7 +35,6 @@ const CategoryForm = ({ category, onSuccess }: CategoryFormProps) => {
 
     if (!trimmedName) return;
 
-    // Update existing category
     if (isEditMode && category) {
       updateCategoryMutation.mutate(
         {
@@ -52,7 +52,6 @@ const CategoryForm = ({ category, onSuccess }: CategoryFormProps) => {
       return;
     }
 
-    // Create new category
     createCategoryMutation.mutate(
       {
         name: trimmedName,
@@ -68,7 +67,6 @@ const CategoryForm = ({ category, onSuccess }: CategoryFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Category Name */}
       <div>
         <label
           htmlFor="category-name"
@@ -88,11 +86,19 @@ const CategoryForm = ({ category, onSuccess }: CategoryFormProps) => {
         />
       </div>
 
-      {/* Submit */}
+      {/* Show backend error */}
+      {error && (
+        <p className="text-sm text-destructive">
+          {error instanceof Error
+            ? error.message
+            : "Something went wrong. Please try again."}
+        </p>
+      )}
+
       <button
         type="submit"
         disabled={isPending || !name.trim()}
-        className="inline-flex h-10 items-center justify-center rounded-lg bg-secondary/90 px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-secondary/100 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex h-10 items-center justify-center rounded-lg bg-secondary px-4 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/100 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isPending
           ? isEditMode
