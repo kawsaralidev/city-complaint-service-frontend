@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  demoLogin,
   forgotPassword,
   getCurrentUser,
   loginUser,
@@ -28,6 +29,21 @@ export function useLogin() {
   });
 }
 
+export function useDemoLogin() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (role: "CITIZEN" | "OFFICER" | "ADMIN") => demoLogin(role),
+
+    onSuccess: (response) => {
+      queryClient.setQueryData(currentUserQueryKey, {
+        success: response.success,
+        message: response.message,
+        data: response.data.user,
+      });
+    },
+  });
+}
 export function useRegister() {
   return useMutation({
     mutationFn: registerUser,

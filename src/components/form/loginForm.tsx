@@ -7,7 +7,7 @@ import { Eye, EyeOff } from "lucide-react";
 
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth.schema";
 
-import { useLogin } from "@/hooks/auth.hook";
+import { useDemoLogin, useLogin } from "@/hooks/auth.hook";
 
 import { useRouter } from "next/navigation";
 
@@ -23,6 +23,7 @@ export function LoginForm() {
   });
 
   const loginMutation = useLogin();
+  const demoLoginMutation = useDemoLogin();
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -32,6 +33,15 @@ export function LoginForm() {
       router.push("/");
     } catch (error) {
       console.error("Login failed:", error);
+    }
+  };
+
+  const handleDemoLogin = async (role: "CITIZEN" | "OFFICER" | "ADMIN") => {
+    try {
+      await demoLoginMutation.mutateAsync(role);
+      router.push("/");
+    } catch (error) {
+      console.error("Demo login failed:", error);
     }
   };
 
@@ -147,6 +157,38 @@ export function LoginForm() {
           <Separator />
 
           <GoogleAuthButton />
+
+          <div className="mt-6 space-y-3">
+            <p className="text-center text-sm font-medium text-muted-foreground">
+              Demo Login
+            </p>
+
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => handleDemoLogin("CITIZEN")}
+                className="rounded-lg border border-secondary bg-background px-3 py-2 text-sm font-medium text-secondary transition-all hover:bg-secondary hover:text-secondary-foreground hover:shadow-lg hover:shadow-secondary/25"
+              >
+                Citizen
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleDemoLogin("OFFICER")}
+                className="rounded-lg border border-secondary bg-background px-3 py-2 text-sm font-medium text-secondary transition-all hover:bg-secondary hover:text-secondary-foreground hover:shadow-lg hover:shadow-secondary/25"
+              >
+                Officer
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleDemoLogin("ADMIN")}
+                className="rounded-lg border border-secondary bg-background px-3 py-2 text-sm font-medium text-secondary transition-all hover:bg-secondary hover:text-secondary-foreground hover:shadow-lg hover:shadow-secondary/25"
+              >
+                Admin
+              </button>
+            </div>
+          </div>
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">

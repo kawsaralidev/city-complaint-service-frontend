@@ -17,6 +17,17 @@ export const loginUser = async (
   });
 };
 
+export const demoLogin = async (
+  role: "CITIZEN" | "OFFICER" | "ADMIN",
+): Promise<ApiResponse<LoginResponse>> => {
+  return api<ApiResponse<LoginResponse>>("/auth/demo-login", {
+    method: "POST",
+    body: {
+      role,
+    },
+  });
+};
+
 export const registerUser = async (
   data: RegisterInput,
 ): Promise<ApiResponse<RegisterResponse>> => {
