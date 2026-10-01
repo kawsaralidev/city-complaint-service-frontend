@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  changePassword,
   getAdminUsers,
   updateMyProfile,
   updateUserStatus,
@@ -44,5 +45,12 @@ export function useUpdateUserStatus() {
         queryKey: adminUsersQueryKey,
       });
     },
+  });
+}
+
+// Change current user's password
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: changePassword,
   });
 }

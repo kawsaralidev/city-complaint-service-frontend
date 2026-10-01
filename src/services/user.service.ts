@@ -81,3 +81,19 @@ export const updateUserStatus = async ({
     },
   });
 };
+
+// Change current user's password
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export const changePassword = async (
+  data: ChangePasswordInput,
+): Promise<ApiResponse<null>> => {
+  return api<ApiResponse<null>>("/users/change-password", {
+    method: "PATCH",
+    body: data,
+  });
+};
