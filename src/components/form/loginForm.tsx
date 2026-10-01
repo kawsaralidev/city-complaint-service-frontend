@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import GoogleAuthButton from "@/app/(public)/(authentication)/google-auth/google-auth-button";
 
 import { Separator } from "@/components/ui/separator";
+import { toast } from "@/components/ui/toast";
 
 export function LoginForm() {
   const router = useRouter();
@@ -30,18 +31,42 @@ export function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       await loginMutation.mutateAsync(data);
+
+      toast.add({
+        title: "Login successful.",
+        type: "success",
+      });
+
       router.push("/");
     } catch (error) {
       console.error("Login failed:", error);
+
+      toast.add({
+        title:
+          error instanceof Error
+            ? error.message
+            : "Login failed. Please check your email and password.",
+        type: "error",
+      });
     }
   };
 
   const handleDemoLogin = async (role: "CITIZEN" | "OFFICER" | "ADMIN") => {
     try {
       await demoLoginMutation.mutateAsync(role);
+      toast.add({
+        title: `${role} demo login successful.`,
+        type: "success",
+      });
       router.push("/");
     } catch (error) {
-      console.error("Demo login failed:", error);
+      toast.add({
+        title:
+          error instanceof Error
+            ? error.message
+            : "Demo login failed. Please try again.",
+        type: "error",
+      });
     }
   };
 

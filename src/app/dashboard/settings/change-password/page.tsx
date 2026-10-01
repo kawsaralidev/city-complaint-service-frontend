@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Eye, EyeOff, KeyRound } from "lucide-react";
 
 import { useChangePassword } from "@/hooks/user.hook";
+import { toast } from "@/components/ui/toast";
 
 const ChangePasswordPage = () => {
   const changePasswordMutation = useChangePassword();
@@ -17,12 +18,8 @@ const ChangePasswordPage = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [successMessage, setSuccessMessage] = useState("");
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    setSuccessMessage("");
 
     if (newPassword !== confirmPassword) {
       return;
@@ -35,13 +32,22 @@ const ChangePasswordPage = () => {
         confirmPassword,
       });
 
-      setSuccessMessage("Password changed successfully.");
+      toast.add({
+        title: "Password changed successfully.",
+        type: "success",
+      });
 
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (error) {
-      console.error("Change password failed:", error);
+      toast.add({
+        title:
+          error instanceof Error
+            ? error.message
+            : "Failed to change password. Please try again.",
+        type: "error",
+      });
     }
   };
 
@@ -201,18 +207,7 @@ const ChangePasswordPage = () => {
 
           {/* Error */}
           {changePasswordMutation.isError && (
-            <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-              {changePasswordMutation.error instanceof Error
-                ? changePasswordMutation.error.message
-                : "Failed to change password. Please try again."}
-            </div>
-          )}
-
-          {/* Success */}
-          {successMessage && (
-            <div className="rounded-lg border border-secondary/20 bg-secondary/5 px-4 py-3 text-sm text-secondary">
-              {successMessage}
-            </div>
+            <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"></div>
           )}
 
           {/* Submit */}

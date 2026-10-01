@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronDown, LayoutDashboard, LogOut, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-
+import { toast } from "@/components/ui/toast";
 import { useCurrentUser, useLogout } from "@/hooks/auth.hook";
 
 const UserMenu = () => {
@@ -21,7 +21,23 @@ const UserMenu = () => {
     logout(undefined, {
       onSuccess: () => {
         setOpen(false);
-        router.push("/");
+
+        toast.add({
+          title: "Logout successful.",
+          type: "success",
+        });
+
+        router.push("/login");
+      },
+
+      onError: (error) => {
+        toast.add({
+          title:
+            error instanceof Error
+              ? error.message
+              : "Logout failed. Please try again.",
+          type: "error",
+        });
       },
     });
   };

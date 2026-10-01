@@ -1,14 +1,19 @@
 "use client";
 
 import Link from "next/link";
+
 import { useForm } from "react-hook-form";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
   forgotPasswordSchema,
   type ForgotPasswordFormData,
 } from "@/lib/validations/auth.schema";
+
 import { useForgotPassword } from "@/hooks/auth.hook";
+
+import { toast } from "@/components/ui/toast";
 
 const ForgotPasswordForm = () => {
   const forgotPasswordMutation = useForgotPassword();
@@ -22,28 +27,23 @@ const ForgotPasswordForm = () => {
   });
 
   const onSubmit = async (data: ForgotPasswordFormData) => {
-    await forgotPasswordMutation.mutateAsync(data.email);
+    try {
+      await forgotPasswordMutation.mutateAsync(data.email);
+
+      toast.add({
+        title: "Password reset link sent to your email.",
+        type: "success",
+      });
+    } catch (error) {
+      toast.add({
+        title:
+          error instanceof Error
+            ? error.message
+            : "Unable to send the password reset link. Please try again.",
+        type: "error",
+      });
+    }
   };
-
-  if (forgotPasswordMutation.isSuccess) {
-    return (
-      <div className="space-y-5 text-center">
-        <div className="rounded-lg border border-secondary/20 bg-secondary/10 p-4">
-          <p className="text-sm font-medium text-foreground">
-            If an account exists with this email, a password reset link has been
-            sent.
-          </p>
-        </div>
-
-        <Link
-          href="/login"
-          className="inline-block text-sm font-semibold text-secondary hover:underline"
-        >
-          Back to Login
-        </Link>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -68,12 +68,6 @@ const ForgotPasswordForm = () => {
           <p className="text-sm text-destructive">{errors.email.message}</p>
         )}
       </div>
-
-      {forgotPasswordMutation.isError && (
-        <p className="text-sm text-destructive">
-          Unable to send the password reset request. Please try again.
-        </p>
-      )}
 
       <button
         type="submit"

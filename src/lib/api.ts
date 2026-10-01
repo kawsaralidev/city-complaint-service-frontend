@@ -20,6 +20,8 @@ export async function api<T>(
     // Only try to refresh after an unauthorized response
     if (
       status !== 401 ||
+      request.includes("/auth/login") ||
+      request.includes("/auth/demo-login") ||
       request.includes("/auth/refresh-token") ||
       request.includes("/auth/me")
     ) {

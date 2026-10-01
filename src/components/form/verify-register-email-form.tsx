@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
+import { toast } from "@/components/ui/toast";
 import { useVerifyRegisterEmail } from "@/hooks/auth.hook";
 
 export function VerifyRegisterEmailForm() {
@@ -36,21 +36,28 @@ export function VerifyRegisterEmailForm() {
     }
 
     try {
-      const response = await verifyMutation.mutateAsync({
+      await verifyMutation.mutateAsync({
         email,
         otp,
       });
 
       sessionStorage.removeItem("registrationEmail");
 
+      toast.add({
+        title: "Registration successful.",
+        type: "success",
+      });
+
       // Go to home after successful verification
       router.push("/");
-    } catch (error: any) {
-      setErrorMessage(
-        error?.data?.message ||
-          error?.message ||
-          "Failed to verify email. Please try again.",
-      );
+    } catch (error) {
+      toast.add({
+        title:
+          error instanceof Error
+            ? error.message
+            : "Failed to verify email. Please try again.",
+        type: "error",
+      });
     }
   };
 

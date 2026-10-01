@@ -1,25 +1,36 @@
 "use client";
 
 import Link from "next/link";
+
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
+
+import { useRouter, useSearchParams } from "next/navigation";
+
 import { useForm } from "react-hook-form";
+
 import { zodResolver } from "@hookform/resolvers/zod";
+
 import { Eye, EyeOff } from "lucide-react";
 
 import {
   resetPasswordSchema,
   type ResetPasswordFormData,
 } from "@/lib/validations/auth.schema";
+
 import { useResetPassword } from "@/hooks/auth.hook";
+
+import { toast } from "@/components/ui/toast";
 
 const ResetPasswordForm = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
+
   const token = searchParams.get("token");
 
   const resetPasswordMutation = useResetPassword();
 
   const [showNewPassword, setShowNewPassword] = useState(false);
+
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
@@ -35,10 +46,29 @@ const ResetPasswordForm = () => {
       return;
     }
 
-    await resetPasswordMutation.mutateAsync({
-      token,
-      data,
-    });
+    try {
+      await resetPasswordMutation.mutateAsync({
+        token,
+        data,
+      });
+
+      toast.add({
+        title: "Password reset successfully.",
+        type: "success",
+      });
+
+      setTimeout(() => {
+        router.push("/login");
+      }, 1000);
+    } catch (error) {
+      toast.add({
+        title:
+          error instanceof Error
+            ? error.message
+            : "Unable to reset your password. The link may be expired or invalid.",
+        type: "error",
+      });
+    }
   };
 
   if (!token) {
@@ -55,25 +85,6 @@ const ResetPasswordForm = () => {
           className="text-sm font-semibold text-secondary hover:underline"
         >
           Request a new reset link
-        </Link>
-      </div>
-    );
-  }
-
-  if (resetPasswordMutation.isSuccess) {
-    return (
-      <div className="space-y-5 text-center">
-        <div className="rounded-lg border border-secondary/20 bg-secondary/10 p-4">
-          <p className="text-sm font-medium text-foreground">
-            Your password has been reset successfully.
-          </p>
-        </div>
-
-        <Link
-          href="/login"
-          className="inline-block text-sm font-semibold text-secondary hover:underline"
-        >
-          Go to Login
         </Link>
       </div>
     );
@@ -166,13 +177,6 @@ const ResetPasswordForm = () => {
           </p>
         )}
       </div>
-
-      {/* API Error */}
-      {resetPasswordMutation.isError && (
-        <p className="text-sm text-destructive">
-          Unable to reset your password. The link may be expired or invalid.
-        </p>
-      )}
 
       {/* Submit Button */}
       <button
