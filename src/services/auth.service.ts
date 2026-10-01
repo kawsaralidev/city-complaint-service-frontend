@@ -47,3 +47,14 @@ export const verifyRegisterEmail = async (data: {
     body: data,
   });
 };
+
+export const forgotPassword = async (
+  email: string,
+): Promise<ApiResponse<null>> => {
+  return api<ApiResponse<null>>("/auth/forgot-password", {
+    method: "POST",
+    body: {
+      email,
+    },
+  });
+};

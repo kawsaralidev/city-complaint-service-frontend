@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  forgotPassword,
   getCurrentUser,
   loginUser,
   logoutUser,
@@ -29,6 +30,12 @@ export function useLogin() {
 export function useRegister() {
   return useMutation({
     mutationFn: registerUser,
+  });
+}
+
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: forgotPassword,
   });
 }
 
