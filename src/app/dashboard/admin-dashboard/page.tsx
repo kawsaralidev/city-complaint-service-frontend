@@ -18,6 +18,76 @@ import {
   useAdminDashboardOverview,
   useCategories,
 } from "@/hooks/dashboard.hook";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const AdminDashboardSkeleton = () => {
+  return (
+    <div className="min-h-full bg-muted/20">
+      <div className="mx-auto w-full max-w-[1600px] space-y-7 p-4 sm:p-6 lg:p-8">
+        {/* Dashboard Header */}
+        <section className="rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-7">
+          <div className="space-y-4">
+            <Skeleton className="h-6 w-32 rounded-full" />
+            <Skeleton className="h-9 w-64" />
+            <Skeleton className="h-5 w-full max-w-2xl" />
+            <Skeleton className="h-5 w-3/4 max-w-xl" />
+          </div>
+        </section>
+
+        {/* Overview Cards */}
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="rounded-2xl border border-border bg-background p-5 shadow-sm"
+            >
+              <div className="flex items-start justify-between">
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-9 w-20" />
+                </div>
+
+                <Skeleton className="h-11 w-11 rounded-xl" />
+              </div>
+
+              <div className="mt-4 flex gap-2">
+                <Skeleton className="h-7 w-24 rounded-md" />
+                <Skeleton className="h-7 w-24 rounded-md" />
+              </div>
+            </div>
+          ))}
+        </section>
+
+        {/* Content */}
+        <section className="grid gap-6 lg:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <div
+              key={index}
+              className="rounded-2xl border border-border bg-background p-6 shadow-sm"
+            >
+              <div className="space-y-4">
+                <Skeleton className="h-6 w-40" />
+                <Skeleton className="h-4 w-64" />
+
+                <div className="space-y-3 pt-3">
+                  {Array.from({ length: 5 }).map((_, itemIndex) => (
+                    <div
+                      key={itemIndex}
+                      className="flex items-center justify-between gap-4"
+                    >
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-4 w-20" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </section>
+      </div>
+    </div>
+  );
+};
 
 const AdminDashboardPage = () => {
   const {
@@ -79,20 +149,11 @@ const AdminDashboardPage = () => {
 
   if (isLoading) {
     return (
-      <RoleGuard requiredRole="ADMIN">
-        <div className="flex min-h-[calc(100vh-64px)] items-center justify-center bg-muted/20">
-          <div className="rounded-2xl border border-border bg-background px-8 py-7 text-center shadow-sm">
-            <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-secondary/20 border-t-secondary" />
-
-            <p className="mt-4 text-sm font-medium text-foreground">
-              Loading admin dashboard...
-            </p>
-
-            <p className="mt-1 text-xs text-muted-foreground">
-              Preparing your dashboard overview
-            </p>
-          </div>
-        </div>
+      <RoleGuard
+        requiredRole="ADMIN"
+        loadingFallback={<AdminDashboardSkeleton />}
+      >
+        <AdminDashboardSkeleton />
       </RoleGuard>
     );
   }

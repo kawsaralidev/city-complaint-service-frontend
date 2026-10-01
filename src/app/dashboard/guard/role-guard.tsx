@@ -10,9 +10,14 @@ type UserRole = "ADMIN" | "OFFICER" | "CITIZEN";
 interface RoleGuardProps {
   requiredRole: UserRole;
   children: ReactNode;
+  loadingFallback?: ReactNode;
 }
 
-const RoleGuard = ({ requiredRole, children }: RoleGuardProps) => {
+const RoleGuard = ({
+  requiredRole,
+  children,
+  loadingFallback,
+}: RoleGuardProps) => {
   const router = useRouter();
 
   const { data: userResponse, isLoading } = useCurrentUser();
@@ -36,15 +41,11 @@ const RoleGuard = ({ requiredRole, children }: RoleGuardProps) => {
     }
   }, [isLoading, user, requiredRole, router]);
 
-  if (isLoading || !user) {
-    return (
-      <div className="flex min-h-[calc(100vh-64px)] items-center justify-center">
-        <p className="text-sm text-muted-foreground">Checking access...</p>
-      </div>
-    );
+  if (isLoading) {
+    return loadingFallback;
   }
 
-  if (user.role !== requiredRole) {
+  if (user?.role !== requiredRole) {
     return null;
   }
 
