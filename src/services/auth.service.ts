@@ -58,3 +58,20 @@ export const forgotPassword = async (
     },
   });
 };
+
+export const resetPassword = async (
+  token: string,
+  data: {
+    newPassword: string;
+    confirmPassword: string;
+  },
+): Promise<ApiResponse<null>> => {
+  return api<ApiResponse<null>>("/auth/reset-password", {
+    method: "POST",
+    body: {
+      token,
+      newPassword: data.newPassword,
+      confirmPassword: data.confirmPassword,
+    },
+  });
+};

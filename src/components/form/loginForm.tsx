@@ -1,12 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff } from "lucide-react";
 
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth.schema";
+
 import { useLogin } from "@/hooks/auth.hook";
+
 import { useRouter } from "next/navigation";
+
 import GoogleAuthButton from "@/app/(public)/(authentication)/google-auth/google-auth-button";
+
 import { Separator } from "@/components/ui/separator";
 
 export function LoginForm() {
@@ -18,10 +24,11 @@ export function LoginForm() {
 
   const loginMutation = useLogin();
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const onSubmit = async (data: LoginFormData) => {
     try {
       await loginMutation.mutateAsync(data);
-
       router.push("/");
     } catch (error) {
       console.error("Login failed:", error);
@@ -29,24 +36,25 @@ export function LoginForm() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
+    <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/60">
+        <div className="rounded-2xl border border-border bg-background p-8 shadow-xl">
           <div className="mb-8 text-center">
-            <h1 className="mt-5 text-3xl font-bold tracking-tight text-slate-900">
+            <h1 className="mt-5 text-3xl font-bold tracking-tight text-foreground">
               Welcome Back
             </h1>
 
-            <p className="mt-2 text-sm text-slate-500">
+            <p className="mt-2 text-sm text-muted-foreground">
               Sign in to your CityCare account
             </p>
           </div>
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-            <div>
+            {/* Email */}
+            <div className="space-y-2">
               <label
                 htmlFor="email"
-                className="mb-2 block text-sm font-semibold text-slate-700"
+                className="text-sm font-medium text-foreground"
               >
                 Email Address
               </label>
@@ -56,72 +64,92 @@ export function LoginForm() {
                 type="email"
                 placeholder="you@example.com"
                 {...form.register("email")}
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-secondary"
               />
 
               {form.formState.errors.email && (
-                <p className="mt-2 text-sm text-red-500">
+                <p className="text-sm text-destructive">
                   {form.formState.errors.email.message}
                 </p>
               )}
             </div>
 
-            <div>
+            {/* Password */}
+            <div className="space-y-2">
               <label
                 htmlFor="password"
-                className="mb-2 block text-sm font-semibold text-slate-700"
+                className="text-sm font-medium text-foreground"
               >
                 Password
               </label>
 
-              <input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                {...form.register("password")}
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  {...form.register("password")}
+                  className="w-full rounded-lg border border-border bg-background px-4 py-3 pr-12 text-sm outline-none transition focus:border-secondary"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
 
               {form.formState.errors.password && (
-                <p className="mt-2 text-sm text-red-500">
+                <p className="text-sm text-destructive">
                   {form.formState.errors.password.message}
                 </p>
               )}
             </div>
 
+            {/* Forgot Password */}
             <div className="flex justify-end">
               <a
                 href="/forgot-password"
-                className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                className="text-sm font-medium text-secondary hover:underline"
               >
                 Forgot password?
               </a>
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={loginMutation.isPending}
-              className="w-full rounded-xl bg-blue-600 px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-lg bg-secondary px-5 py-3 text-sm font-semibold text-secondary-foreground transition-shadow hover:shadow-lg hover:shadow-secondary/25 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loginMutation.isPending ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
-          <p className="mt-7 text-center text-sm text-slate-500">
-            Don't have an account?{" "}
+          {/* Register Link */}
+          <p className="my-5 text-center text-sm text-muted-foreground">
+            Don't have an account?
             <a
               href="/register"
-              className="font-semibold text-blue-600 transition hover:text-blue-700"
+              className="font-semibold text-secondary hover:underline"
             >
               Create an account
             </a>
           </p>
-          <Separator></Separator>
+
+          <Separator />
 
           <GoogleAuthButton />
         </div>
 
-        <p className="mt-6 text-center text-xs text-slate-400">
+        <p className="mt-6 text-center text-xs text-muted-foreground">
           CityCare · City Complaint & Service Platform
         </p>
       </div>

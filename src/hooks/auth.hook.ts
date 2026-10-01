@@ -6,6 +6,7 @@ import {
   loginUser,
   logoutUser,
   registerUser,
+  resetPassword,
   verifyRegisterEmail,
 } from "@/services/auth.service";
 
@@ -36,6 +37,21 @@ export function useRegister() {
 export function useForgotPassword() {
   return useMutation({
     mutationFn: forgotPassword,
+  });
+}
+
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: ({
+      token,
+      data,
+    }: {
+      token: string;
+      data: {
+        newPassword: string;
+        confirmPassword: string;
+      };
+    }) => resetPassword(token, data),
   });
 }
 
