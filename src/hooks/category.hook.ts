@@ -53,8 +53,10 @@ export function useUpdateCategoryStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { categoryId: string; isActive: boolean }) =>
-      updateCategoryStatus(data),
+    mutationFn: (data: {
+      categoryId: string;
+      isActive: boolean;
+    }) => updateCategoryStatus(data),
 
     onSuccess: () => {
       queryClient.invalidateQueries({

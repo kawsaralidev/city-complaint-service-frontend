@@ -5,15 +5,14 @@ import {
   getComplaintById,
   getComplaints,
   getMyComplaints,
+  updateComplaintAdminStatus,
   updateComplaintStatus,
 } from "@/services/complaint.service";
 
 import type { ComplaintQueryParams } from "@/types/complaint";
 
 const complaintsQueryKey = ["complaints"];
-
 const myComplaintsQueryKey = ["my-complaints"];
-
 const complaintQueryKey = ["complaint"];
 
 // Get all complaints
@@ -41,7 +40,7 @@ export function useComplaint(complaintId: string) {
   });
 }
 
-// Create complaint mutation
+// Create complaint
 export function useCreateComplaint() {
   const queryClient = useQueryClient();
 
@@ -49,20 +48,18 @@ export function useCreateComplaint() {
     mutationFn: createComplaint,
 
     onSuccess: () => {
-      // Refresh citizen's complaints after creating a new complaint
       queryClient.invalidateQueries({
-        queryKey: ["my-complaints"],
+        queryKey: myComplaintsQueryKey,
       });
 
-      // Refresh complaints data if it is already being used elsewhere
       queryClient.invalidateQueries({
-        queryKey: ["complaints"],
+        queryKey: complaintsQueryKey,
       });
     },
   });
 }
 
-// Update complaint status
+// Update complaint status by officer
 export function useUpdateComplaintStatus() {
   const queryClient = useQueryClient();
 
@@ -71,15 +68,38 @@ export function useUpdateComplaintStatus() {
 
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["complaint", variables.complaintId],
+        queryKey: [...complaintQueryKey, variables.complaintId],
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["complaints"],
+        queryKey: complaintsQueryKey,
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["my-complaints"],
+        queryKey: myComplaintsQueryKey,
+      });
+    },
+  });
+}
+
+// Update complaint status by admin
+export function useUpdateComplaintAdminStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateComplaintAdminStatus,
+
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...complaintQueryKey, variables.complaintId],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: complaintsQueryKey,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: myComplaintsQueryKey,
       });
     },
   });

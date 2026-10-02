@@ -28,6 +28,7 @@ import { useComplaints } from "@/hooks/complaint.hook";
 import type { Complaint, ComplaintStatus } from "@/types/complaint";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorState } from "@/components/common/error-state";
+import { Category } from "@/types/dashboard";
 
 const PAGE_LIMIT = 10;
 
@@ -143,21 +144,9 @@ const ComplaintsPage = () => {
   });
 
   // Get categories for category filter
-  const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const { data: categoriesResponse, isLoading: categoriesLoading } =
+    useCategories();
 
-  /*
-   * Backend response can reach the frontend in two possible forms:
-   *
-   * 1. data = complaints[]
-   *    meta = pagination
-   *
-   * 2. data = {
-   *      complaints: [],
-   *      pagination: {}
-   *    }
-   *
-   * Handle both formats here.
-   */
   const complaints = complaintsResponse?.data ?? [];
 
   const pagination = complaintsResponse?.meta;
@@ -166,8 +155,14 @@ const ComplaintsPage = () => {
 
   const totalPages = pagination?.totalPages ?? 1;
 
-  const complaintCategories =
-    categories?.filter((category) => category.type === "COMPLAINT") ?? [];
+  // Categories returned from API
+  const categories: Category[] = Array.isArray(categoriesResponse)
+    ? categoriesResponse
+    : [];
+
+  const complaintCategories: Category[] = categories.filter(
+    (category) => category.type === "COMPLAINT",
+  );
 
   const handleStatusChange = (value: string) => {
     setStatus(value ? (value as ComplaintStatus) : undefined);

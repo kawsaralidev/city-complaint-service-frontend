@@ -1,7 +1,7 @@
 "use client";
 
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-
 import {
   ArrowLeft,
   CalendarDays,
@@ -13,10 +13,14 @@ import {
   UserRound,
 } from "lucide-react";
 
-import { useComplaint } from "@/hooks/complaint.hook";
+import { useCurrentUser } from "@/hooks/auth.hook";
+
+import {
+  useComplaint,
+  useUpdateComplaintAdminStatus,
+} from "@/hooks/complaint.hook";
 
 import type { ComplaintStatus } from "@/types/complaint";
-import Image from "next/image";
 
 // Get status badge style
 const getStatusStyle = (status: ComplaintStatus) => {
@@ -87,7 +91,16 @@ const ComplaintDetailsPage = () => {
     error,
   } = useComplaint(complaintId);
 
+  const { data: currentUserResponse } = useCurrentUser();
+
+  const updateComplaintAdminStatus = useUpdateComplaintAdminStatus();
+
   const complaint = complaintResponse?.data;
+  const currentUser = currentUserResponse?.data;
+
+  // Admin can approve/reject only pending complaints
+  const canUpdateAdminStatus =
+    currentUser?.role === "ADMIN" && complaint?.status === "PENDING";
 
   // Loading state
   if (isLoading) {
@@ -195,14 +208,54 @@ const ComplaintDetailsPage = () => {
                 Complaint Details
               </div>
 
-              {/* Status */}
-              <div
-                className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-bold shadow-sm ${getStatusStyle(
-                  complaint.status,
-                )}`}
-              >
-                {getStatusIcon(complaint.status)}
-                {formatStatus(complaint.status)}
+              {/* Status + Admin Actions */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-bold shadow-sm ${getStatusStyle(
+                    complaint.status,
+                  )}`}
+                >
+                  {getStatusIcon(complaint.status)}
+                  {formatStatus(complaint.status)}
+                </div>
+
+                {canUpdateAdminStatus && (
+                  <>
+                    <button
+                      type="button"
+                      disabled={updateComplaintAdminStatus.isPending}
+                      onClick={() =>
+                        updateComplaintAdminStatus.mutate({
+                          complaintId: complaint.id,
+                          status: "APPROVED",
+                        })
+                      }
+                      className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+
+                      {updateComplaintAdminStatus.isPending
+                        ? "Updating..."
+                        : "Approve"}
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={updateComplaintAdminStatus.isPending}
+                      onClick={() =>
+                        updateComplaintAdminStatus.mutate({
+                          complaintId: complaint.id,
+                          status: "REJECTED",
+                        })
+                      }
+                      className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 transition-all duration-200 hover:-translate-y-0.5 hover:bg-red-100 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {updateComplaintAdminStatus.isPending
+                        ? "Updating..."
+                        : "Reject"}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 

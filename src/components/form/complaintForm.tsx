@@ -5,6 +5,7 @@ import { useState } from "react";
 import { FileText, ImagePlus, MapPin, Send, Tag } from "lucide-react";
 
 import { useCategories } from "@/hooks/category.hook";
+import { useCreateComplaint } from "@/hooks/complaint.hook";
 
 interface ComplaintFormProps {
   onCancel?: () => void;
@@ -12,6 +13,8 @@ interface ComplaintFormProps {
 
 const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
   const { data: categories, isLoading: categoriesLoading } = useCategories();
+
+  const createComplaintMutation = useCreateComplaint();
 
   const [title, setTitle] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -27,15 +30,45 @@ const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    // API submission will be added in the next step
-    console.log({
-      title,
-      categoryId,
-      location,
-      description,
-      image,
-    });
+    if (!title.trim()) {
+      return;
+    }
+
+    if (!categoryId) {
+      return;
+    }
+
+    if (!location.trim()) {
+      return;
+    }
+
+    if (!description.trim()) {
+      return;
+    }
+
+    createComplaintMutation.mutate(
+      {
+        title: title.trim(),
+        categoryId,
+        location: location.trim(),
+        description: description.trim(),
+        image,
+      },
+      {
+        onSuccess: () => {
+          setTitle("");
+          setCategoryId("");
+          setLocation("");
+          setDescription("");
+          setImage(null);
+
+          onCancel?.();
+        },
+      },
+    );
   };
+
+  const isSubmitting = createComplaintMutation.isPending;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -73,7 +106,7 @@ const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
           id="complaint-category"
           value={categoryId}
           onChange={(event) => setCategoryId(event.target.value)}
-          disabled={categoriesLoading}
+          disabled={categoriesLoading || isSubmitting}
           className="h-11 w-full rounded-xl border border-input bg-background px-3.5 text-sm text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <option value="">
@@ -112,7 +145,8 @@ const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
           value={location}
           onChange={(event) => setLocation(event.target.value)}
           placeholder="Enter the location of the problem"
-          className="h-11 w-full rounded-xl border border-input bg-background px-3.5 text-sm text-foreground outline-none transition-all duration-200 placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10"
+          disabled={isSubmitting}
+          className="h-11 w-full rounded-xl border border-input bg-background px-3.5 text-sm text-foreground outline-none transition-all duration-200 placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
         />
       </div>
 
@@ -132,7 +166,8 @@ const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
           onChange={(event) => setDescription(event.target.value)}
           placeholder="Describe the problem clearly and provide any useful details..."
           rows={5}
-          className="w-full resize-none rounded-xl border border-input bg-background px-3.5 py-3 text-sm leading-6 text-foreground outline-none transition-all duration-200 placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10"
+          disabled={isSubmitting}
+          className="w-full resize-none rounded-xl border border-input bg-background px-3.5 py-3 text-sm leading-6 text-foreground outline-none transition-all duration-200 placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
         />
 
         <p className="text-right text-xs text-muted-foreground">
@@ -174,6 +209,7 @@ const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
             type="file"
             accept="image/*"
             className="hidden"
+            disabled={isSubmitting}
             onChange={(event) => {
               setImage(event.target.files?.[0] ?? null);
             }}
@@ -181,13 +217,22 @@ const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
         </label>
       </div>
 
+      {/* API Error */}
+      {createComplaintMutation.error && (
+        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {createComplaintMutation.error.message ||
+            "Failed to create complaint. Please try again."}
+        </p>
+      )}
+
       {/* Actions */}
       <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
-            className="inline-flex h-11 items-center justify-center rounded-xl border border-border bg-background px-5 text-sm font-semibold text-foreground transition-all duration-200 hover:bg-muted"
+            disabled={isSubmitting}
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-border bg-background px-5 text-sm font-semibold text-foreground transition-all duration-200 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
           >
             Cancel
           </button>
@@ -195,10 +240,12 @@ const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
 
         <button
           type="submit"
-          className="group inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-lg"
+          disabled={isSubmitting || categoriesLoading}
+          className="group inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
         >
           <Send className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-          Submit Complaint
+
+          {isSubmitting ? "Submitting..." : "Submit Complaint"}
         </button>
       </div>
     </form>

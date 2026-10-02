@@ -58,13 +58,45 @@ export const createComplaint = async (data: {
   description: string;
   location: string;
   categoryId: string;
+  image?: File | null;
 }): Promise<ApiResponse<Complaint>> => {
+  const formData = new FormData();
+
+  formData.append("title", data.title);
+  formData.append("description", data.description);
+  formData.append("location", data.location);
+  formData.append("categoryId", data.categoryId);
+
+  if (data.image) {
+    formData.append("image", data.image);
+  }
+
   return api<ApiResponse<Complaint>>("/complaints", {
     method: "POST",
-    body: data,
+    body: formData,
   });
 };
 
+// Update complaint status by admin
+export const updateComplaintAdminStatus = async ({
+  complaintId,
+  status,
+}: {
+  complaintId: string;
+  status: ComplaintStatus;
+}): Promise<ApiResponse<Complaint>> => {
+  return api<ApiResponse<Complaint>>(
+    `/complaints/${complaintId}/admin-status`,
+    {
+      method: "PATCH",
+      body: {
+        status,
+      },
+    },
+  );
+};
+
+// Update complaint status by officer
 export const updateComplaintStatus = async ({
   complaintId,
   status,
