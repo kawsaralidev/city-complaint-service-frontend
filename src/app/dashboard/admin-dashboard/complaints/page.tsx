@@ -26,11 +26,13 @@ import { useCategories } from "@/hooks/category.hook";
 import { useComplaints } from "@/hooks/complaint.hook";
 
 import type { Complaint, ComplaintStatus } from "@/types/complaint";
+import { EmptyState } from "@/components/common/empty-state";
+import { ErrorState } from "@/components/common/error-state";
 
 const PAGE_LIMIT = 10;
 
 const statusOptions: {
-  value: string;
+  value: ComplaintStatus;
   label: string;
 }[] = [
   {
@@ -318,23 +320,17 @@ const ComplaintsPage = () => {
 
       {/* Error */}
       {error && (
-        <div className="flex items-start gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 p-4">
-          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
-
-          <div>
-            <p className="text-sm font-semibold text-destructive">
-              Failed to load complaints
-            </p>
-
-            <p className="mt-1 text-sm text-muted-foreground">
-              {error instanceof Error
+        <div className="flex justify-center">
+          <ErrorState
+            title="Failed to load complaints"
+            description={
+              error instanceof Error
                 ? error.message
-                : "Something went wrong. Please try again."}
-            </p>
-          </div>
+                : "Something went wrong. Please try again."
+            }
+          />
         </div>
       )}
-
       {/* Complaints Table */}
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         {/* Table Header */}
@@ -368,53 +364,48 @@ const ComplaintsPage = () => {
           </div>
         ) : complaints.length === 0 ? (
           /* Empty State */
-          <div className="flex min-h-[300px] flex-col items-center justify-center px-5 text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary/10 text-secondary">
-              <ClipboardList className="h-6 w-6" />
-            </div>
-
-            <h3 className="text-base font-semibold text-foreground">
-              No complaints found
-            </h3>
-
-            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-              {search || status || categoryId
-                ? "Try changing your search or filters to find what you are looking for."
-                : "There are currently no complaints to display."}
-            </p>
+          <div className="flex min-h-[300px] items-center justify-center px-5">
+            <EmptyState
+              title="No complaints found"
+              description={
+                search || status || categoryId
+                  ? "Try changing your search or filters to find what you are looking for."
+                  : "There are currently no complaints to display."
+              }
+            />
           </div>
         ) : (
           <>
             {/* Responsive Table */}
-            <div className="overflow-x-auto">
-              <Table className="min-w-[1150px]">
+            <div className="w-full overflow-hidden">
+              <Table className="w-full table-fixed">
                 <TableHeader>
                   <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                    <TableHead className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <TableHead className="w-[23%] px-3 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:px-4">
                       Complaint
                     </TableHead>
 
-                    <TableHead className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <TableHead className="w-[14%] px-3 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:px-4">
                       Category
                     </TableHead>
 
-                    <TableHead className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <TableHead className="w-[17%] px-3 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:px-4">
                       Citizen
                     </TableHead>
 
-                    <TableHead className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <TableHead className="w-[16%] px-3 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:px-4">
                       Location
                     </TableHead>
 
-                    <TableHead className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <TableHead className="w-[11%] px-3 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:px-4">
                       Status
                     </TableHead>
 
-                    <TableHead className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <TableHead className="w-[11%] px-3 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:px-4">
                       Created
                     </TableHead>
 
-                    <TableHead className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <TableHead className="w-[8%] px-3 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:px-4">
                       Actions
                     </TableHead>
                   </TableRow>
@@ -427,18 +418,18 @@ const ComplaintsPage = () => {
                       className="group border-b border-border transition-colors hover:bg-muted/20"
                     >
                       {/* Complaint */}
-                      <TableCell className="px-5 py-4">
-                        <div className="flex max-w-[280px] items-start gap-3">
-                          <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary transition-colors group-hover:bg-secondary group-hover:text-secondary-foreground">
+                      <TableCell className="overflow-hidden px-3 py-4 lg:px-4">
+                        <div className="flex min-w-0 items-start gap-2">
+                          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary transition-colors group-hover:bg-secondary group-hover:text-secondary-foreground">
                             <ClipboardList className="h-4 w-4" />
                           </div>
 
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-semibold text-foreground">
                               {complaint.title}
                             </p>
 
-                            <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+                            <p className="mt-1 truncate text-xs text-muted-foreground">
                               {complaint.description}
                             </p>
                           </div>
@@ -446,25 +437,25 @@ const ComplaintsPage = () => {
                       </TableCell>
 
                       {/* Category */}
-                      <TableCell className="px-5 py-4">
-                        <span className="inline-flex rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground">
+                      <TableCell className="overflow-hidden px-3 py-4 lg:px-4">
+                        <span className="block truncate rounded-lg border border-border bg-background px-2 py-1.5 text-xs font-medium text-foreground">
                           {complaint.category?.name ?? "—"}
                         </span>
                       </TableCell>
 
                       {/* Citizen */}
-                      <TableCell className="px-5 py-4">
-                        <div className="flex items-center gap-2.5">
+                      <TableCell className="overflow-hidden px-3 py-4 lg:px-4">
+                        <div className="flex min-w-0 items-center gap-2">
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary">
                             <UserRound className="h-3.5 w-3.5" />
                           </div>
 
-                          <div className="min-w-0">
-                            <p className="max-w-[160px] truncate text-sm font-medium text-foreground">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-foreground">
                               {complaint.citizen?.name ?? "—"}
                             </p>
 
-                            <p className="max-w-[180px] truncate text-xs text-muted-foreground">
+                            <p className="truncate text-xs text-muted-foreground">
                               {complaint.citizen?.email ?? "—"}
                             </p>
                           </div>
@@ -472,47 +463,49 @@ const ComplaintsPage = () => {
                       </TableCell>
 
                       {/* Location */}
-                      <TableCell className="px-5 py-4">
-                        <div className="flex max-w-[180px] items-start gap-1.5 text-muted-foreground">
-                          <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                      <TableCell className="overflow-hidden px-3 py-4 lg:px-4">
+                        <div className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
+                          <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
 
-                          <span className="line-clamp-2 text-xs leading-5">
+                          <span className="block truncate text-xs leading-5">
                             {complaint.location}
                           </span>
                         </div>
                       </TableCell>
 
                       {/* Status */}
-                      <TableCell className="px-5 py-4">
+                      <TableCell className="overflow-hidden px-3 py-4 lg:px-4">
                         <span
-                          className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusStyle(
+                          className={`inline-flex max-w-full items-center rounded-full border px-2 py-1 text-xs font-semibold ${getStatusStyle(
                             complaint.status,
                           )}`}
                         >
-                          <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-current" />
-
-                          {formatStatus(complaint.status)}
+                          <span className="truncate">
+                            {formatStatus(complaint.status)}
+                          </span>
                         </span>
                       </TableCell>
 
                       {/* Created */}
-                      <TableCell className="px-5 py-4">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <CalendarDays className="h-3.5 w-3.5" />
+                      <TableCell className="overflow-hidden px-3 py-4 lg:px-4">
+                        <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                          <CalendarDays className="h-3.5 w-3.5 shrink-0" />
 
-                          {formatDate(complaint.createdAt)}
+                          <span className="truncate">
+                            {formatDate(complaint.createdAt)}
+                          </span>
                         </div>
                       </TableCell>
 
                       {/* Actions */}
-                      <TableCell className="px-5 py-4 text-center">
+                      <TableCell className="px-2 py-4 text-center lg:px-3">
                         <div className="flex justify-center">
                           <Link
-                            href={`/dashboard/admin-dashboard/complaints/${complaint.id}`}
-                            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
+                            href={`/complaints/${complaint.id}`}
+                            className="inline-flex h-8 items-center gap-1 rounded-lg border border-border bg-background px-2.5 text-xs font-medium text-foreground transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
                           >
                             <Eye className="h-3.5 w-3.5" />
-                            View
+                            <span>View</span>
                           </Link>
                         </div>
                       </TableCell>

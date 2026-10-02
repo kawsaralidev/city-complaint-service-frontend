@@ -40,6 +40,12 @@ export interface ComplaintAssignment {
   officerId: string;
   assignedBy: string;
   assignedAt: string;
+
+  officer?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
 }
 
 export interface ComplaintResolution {

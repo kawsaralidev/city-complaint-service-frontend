@@ -11,9 +11,9 @@ export interface UpdateCategoryInput {
   name: string;
 }
 
-// Get all categories for admin
+// Get all active categories
 export const getCategories = async (): Promise<Category[]> => {
-  const response = await api<ApiResponse<Category[]>>("/categories/admin");
+  const response = await api<ApiResponse<Category[]>>("/categories");
 
   return response.data;
 };

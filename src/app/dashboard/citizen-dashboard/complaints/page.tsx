@@ -118,14 +118,9 @@ const CitizenComplaintsPage = () => {
               open={isCreateComplaintOpen}
               onOpenChange={setIsCreateComplaintOpen}
             >
-              <DialogTrigger>
-                <button
-                  type="button"
-                  className="group inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-lg"
-                >
-                  <Plus className="h-4 w-4 transition-transform duration-200 group-hover:rotate-90" />
-                  Create Complaint
-                </button>
+              <DialogTrigger className="group inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-lg">
+                <Plus className="h-4 w-4 transition-transform duration-200 group-hover:rotate-90" />
+                Create Complaint
               </DialogTrigger>
 
               <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">

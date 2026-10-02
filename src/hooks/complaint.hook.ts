@@ -5,6 +5,7 @@ import {
   getComplaintById,
   getComplaints,
   getMyComplaints,
+  updateComplaintStatus,
 } from "@/services/complaint.service";
 
 import type { ComplaintQueryParams } from "@/types/complaint";
@@ -56,6 +57,29 @@ export function useCreateComplaint() {
       // Refresh complaints data if it is already being used elsewhere
       queryClient.invalidateQueries({
         queryKey: ["complaints"],
+      });
+    },
+  });
+}
+
+// Update complaint status
+export function useUpdateComplaintStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateComplaintStatus,
+
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["complaint", variables.complaintId],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["complaints"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["my-complaints"],
       });
     },
   });

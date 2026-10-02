@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   ArrowLeft,
@@ -17,6 +16,7 @@ import {
 import { useComplaint } from "@/hooks/complaint.hook";
 
 import type { ComplaintStatus } from "@/types/complaint";
+import Image from "next/image";
 
 // Get status badge style
 const getStatusStyle = (status: ComplaintStatus) => {
@@ -77,6 +77,7 @@ const formatDate = (date: string) => {
 
 const ComplaintDetailsPage = () => {
   const params = useParams();
+  const router = useRouter();
 
   const complaintId = params.id as string;
 
@@ -152,13 +153,14 @@ const ComplaintDetailsPage = () => {
               you may not have access to it.
             </p>
 
-            <Link
-              href="/dashboard/citizen-dashboard/complaints"
+            <button
+              type="button"
+              onClick={() => router.back()}
               className="group mt-7 inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-lg"
             >
               <ArrowLeft className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-1" />
-              Back to My Complaints
-            </Link>
+              Back
+            </button>
           </div>
         </div>
       </main>
@@ -169,13 +171,14 @@ const ComplaintDetailsPage = () => {
     <main className="min-h-screen bg-slate-50/70">
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-1 lg:py-10">
         {/* Back Navigation */}
-        <Link
-          href="/dashboard/citizen-dashboard/complaints"
+        <button
+          type="button"
+          onClick={() => router.back()}
           className="group mb-5 inline-flex items-center gap-2 rounded-lg px-1 py-1 text-sm font-medium text-muted-foreground transition-colors duration-200 hover:text-primary"
         >
           <ArrowLeft className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-1" />
-          Back to My Complaints
-        </Link>
+          Back to Complaints
+        </button>
 
         {/* Hero Section */}
         <section className="relative mb-6 overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-md">
@@ -261,9 +264,11 @@ const ComplaintDetailsPage = () => {
                 </div>
 
                 <div className="mx-6 mb-6 overflow-hidden rounded-2xl border border-border bg-muted/20 md:mx-7 md:mb-7">
-                  <img
+                  <Image
                     src={complaint.imageUrl}
                     alt={complaint.title}
+                    width={1200}
+                    height={800}
                     className="max-h-[520px] w-full object-contain transition-transform duration-500 group-hover:scale-[1.01]"
                   />
                 </div>
@@ -447,8 +452,17 @@ const ComplaintDetailsPage = () => {
                 </div>
 
                 <div className="mt-5 rounded-2xl border border-secondary/15 bg-background/80 p-4">
-                  <p className="text-sm leading-6 text-muted-foreground">
-                    Your complaint has been assigned for further processing.
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Assigned Officer
+                  </p>
+
+                  <p className="mt-2 text-sm font-semibold text-foreground">
+                    {complaint.assignment?.officer?.name ?? "Assigned Officer"}
+                  </p>
+
+                  <p className="mt-1 break-all text-xs text-muted-foreground">
+                    {complaint.assignment?.officer?.email ??
+                      "Officer information unavailable"}
                   </p>
                 </div>
               </section>

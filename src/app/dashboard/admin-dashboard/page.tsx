@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ArrowUpRight,
   BriefcaseBusiness,
   CheckCircle2,
   ClipboardList,
@@ -19,6 +18,8 @@ import {
   useCategories,
 } from "@/hooks/dashboard.hook";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/common/empty-state";
+import { ErrorState } from "@/components/common/error-state";
 
 const AdminDashboardSkeleton = () => {
   return (
@@ -109,6 +110,14 @@ const AdminDashboardPage = () => {
 
   const isError = overviewError || analyticsError;
 
+  const formatStatus = (status: string) => {
+    return status
+      .toLowerCase()
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
   // Get status bar color
   const getStatusColor = (status: string) => {
     const normalizedStatus = status.toUpperCase();
@@ -162,19 +171,11 @@ const AdminDashboardPage = () => {
     return (
       <RoleGuard requiredRole="ADMIN">
         <div className="flex min-h-[calc(100vh-64px)] items-center justify-center bg-muted/20 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-destructive/20 bg-background p-7 text-center shadow-sm">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-              <MessageSquareWarning className="h-6 w-6" />
-            </div>
-
-            <h2 className="mt-4 text-lg font-semibold text-foreground">
-              Unable to load dashboard
-            </h2>
-
-            <p className="mt-2 text-sm text-muted-foreground">
-              Something went wrong while loading the dashboard data. Please try
-              again later.
-            </p>
+          <div className="w-full max-w-md">
+            <ErrorState
+              title="Unable to load dashboard"
+              description="Something went wrong while loading the dashboard data. Please try again later."
+            />
           </div>
         </div>
       </RoleGuard>
@@ -270,9 +271,15 @@ const AdminDashboardPage = () => {
                 </div>
 
                 <div className="mt-4">
-                  <span className="rounded-md bg-secondary/10 px-2 py-1 text-xs font-medium text-secondary">
-                    Active categories
-                  </span>
+                  {categories.length === 0 ? (
+                    <span className="rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
+                      No categories available
+                    </span>
+                  ) : (
+                    <span className="rounded-md bg-secondary/10 px-2 py-1 text-xs font-medium text-secondary">
+                      Active categories
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -374,9 +381,10 @@ const AdminDashboardPage = () => {
 
               <div className="space-y-5 p-5 sm:p-6">
                 {analytics.complaints.byStatus.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No complaint data available.
-                  </p>
+                  <EmptyState
+                    title="No complaint data"
+                    description="There is no complaint status data available yet."
+                  />
                 ) : (
                   analytics.complaints.byStatus.map((item) => {
                     const total = overview.complaints.total || 1;
@@ -393,7 +401,7 @@ const AdminDashboardPage = () => {
                             />
 
                             <span className="text-sm font-medium text-foreground">
-                              {item.status}
+                              {formatStatus(item.status)}
                             </span>
                           </div>
 
@@ -453,9 +461,10 @@ const AdminDashboardPage = () => {
 
               <div className="space-y-5 p-5 sm:p-6">
                 {analytics.serviceRequests.byStatus.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No service request data available.
-                  </p>
+                  <EmptyState
+                    title="No service request data"
+                    description="There is no service request status data available yet."
+                  />
                 ) : (
                   analytics.serviceRequests.byStatus.map((item) => {
                     const total = overview.serviceRequests.total || 1;
@@ -640,11 +649,11 @@ const AdminDashboardPage = () => {
                 <tbody>
                   {analytics.monthly.length === 0 ? (
                     <tr>
-                      <td
-                        colSpan={4}
-                        className="px-4 py-10 text-center text-sm text-muted-foreground"
-                      >
-                        No monthly data available.
+                      <td colSpan={4} className="px-4 py-10">
+                        <EmptyState
+                          title="No monthly data"
+                          description="There is no monthly activity data available yet."
+                        />
                       </td>
                     </tr>
                   ) : (
