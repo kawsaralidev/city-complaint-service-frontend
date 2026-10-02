@@ -111,3 +111,12 @@ export const updateComplaintStatus = async ({
     },
   });
 };
+
+// Cancel complaint by citizen
+export const cancelComplaint = async (
+  complaintId: string,
+): Promise<ApiResponse<Complaint>> => {
+  return api<ApiResponse<Complaint>>(`/complaints/${complaintId}/cancel`, {
+    method: "PATCH",
+  });
+};

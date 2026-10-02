@@ -1,6 +1,14 @@
 "use client";
 
-import { CalendarDays, ClipboardList, Eye, MapPin, Plus } from "lucide-react";
+import {
+  CalendarDays,
+  ClipboardList,
+  Eye,
+  MapPin,
+  Plus,
+  XCircle,
+} from "lucide-react";
+
 import {
   Dialog,
   DialogContent,
@@ -9,6 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+
 import {
   Table,
   TableBody,
@@ -18,11 +27,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { useMyComplaints } from "@/hooks/complaint.hook";
+import { useCancelComplaint, useMyComplaints } from "@/hooks/complaint.hook";
 
 import type { ComplaintStatus } from "@/types/complaint";
+
 import Link from "next/link";
 import { useState } from "react";
+
 import ComplaintForm from "@/components/form/complaintForm";
 
 const getStatusStyle = (status: ComplaintStatus) => {
@@ -70,14 +81,40 @@ const formatDate = (date: string) => {
 
 const CitizenComplaintsPage = () => {
   const [isCreateComplaintOpen, setIsCreateComplaintOpen] = useState(false);
+
+  // 📍 কোন complaint cancel হচ্ছে সেটা track করবে
+  const [cancelingComplaintId, setCancelingComplaintId] = useState<
+    string | null
+  >(null);
+
   const { data: complaintsResponse, isLoading, error } = useMyComplaints();
+
+  // 📍 Cancel mutation
+  const cancelComplaintMutation = useCancelComplaint();
 
   const complaints = complaintsResponse?.data ?? [];
 
+  // 📍 Cancel handler
+  const handleCancelComplaint = (complaintId: string) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to cancel this complaint?",
+    );
+
+    if (!confirmed) return;
+
+    setCancelingComplaintId(complaintId);
+
+    cancelComplaintMutation.mutate(complaintId, {
+      onSettled: () => {
+        setCancelingComplaintId(null);
+      },
+    });
+  };
+
   return (
-    <div className="space-y-6 p-6 md:p-7">
+    <div className="space-y-6 p-4 sm:p-6 md:p-7">
       {/* Page Header */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
         <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
 
         <div className="relative">
@@ -97,10 +134,10 @@ const CitizenComplaintsPage = () => {
       </div>
 
       {/* Complaints Table */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <div className="w-full overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         {/* Table Header */}
-        <div className=" flex items-center justify-between border-b border-border px-5 py-4">
-          <div>
+        <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <div className="min-w-0">
             <h2 className="text-base font-semibold text-foreground">
               Your Complaints
             </h2>
@@ -113,7 +150,8 @@ const CitizenComplaintsPage = () => {
                   } found`}
             </p>
           </div>
-          <div>
+
+          <div className="shrink-0">
             <Dialog
               open={isCreateComplaintOpen}
               onOpenChange={setIsCreateComplaintOpen}
@@ -144,7 +182,7 @@ const CitizenComplaintsPage = () => {
 
         {/* Loading State */}
         {isLoading ? (
-          <div className="space-y-3 p-5">
+          <div className="space-y-3 p-4 sm:p-5">
             {Array.from({ length: 5 }).map((_, index) => (
               <div
                 key={index}
@@ -185,113 +223,157 @@ const CitizenComplaintsPage = () => {
           </div>
         ) : (
           /* Complaints Table */
-          <div className="overflow-x-auto">
-            <Table className="min-w-[900px]">
+          <div className="w-full overflow-hidden">
+            <Table className="w-full table-fixed">
               <TableHeader>
                 <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                  <TableHead className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {/* Complaint */}
+                  <TableHead className="w-[25%] px-2 py-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 sm:py-3.5 sm:text-xs md:px-5">
                     Complaint
                   </TableHead>
 
-                  <TableHead className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {/* Category */}
+                  <TableHead className="w-[15%] px-2 py-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 sm:py-3.5 sm:text-xs md:px-5">
                     Category
                   </TableHead>
 
-                  <TableHead className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {/* Location */}
+                  <TableHead className="w-[16%] px-2 py-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 sm:py-3.5 sm:text-xs md:px-5">
                     Location
                   </TableHead>
 
-                  <TableHead className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {/* Status */}
+                  <TableHead className="w-[13%] px-2 py-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 sm:py-3.5 sm:text-xs md:px-5">
                     Status
                   </TableHead>
 
-                  <TableHead className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {/* Created */}
+                  <TableHead className="w-[13%] px-2 py-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 sm:py-3.5 sm:text-xs md:px-5">
                     Created
                   </TableHead>
 
-                  <TableHead className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {/* Action */}
+                  <TableHead className="w-[18%] px-1 py-3 text-center text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-2 sm:py-3.5 sm:text-xs md:px-3">
                     Action
                   </TableHead>
                 </TableRow>
               </TableHeader>
 
               <TableBody>
-                {complaints.map((complaint) => (
-                  <TableRow
-                    key={complaint.id}
-                    className="group border-b border-border transition-colors last:border-b-0 hover:bg-muted/20"
-                  >
-                    {/* Complaint */}
-                    <TableCell className="px-5 py-4">
-                      <div className="flex max-w-[280px] items-start gap-3">
-                        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary transition-colors group-hover:bg-secondary group-hover:text-secondary-foreground">
-                          <ClipboardList className="h-4 w-4" />
+                {complaints.map((complaint) => {
+                  const isPending = complaint.status === "PENDING";
+
+                  const isCanceling =
+                    cancelingComplaintId === complaint.id &&
+                    cancelComplaintMutation.isPending;
+
+                  return (
+                    <TableRow
+                      key={complaint.id}
+                      className="group border-b border-border transition-colors last:border-b-0 hover:bg-muted/20"
+                    >
+                      {/* Complaint */}
+                      <TableCell className="max-w-0 px-2 py-3 sm:px-3 sm:py-4 md:px-5">
+                        <div className="flex min-w-0 items-start gap-2 sm:gap-3">
+                          <div className="mt-0.5 hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary transition-colors group-hover:bg-secondary group-hover:text-secondary-foreground sm:flex">
+                            <ClipboardList className="h-4 w-4" />
+                          </div>
+
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-semibold text-foreground sm:text-sm">
+                              {complaint.title}
+                            </p>
+
+                            <p className="mt-1 truncate text-[10px] text-muted-foreground sm:text-xs">
+                              {complaint.description}
+                            </p>
+                          </div>
                         </div>
+                      </TableCell>
 
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-foreground">
-                            {complaint.title}
-                          </p>
-
-                          <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
-                            {complaint.description}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-
-                    {/* Category */}
-                    <TableCell className="px-5 py-4">
-                      <span className="inline-flex rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground">
-                        {complaint.category?.name ?? "—"}
-                      </span>
-                    </TableCell>
-
-                    {/* Location */}
-                    <TableCell className="px-5 py-4">
-                      <div className="flex max-w-[180px] items-start gap-1.5 text-muted-foreground">
-                        <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-
-                        <span className="line-clamp-2 text-xs leading-5">
-                          {complaint.location}
+                      {/* Category */}
+                      <TableCell className="max-w-0 px-2 py-3 sm:px-3 sm:py-4 md:px-5">
+                        <span className="block truncate rounded-lg border border-border bg-background px-1.5 py-1.5 text-[10px] font-medium text-foreground sm:px-2.5 sm:text-xs">
+                          {complaint.category?.name ?? "—"}
                         </span>
-                      </div>
-                    </TableCell>
+                      </TableCell>
 
-                    {/* Status */}
-                    <TableCell className="px-5 py-4">
-                      <span
-                        className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusStyle(
-                          complaint.status,
-                        )}`}
-                      >
-                        <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-current" />
+                      {/* Location */}
+                      <TableCell className="max-w-0 px-2 py-3 sm:px-3 sm:py-4 md:px-5">
+                        <div className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
+                          <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
 
-                        {formatStatus(complaint.status)}
-                      </span>
-                    </TableCell>
+                          <span className="truncate text-[10px] leading-5 sm:text-xs">
+                            {complaint.location}
+                          </span>
+                        </div>
+                      </TableCell>
 
-                    {/* Created */}
-                    <TableCell className="px-5 py-4">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <CalendarDays className="h-3.5 w-3.5" />
+                      {/* Status */}
+                      <TableCell className="px-2 py-3 sm:px-3 sm:py-4 md:px-5">
+                        <span
+                          className={`inline-flex max-w-full items-center rounded-full border px-1.5 py-1 text-[9px] font-semibold sm:px-2.5 sm:text-xs ${getStatusStyle(
+                            complaint.status,
+                          )}`}
+                        >
+                          <span className="mr-1 h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
 
-                        {formatDate(complaint.createdAt)}
-                      </div>
-                    </TableCell>
+                          <span className="truncate">
+                            {formatStatus(complaint.status)}
+                          </span>
+                        </span>
+                      </TableCell>
 
-                    {/* Action */}
-                    <TableCell className="px-5 py-4 text-center">
-                      <Link
-                        href={`/complaints/${complaint.id}`}
-                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                        View
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      {/* Created */}
+                      <TableCell className="px-2 py-3 sm:px-3 sm:py-4 md:px-5">
+                        <div className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
+                          <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+
+                          <span className="truncate text-[10px] sm:text-xs">
+                            {formatDate(complaint.createdAt)}
+                          </span>
+                        </div>
+                      </TableCell>
+
+                      {/* Action */}
+                      <TableCell className="px-1 py-3 sm:px-2 sm:py-4 md:px-3">
+                        <div className="flex items-center justify-center gap-1 sm:gap-2">
+                          {/* View Button */}
+                          <Link
+                            href={`/complaints/${complaint.id}`}
+                            className="inline-flex h-8 shrink-0 items-center justify-center gap-1 rounded-lg border border-border bg-background px-2 text-[10px] font-medium text-foreground transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary sm:h-9 sm:px-2.5 sm:text-xs"
+                          >
+                            <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+
+                            <span>View</span>
+                          </Link>
+
+                          {/* Cancel Button */}
+                          <button
+                            type="button"
+                            disabled={!isPending || isCanceling}
+                            onClick={() => {
+                              if (!isPending) return;
+
+                              handleCancelComplaint(complaint.id);
+                            }}
+                            className={`inline-flex h-8 shrink-0 items-center justify-center gap-1 rounded-lg border px-2 text-[10px] font-semibold transition-colors sm:h-9 sm:px-2.5 sm:text-xs ${
+                              isPending
+                                ? "border-red-200 bg-red-50 text-red-600 hover:border-red-300 hover:bg-red-100"
+                                : "cursor-not-allowed border-red-200/50 bg-red-50/40 text-red-400 opacity-50 blur-[0.2px]"
+                            }`}
+                          >
+                            <XCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+
+                            <span>
+                              {isCanceling ? "Canceling..." : "Cancel"}
+                            </span>
+                          </button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>

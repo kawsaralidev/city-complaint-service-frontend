@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  cancelComplaint,
   createComplaint,
   getComplaintById,
   getComplaints,
@@ -48,6 +49,28 @@ export function useCreateComplaint() {
     mutationFn: createComplaint,
 
     onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: myComplaintsQueryKey,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: complaintsQueryKey,
+      });
+    },
+  });
+}
+
+export function useCancelComplaint() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (complaintId: string) => cancelComplaint(complaintId),
+
+    onSuccess: (_, complaintId) => {
+      queryClient.invalidateQueries({
+        queryKey: [...complaintQueryKey, complaintId],
+      });
+
       queryClient.invalidateQueries({
         queryKey: myComplaintsQueryKey,
       });
