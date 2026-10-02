@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { useCurrentUser } from "@/hooks/auth.hook";
 import EditProfileDialog from "@/components/user-profile/edit-profile-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ProfilePage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -15,8 +16,49 @@ const ProfilePage = () => {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-sm text-muted-foreground">Loading profile...</p>
+      <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
+        <div className="mb-6 space-y-2">
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+
+        <div className="overflow-hidden rounded-xl border border-border bg-background">
+          <div className="flex items-center gap-4 border-b border-border p-6">
+            <Skeleton className="h-16 w-16 shrink-0 rounded-full" />
+
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+          </div>
+
+          <div className="space-y-6 p-6">
+            <div className="flex items-start gap-3">
+              <Skeleton className="h-5 w-5 rounded-full" />
+
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <Skeleton className="h-5 w-5 rounded-full" />
+
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-12" />
+                <Skeleton className="h-4 w-44" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-10" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+
+            <Skeleton className="h-10 w-28 rounded-lg" />
+          </div>
+        </div>
       </div>
     );
   }

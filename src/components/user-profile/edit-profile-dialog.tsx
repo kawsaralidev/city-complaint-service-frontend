@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { User } from "lucide-react";
 import { useEffect, useState } from "react";
-
+import { toast } from "@/components/ui/toast";
 import { useUpdateMyProfile } from "@/hooks/user.hook";
 
 interface EditProfileDialogProps {
@@ -56,6 +56,11 @@ const EditProfileDialog = ({
     const trimmedName = name.trim();
 
     if (!trimmedName) {
+      toast.add({
+        title: "Name is required",
+        type: "error",
+      });
+
       return;
     }
 
@@ -66,7 +71,21 @@ const EditProfileDialog = ({
       },
       {
         onSuccess: () => {
+          toast.add({
+            title: "Profile updated successfully",
+            type: "success",
+          });
+
           onClose();
+        },
+        onError: (error) => {
+          toast.add({
+            title:
+              error instanceof Error
+                ? error.message
+                : "Failed to update profile",
+            type: "error",
+          });
         },
       },
     );
