@@ -11,19 +11,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  AlertCircle,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
   Eye,
+  Trash2,
   MapPin,
   Search,
   UserRound,
 } from "lucide-react";
 
 import { useCategories } from "@/hooks/category.hook";
-import { useComplaints } from "@/hooks/complaint.hook";
+import { useComplaints, useDeleteComplaint } from "@/hooks/complaint.hook";
 
 import type { Complaint, ComplaintStatus } from "@/types/complaint";
 import { EmptyState } from "@/components/common/empty-state";
@@ -119,6 +119,10 @@ const ComplaintsPage = () => {
 
   const [page, setPage] = useState(1);
 
+  const [deletingComplaintId, setDeletingComplaintId] = useState<string | null>(
+    null,
+  );
+
   // Debounce search before sending request
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -128,6 +132,8 @@ const ComplaintsPage = () => {
 
     return () => clearTimeout(timer);
   }, [searchInput]);
+
+  const deleteComplaintMutation = useDeleteComplaint();
 
   // Get complaints from backend
   const {
@@ -168,6 +174,22 @@ const ComplaintsPage = () => {
     setStatus(value ? (value as ComplaintStatus) : undefined);
 
     setPage(1);
+  };
+
+  const handleDeleteComplaint = (complaintId: string) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this complaint?",
+    );
+
+    if (!confirmed) return;
+
+    setDeletingComplaintId(complaintId);
+
+    deleteComplaintMutation.mutate(complaintId, {
+      onSettled: () => {
+        setDeletingComplaintId(null);
+      },
+    });
   };
 
   const handleCategoryChange = (value: string) => {
@@ -372,35 +394,35 @@ const ComplaintsPage = () => {
         ) : (
           <>
             {/* Responsive Table */}
-            <div className="w-full overflow-hidden">
+            <div className="w-full min-w-0">
               <Table className="w-full table-fixed">
                 <TableHeader>
                   <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                    <TableHead className="w-[23%] px-3 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:px-4">
+                    <TableHead className="w-[22%] px-2 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 lg:px-4">
                       Complaint
                     </TableHead>
 
-                    <TableHead className="w-[14%] px-3 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:px-4">
+                    <TableHead className="w-[13%] px-2 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 lg:px-4">
                       Category
                     </TableHead>
 
-                    <TableHead className="w-[17%] px-3 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:px-4">
+                    <TableHead className="w-[15%] px-2 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 lg:px-4">
                       Citizen
                     </TableHead>
 
-                    <TableHead className="w-[16%] px-3 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:px-4">
+                    <TableHead className="w-[14%] px-2 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 lg:px-4">
                       Location
                     </TableHead>
 
-                    <TableHead className="w-[11%] px-3 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:px-4">
+                    <TableHead className="w-[10%] px-2 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 lg:px-4">
                       Status
                     </TableHead>
 
-                    <TableHead className="w-[11%] px-3 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:px-4">
+                    <TableHead className="w-[10%] px-2 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 lg:px-4">
                       Created
                     </TableHead>
 
-                    <TableHead className="w-[8%] px-3 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:px-4">
+                    <TableHead className="w-[16%] px-1 py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:px-2 lg:px-3">
                       Actions
                     </TableHead>
                   </TableRow>
@@ -413,18 +435,18 @@ const ComplaintsPage = () => {
                       className="group border-b border-border transition-colors hover:bg-muted/20"
                     >
                       {/* Complaint */}
-                      <TableCell className="overflow-hidden px-3 py-4 lg:px-4">
-                        <div className="flex min-w-0 items-start gap-2">
-                          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary transition-colors group-hover:bg-secondary group-hover:text-secondary-foreground">
+                      <TableCell className="min-w-0 overflow-hidden px-2 py-3 sm:px-3 lg:px-4">
+                        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+                          <div className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary sm:flex">
                             <ClipboardList className="h-4 w-4" />
                           </div>
 
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-semibold text-foreground">
+                            <p className="truncate text-xs font-semibold text-foreground sm:text-sm">
                               {complaint.title}
                             </p>
 
-                            <p className="mt-1 truncate text-xs text-muted-foreground">
+                            <p className="mt-0.5 truncate text-[10px] text-muted-foreground sm:text-xs">
                               {complaint.description}
                             </p>
                           </div>
@@ -432,25 +454,25 @@ const ComplaintsPage = () => {
                       </TableCell>
 
                       {/* Category */}
-                      <TableCell className="overflow-hidden px-3 py-4 lg:px-4">
-                        <span className="block truncate rounded-lg border border-border bg-background px-2 py-1.5 text-xs font-medium text-foreground">
+                      <TableCell className="min-w-0 overflow-hidden px-2 py-3 sm:px-3 lg:px-4">
+                        <span className="block truncate rounded-md border border-border bg-background px-1.5 py-1 text-[10px] font-medium text-foreground sm:px-2 sm:text-xs">
                           {complaint.category?.name ?? "—"}
                         </span>
                       </TableCell>
 
                       {/* Citizen */}
-                      <TableCell className="overflow-hidden px-3 py-4 lg:px-4">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary">
+                      <TableCell className="min-w-0 overflow-hidden px-2 py-3 sm:px-3 lg:px-4">
+                        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+                          <div className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary sm:flex">
                             <UserRound className="h-3.5 w-3.5" />
                           </div>
 
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-foreground">
+                            <p className="truncate text-xs font-medium text-foreground">
                               {complaint.citizen?.name ?? "—"}
                             </p>
 
-                            <p className="truncate text-xs text-muted-foreground">
+                            <p className="truncate text-[10px] text-muted-foreground sm:text-xs">
                               {complaint.citizen?.email ?? "—"}
                             </p>
                           </div>
@@ -458,20 +480,20 @@ const ComplaintsPage = () => {
                       </TableCell>
 
                       {/* Location */}
-                      <TableCell className="overflow-hidden px-3 py-4 lg:px-4">
-                        <div className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
-                          <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
+                      <TableCell className="min-w-0 overflow-hidden px-2 py-3 sm:px-3 lg:px-4">
+                        <div className="flex min-w-0 items-center gap-1 text-muted-foreground">
+                          <MapPin className="h-3 w-3 shrink-0 text-primary" />
 
-                          <span className="block truncate text-xs leading-5">
+                          <span className="truncate text-[10px] leading-5 sm:text-xs">
                             {complaint.location}
                           </span>
                         </div>
                       </TableCell>
 
                       {/* Status */}
-                      <TableCell className="overflow-hidden px-3 py-4 lg:px-4">
+                      <TableCell className="min-w-0 overflow-hidden px-2 py-3 sm:px-3 lg:px-4">
                         <span
-                          className={`inline-flex max-w-full items-center rounded-full border px-2 py-1 text-xs font-semibold ${getStatusStyle(
+                          className={`inline-flex max-w-full items-center rounded-full border px-1.5 py-1 text-[10px] font-semibold sm:px-2 sm:text-xs ${getStatusStyle(
                             complaint.status,
                           )}`}
                         >
@@ -482,26 +504,104 @@ const ComplaintsPage = () => {
                       </TableCell>
 
                       {/* Created */}
-                      <TableCell className="overflow-hidden px-3 py-4 lg:px-4">
-                        <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                          <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                      <TableCell className="min-w-0 overflow-hidden px-2 py-3 sm:px-3 lg:px-4">
+                        <div className="flex min-w-0 items-center gap-1 text-muted-foreground">
+                          <CalendarDays className="h-3 w-3 shrink-0" />
 
-                          <span className="truncate">
+                          <span className="truncate text-[10px] sm:text-xs">
                             {formatDate(complaint.createdAt)}
                           </span>
                         </div>
                       </TableCell>
 
                       {/* Actions */}
-                      <TableCell className="px-2 py-4 text-center lg:px-3">
-                        <div className="flex justify-center">
+                      <TableCell className="min-w-0 px-1 py-3 text-center sm:px-2 lg:px-3">
+                        <div className="flex items-center justify-center gap-1">
+                          {/* View */}
                           <Link
-                            href={`/complaints/${complaint.id}`}
-                            className="inline-flex h-8 items-center gap-1 rounded-lg border border-border bg-background px-2.5 text-xs font-medium text-foreground transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
+                            href={`/dashboard/admin-dashboard/complaints/${complaint.id}`}
+                            title="View complaint"
+                            className="
+                  inline-flex
+                  h-8
+                  w-8
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-md
+                  border
+                  border-border
+                  bg-background
+                  text-foreground
+                  transition-colors
+                  hover:border-primary/30
+                  hover:bg-primary/10
+                  hover:text-primary
+                  lg:h-9
+                  lg:w-auto
+                  lg:gap-1
+                  lg:px-2.5
+                "
                           >
                             <Eye className="h-3.5 w-3.5" />
-                            <span>View</span>
+
+                            <span className="hidden lg:inline text-xs">
+                              View
+                            </span>
                           </Link>
+
+                          {/* Delete */}
+                          {(() => {
+                            const canDelete =
+                              complaint.status === "REJECTED" ||
+                              complaint.status === "CANCELED";
+
+                            const isDeleting =
+                              deletingComplaintId === complaint.id;
+
+                            return (
+                              <button
+                                type="button"
+                                title={
+                                  canDelete
+                                    ? "Delete complaint"
+                                    : "Only rejected or canceled complaints can be deleted"
+                                }
+                                disabled={!canDelete || isDeleting}
+                                onClick={() => {
+                                  if (!canDelete) return;
+
+                                  handleDeleteComplaint(complaint.id);
+                                }}
+                                className={`
+                      inline-flex
+                      h-8
+                      w-8
+                      shrink-0
+                      items-center
+                      justify-center
+                      rounded-md
+                      border
+                      transition-colors
+                      lg:h-9
+                      lg:w-auto
+                      lg:gap-1
+                      lg:px-2.5
+                      ${
+                        canDelete
+                          ? "border-red-200 bg-red-50 text-red-600 hover:border-red-300 hover:bg-red-100"
+                          : "cursor-not-allowed border-border bg-muted text-muted-foreground opacity-50"
+                      }
+                    `}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+
+                                <span className="hidden lg:inline text-xs">
+                                  {isDeleting ? "Deleting..." : "Delete"}
+                                </span>
+                              </button>
+                            );
+                          })()}
                         </div>
                       </TableCell>
                     </TableRow>

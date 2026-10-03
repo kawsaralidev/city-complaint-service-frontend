@@ -6,6 +6,7 @@ import {
   Eye,
   MapPin,
   Plus,
+  Trash2,
   XCircle,
 } from "lucide-react";
 
@@ -27,7 +28,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { useCancelComplaint, useMyComplaints } from "@/hooks/complaint.hook";
+import {
+  useCancelComplaint,
+  useDeleteComplaint,
+  useMyComplaints,
+} from "@/hooks/complaint.hook";
 
 import type { ComplaintStatus } from "@/types/complaint";
 
@@ -82,19 +87,27 @@ const formatDate = (date: string) => {
 const CitizenComplaintsPage = () => {
   const [isCreateComplaintOpen, setIsCreateComplaintOpen] = useState(false);
 
-  // 📍 কোন complaint cancel হচ্ছে সেটা track করবে
+  //  complaint cancel
   const [cancelingComplaintId, setCancelingComplaintId] = useState<
     string | null
   >(null);
 
+  //  complaint delete
+  const [deletingComplaintId, setDeletingComplaintId] = useState<string | null>(
+    null,
+  );
+
   const { data: complaintsResponse, isLoading, error } = useMyComplaints();
 
-  // 📍 Cancel mutation
+  // Cancel mutation
   const cancelComplaintMutation = useCancelComplaint();
+
+  // Delete mutation
+  const deleteComplaintMutation = useDeleteComplaint();
 
   const complaints = complaintsResponse?.data ?? [];
 
-  // 📍 Cancel handler
+  // Cancel handler
   const handleCancelComplaint = (complaintId: string) => {
     const confirmed = window.confirm(
       "Are you sure you want to cancel this complaint?",
@@ -107,6 +120,23 @@ const CitizenComplaintsPage = () => {
     cancelComplaintMutation.mutate(complaintId, {
       onSettled: () => {
         setCancelingComplaintId(null);
+      },
+    });
+  };
+
+  // Delete handler
+  const handleDeleteComplaint = (complaintId: string) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this complaint?",
+    );
+
+    if (!confirmed) return;
+
+    setDeletingComplaintId(complaintId);
+
+    deleteComplaintMutation.mutate(complaintId, {
+      onSettled: () => {
+        setDeletingComplaintId(null);
       },
     });
   };
@@ -228,32 +258,32 @@ const CitizenComplaintsPage = () => {
               <TableHeader>
                 <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
                   {/* Complaint */}
-                  <TableHead className="w-[25%] px-2 py-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 sm:py-3.5 sm:text-xs md:px-5">
+                  <TableHead className="w-[23%] px-2 py-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 sm:py-3.5 sm:text-xs md:px-5">
                     Complaint
                   </TableHead>
 
                   {/* Category */}
-                  <TableHead className="w-[15%] px-2 py-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 sm:py-3.5 sm:text-xs md:px-5">
+                  <TableHead className="w-[14%] px-2 py-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 sm:py-3.5 sm:text-xs md:px-5">
                     Category
                   </TableHead>
 
                   {/* Location */}
-                  <TableHead className="w-[16%] px-2 py-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 sm:py-3.5 sm:text-xs md:px-5">
+                  <TableHead className="w-[15%] px-2 py-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 sm:py-3.5 sm:text-xs md:px-5">
                     Location
                   </TableHead>
 
                   {/* Status */}
-                  <TableHead className="w-[13%] px-2 py-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 sm:py-3.5 sm:text-xs md:px-5">
+                  <TableHead className="w-[12%] px-2 py-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 sm:py-3.5 sm:text-xs md:px-5">
                     Status
                   </TableHead>
 
                   {/* Created */}
-                  <TableHead className="w-[13%] px-2 py-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 sm:py-3.5 sm:text-xs md:px-5">
+                  <TableHead className="w-[12%] px-2 py-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 sm:py-3.5 sm:text-xs md:px-5">
                     Created
                   </TableHead>
 
                   {/* Action */}
-                  <TableHead className="w-[18%] px-1 py-3 text-center text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-2 sm:py-3.5 sm:text-xs md:px-3">
+                  <TableHead className="w-[24%] px-1 py-3 text-center text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-2 sm:py-3.5 sm:text-xs md:px-3">
                     Action
                   </TableHead>
                 </TableRow>
@@ -261,11 +291,15 @@ const CitizenComplaintsPage = () => {
 
               <TableBody>
                 {complaints.map((complaint) => {
-                  const isPending = complaint.status === "PENDING";
+                  const canManageComplaint = complaint.status === "PENDING";
 
                   const isCanceling =
                     cancelingComplaintId === complaint.id &&
                     cancelComplaintMutation.isPending;
+
+                  const isDeleting =
+                    deletingComplaintId === complaint.id &&
+                    deleteComplaintMutation.isPending;
 
                   return (
                     <TableRow
@@ -338,37 +372,81 @@ const CitizenComplaintsPage = () => {
                       {/* Action */}
                       <TableCell className="px-1 py-3 sm:px-2 sm:py-4 md:px-3">
                         <div className="flex items-center justify-center gap-1 sm:gap-2">
-                          {/* View Button */}
-                          <Link
-                            href={`/complaints/${complaint.id}`}
-                            className="inline-flex h-8 shrink-0 items-center justify-center gap-1 rounded-lg border border-border bg-background px-2 text-[10px] font-medium text-foreground transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary sm:h-9 sm:px-2.5 sm:text-xs"
-                          >
-                            <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                          {(() => {
+                            const isPending = complaint.status === "PENDING";
 
-                            <span>View</span>
-                          </Link>
+                            const canDelete =
+                              complaint.status === "PENDING" ||
+                              complaint.status === "REJECTED" ||
+                              complaint.status === "CANCELED";
 
-                          {/* Cancel Button */}
-                          <button
-                            type="button"
-                            disabled={!isPending || isCanceling}
-                            onClick={() => {
-                              if (!isPending) return;
+                            const isCanceling =
+                              cancelingComplaintId === complaint.id;
+                            const isDeleting =
+                              deletingComplaintId === complaint.id;
 
-                              handleCancelComplaint(complaint.id);
-                            }}
-                            className={`inline-flex h-8 shrink-0 items-center justify-center gap-1 rounded-lg border px-2 text-[10px] font-semibold transition-colors sm:h-9 sm:px-2.5 sm:text-xs ${
-                              isPending
-                                ? "border-red-200 bg-red-50 text-red-600 hover:border-red-300 hover:bg-red-100"
-                                : "cursor-not-allowed border-red-200/50 bg-red-50/40 text-red-400 opacity-50 blur-[0.2px]"
-                            }`}
-                          >
-                            <XCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                            return (
+                              <>
+                                {/* View Button */}
+                                <Link
+                                  href={`/complaints/${complaint.id}`}
+                                  className="inline-flex h-8 shrink-0 items-center justify-center gap-1 rounded-lg border border-border bg-background px-2 text-[10px] font-medium text-foreground transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary sm:h-9 sm:px-2.5 sm:text-xs"
+                                >
+                                  <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
 
-                            <span>
-                              {isCanceling ? "Canceling..." : "Cancel"}
-                            </span>
-                          </button>
+                                  <span>View</span>
+                                </Link>
+
+                                {/* Cancel Button */}
+                                <button
+                                  type="button"
+                                  disabled={
+                                    !isPending || isCanceling || isDeleting
+                                  }
+                                  onClick={() => {
+                                    if (!isPending) return;
+
+                                    handleCancelComplaint(complaint.id);
+                                  }}
+                                  className={`inline-flex h-8 shrink-0 items-center justify-center gap-1 rounded-lg border px-2 text-[10px] font-semibold transition-colors sm:h-9 sm:px-2.5 sm:text-xs ${
+                                    isPending
+                                      ? "border-red-200 bg-red-50 text-red-600 hover:border-red-300 hover:bg-red-100"
+                                      : "cursor-not-allowed border-red-200/50 bg-red-50/40 text-red-400 opacity-50"
+                                  }`}
+                                >
+                                  <XCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+
+                                  <span>
+                                    {isCanceling ? "Canceling..." : "Cancel"}
+                                  </span>
+                                </button>
+
+                                {/* Delete Button */}
+                                <button
+                                  type="button"
+                                  disabled={
+                                    !canDelete || isDeleting || isCanceling
+                                  }
+                                  onClick={() => {
+                                    if (!canDelete) return;
+
+                                    handleDeleteComplaint(complaint.id);
+                                  }}
+                                  className={`inline-flex h-8 shrink-0 items-center justify-center gap-1 rounded-lg border px-2 text-[10px] font-semibold transition-colors sm:h-9 sm:px-2.5 sm:text-xs ${
+                                    canDelete
+                                      ? "border-red-200 bg-red-50 text-red-600 hover:border-red-300 hover:bg-red-100"
+                                      : "cursor-not-allowed border-border bg-muted text-muted-foreground opacity-50"
+                                  }`}
+                                >
+                                  <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+
+                                  <span>
+                                    {isDeleting ? "Deleting..." : "Delete"}
+                                  </span>
+                                </button>
+                              </>
+                            );
+                          })()}
                         </div>
                       </TableCell>
                     </TableRow>

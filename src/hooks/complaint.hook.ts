@@ -11,6 +11,7 @@ import {
 } from "@/services/complaint.service";
 
 import type { ComplaintQueryParams } from "@/types/complaint";
+import { deleteComplaint } from "@/services/category.service";
 
 const complaintsQueryKey = ["complaints"];
 const myComplaintsQueryKey = ["my-complaints"];
@@ -123,6 +124,28 @@ export function useUpdateComplaintAdminStatus() {
 
       queryClient.invalidateQueries({
         queryKey: myComplaintsQueryKey,
+      });
+    },
+  });
+}
+
+export function useDeleteComplaint() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (complaintId: string) => deleteComplaint(complaintId),
+
+    onSuccess: (_, complaintId) => {
+      queryClient.invalidateQueries({
+        queryKey: [...complaintQueryKey, complaintId],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: myComplaintsQueryKey,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: complaintsQueryKey,
       });
     },
   });
