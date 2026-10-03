@@ -519,7 +519,7 @@ const ComplaintsPage = () => {
                         <div className="flex items-center justify-center gap-1">
                           {/* View */}
                           <Link
-                            href={`/dashboard/admin-dashboard/complaints/${complaint.id}`}
+                            href={`/complaints/${complaint.id}`}
                             title="View complaint"
                             className="
                   inline-flex
