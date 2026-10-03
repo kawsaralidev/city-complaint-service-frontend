@@ -5,6 +5,8 @@ import { useState } from "react";
 import {
   CalendarDays,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   ClipboardList,
   MapPin,
   PlayCircle,
@@ -17,6 +19,8 @@ import {
 } from "@/hooks/complaint.hook";
 
 import type { Complaint, ComplaintStatus } from "@/types/complaint";
+
+const PAGE_LIMIT = 10;
 
 const getStatusStyle = (status: ComplaintStatus) => {
   switch (status) {
@@ -67,23 +71,44 @@ const ComplaintsPage = () => {
     null,
   );
 
+  // =========================================
+  // PAGINATION
+  // =========================================
+
+  const [page, setPage] = useState(1);
+
+  // =========================================
+  // GET COMPLAINTS
+  // =========================================
+
   const {
     data: complaintsResponse,
     isLoading,
     isFetching,
     error,
     refetch,
-  } = useComplaints();
+  } = useComplaints({
+    page,
+    limit: PAGE_LIMIT,
+  });
 
   const updateStatusMutation = useUpdateComplaintStatus();
 
   const complaints = complaintsResponse?.data ?? [];
 
-  /*
-   * ASSIGNED → IN_PROGRESS
-   *
-   * IN_PROGRESS → COMPLETED
-   */
+  // Backend pagination data
+  const pagination = complaintsResponse?.meta;
+
+  const totalComplaints = pagination?.total ?? 0;
+
+  const totalPages = Math.max(pagination?.totalPages ?? 1, 1);
+
+  // =========================================
+  // STATUS UPDATE
+  // ASSIGNED → IN_PROGRESS
+  // IN_PROGRESS → COMPLETED
+  // =========================================
+
   const handleStatusUpdate = (
     complaintId: string,
     status: "IN_PROGRESS" | "COMPLETED",
@@ -103,12 +128,30 @@ const ComplaintsPage = () => {
     );
   };
 
-  /* =========================
-     LOADING
-  ========================= */
+  // =========================================
+  // PAGINATION HANDLERS
+  // =========================================
+
+  const handlePreviousPage = () => {
+    if (page > 1 && !isFetching) {
+      setPage((currentPage) => currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (page < totalPages && !isFetching) {
+      setPage((currentPage) => currentPage + 1);
+    }
+  };
+
+  // =========================================
+  // LOADING
+  // =========================================
+
   if (isLoading) {
     return (
       <div className="space-y-5 p-4 pb-8 sm:p-6 lg:p-7">
+        {/* Header Skeleton */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <div className="h-4 w-40 animate-pulse rounded bg-muted" />
 
@@ -117,6 +160,7 @@ const ComplaintsPage = () => {
           <div className="mt-3 h-4 w-96 max-w-full animate-pulse rounded bg-muted" />
         </div>
 
+        {/* Complaint Skeletons */}
         {[1, 2, 3].map((item) => (
           <div
             key={item}
@@ -138,6 +182,7 @@ const ComplaintsPage = () => {
               {[1, 2, 3, 4, 5].map((column) => (
                 <div key={column}>
                   <div className="h-3 w-16 rounded bg-muted" />
+
                   <div className="mt-2 h-4 w-28 rounded bg-muted" />
                 </div>
               ))}
@@ -150,9 +195,10 @@ const ComplaintsPage = () => {
     );
   }
 
-  /* =========================
-     ERROR
-  ========================= */
+  // =========================================
+  // ERROR
+  // =========================================
+
   if (error) {
     return (
       <div className="flex min-h-[500px] items-center justify-center p-6">
@@ -187,6 +233,7 @@ const ComplaintsPage = () => {
       {/* =========================================
           PAGE HEADER
       ========================================= */}
+
       <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -205,7 +252,8 @@ const ComplaintsPage = () => {
             </p>
           </div>
 
-          {/* Total complaints */}
+          {/* Total Complaints */}
+
           <div className="flex w-fit items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <ClipboardList className="h-5 w-5" />
@@ -217,7 +265,7 @@ const ComplaintsPage = () => {
               </p>
 
               <p className="text-xl font-bold text-foreground">
-                {complaints.length}
+                {totalComplaints}
               </p>
             </div>
           </div>
@@ -225,6 +273,7 @@ const ComplaintsPage = () => {
       </section>
 
       {/* Refresh indicator */}
+
       {isFetching && !isLoading && (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
@@ -235,6 +284,7 @@ const ComplaintsPage = () => {
       {/* =========================================
           EMPTY STATE
       ========================================= */}
+
       {complaints.length === 0 && (
         <section className="rounded-2xl border border-border bg-card p-10 text-center shadow-sm">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-muted text-muted-foreground">
@@ -255,6 +305,7 @@ const ComplaintsPage = () => {
       {/* =========================================
           COMPLAINT LIST
       ========================================= */}
+
       <div className="space-y-5">
         {complaints.map((complaint: Complaint) => {
           const isUpdating = updatingComplaintId === complaint.id;
@@ -277,14 +328,17 @@ const ComplaintsPage = () => {
               {/* =======================================
                   TITLE + STATUS
               ======================================= */}
+
               <div className="p-5 sm:p-6">
                 <div className="flex items-start gap-3">
-                  {/* Complaint icon */}
+                  {/* Complaint Icon */}
+
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
                     <ClipboardList className="h-5 w-5" />
                   </div>
 
                   {/* Title */}
+
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0">
@@ -297,7 +351,8 @@ const ComplaintsPage = () => {
                         </p>
                       </div>
 
-                      {/* Current status */}
+                      {/* Current Status */}
+
                       <span
                         className={`inline-flex w-fit shrink-0 items-center rounded-full border px-3 py-1.5 text-xs font-semibold ${getStatusStyle(
                           complaint.status,
@@ -313,8 +368,10 @@ const ComplaintsPage = () => {
               {/* =======================================
                   INFORMATION + ACTION COLUMN
               ======================================= */}
+
               <div className="grid border-t border-border lg:grid-cols-[1fr_1fr_1fr_1fr_190px]">
                 {/* Category */}
+
                 <div className="border-b border-border p-5 lg:border-b-0 lg:border-r">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Category
@@ -326,6 +383,7 @@ const ComplaintsPage = () => {
                 </div>
 
                 {/* Location */}
+
                 <div className="border-b border-border p-5 lg:border-b-0 lg:border-r">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Location
@@ -341,6 +399,7 @@ const ComplaintsPage = () => {
                 </div>
 
                 {/* Citizen */}
+
                 <div className="border-b border-border p-5 lg:border-b-0 lg:border-r">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Citizen
@@ -356,6 +415,7 @@ const ComplaintsPage = () => {
                 </div>
 
                 {/* Assigned Date */}
+
                 <div className="border-b border-border p-5 lg:border-b-0 lg:border-r">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Assigned
@@ -375,8 +435,10 @@ const ComplaintsPage = () => {
                 {/* ===================================
                     ACTION COLUMN
                 =================================== */}
+
                 <div className="flex items-center p-4 sm:p-5">
                   {/* ASSIGNED → START WORK */}
+
                   {isAssigned && (
                     <button
                       type="button"
@@ -393,6 +455,7 @@ const ComplaintsPage = () => {
                   )}
 
                   {/* IN PROGRESS → MARK COMPLETED */}
+
                   {isInProgress && (
                     <button
                       type="button"
@@ -404,11 +467,12 @@ const ComplaintsPage = () => {
                     >
                       <CheckCircle2 className="h-4 w-4" />
 
-                      {isUpdating ? "Completing..." : "Mark Completed"}
+                      {isUpdating ? "Completing..." : "Completed"}
                     </button>
                   )}
 
                   {/* COMPLETED → DISABLED */}
+
                   {isCompleted && (
                     <button
                       type="button"
@@ -421,6 +485,7 @@ const ComplaintsPage = () => {
                   )}
 
                   {/* REJECTED */}
+
                   {isRejected && (
                     <div className="flex h-11 w-full items-center justify-center rounded-lg border border-red-200 bg-red-50 px-4 text-sm font-semibold text-red-600">
                       Rejected
@@ -428,13 +493,15 @@ const ComplaintsPage = () => {
                   )}
 
                   {/* CANCELED */}
+
                   {isCanceled && (
                     <div className="flex h-11 w-full items-center justify-center rounded-lg border border-border bg-muted px-4 text-sm font-semibold text-muted-foreground">
                       Canceled
                     </div>
                   )}
 
-                  {/* Any other status */}
+                  {/* ANY OTHER STATUS */}
+
                   {!isAssigned &&
                     !isInProgress &&
                     !isCompleted &&
@@ -450,6 +517,70 @@ const ComplaintsPage = () => {
           );
         })}
       </div>
+
+      {/* =========================================
+          PAGINATION
+      ========================================= */}
+
+      {totalPages > 1 && (
+        <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-sm sm:px-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            {/* Page Information */}
+
+            <p className="text-xs text-muted-foreground">
+              Showing{" "}
+              <span className="font-semibold text-foreground">
+                {complaints.length}
+              </span>{" "}
+              of{" "}
+              <span className="font-semibold text-foreground">
+                {totalComplaints}
+              </span>{" "}
+              complaints
+            </p>
+
+            {/* Pagination Controls */}
+
+            <div className="flex items-center justify-between gap-2 sm:justify-end">
+              {/* Previous */}
+
+              <button
+                type="button"
+                onClick={handlePreviousPage}
+                disabled={page === 1 || isFetching}
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </button>
+
+              {/* Current Page */}
+
+              <div className="flex h-9 min-w-9 items-center justify-center rounded-lg bg-secondary px-3 text-xs font-semibold text-primary-foreground">
+                {page}
+              </div>
+
+              {/* Page Text */}
+
+              <span className="text-xs text-muted-foreground">
+                of {totalPages}
+              </span>
+
+              {/* Next */}
+
+              <button
+                type="button"
+                onClick={handleNextPage}
+                disabled={page >= totalPages || isFetching}
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
