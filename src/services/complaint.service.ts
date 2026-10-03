@@ -3,7 +3,6 @@ import { ApiResponse } from "@/types/api";
 
 import type {
   Complaint,
-  ComplaintOfficer,
   ComplaintQueryParams,
   ComplaintStatus,
 } from "@/types/complaint";
@@ -155,4 +154,31 @@ export const assignComplaint = async ({
       officerId,
     },
   });
+};
+
+// Get complaints assigned to current officer
+export const getAssignedComplaints = async (): Promise<
+  ApiResponse<
+    {
+      id: string;
+      officerId: string;
+      complaintId: string;
+      assignedBy: string;
+      assignedAt: string;
+      complaint: Complaint;
+    }[]
+  >
+> => {
+  return api<
+    ApiResponse<
+      {
+        id: string;
+        officerId: string;
+        complaintId: string;
+        assignedBy: string;
+        assignedAt: string;
+        complaint: Complaint;
+      }[]
+    >
+  >("/complaints/assigned");
 };

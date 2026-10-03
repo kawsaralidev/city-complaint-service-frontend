@@ -5,6 +5,7 @@ import {
   cancelComplaint,
   createComplaint,
   getActiveOfficers,
+  getAssignedComplaints,
   getComplaintById,
   getComplaints,
   getMyComplaints,
@@ -18,6 +19,7 @@ import { deleteComplaint } from "@/services/category.service";
 const complaintsQueryKey = ["complaints"];
 const myComplaintsQueryKey = ["my-complaints"];
 const complaintQueryKey = ["complaint"];
+const assignedComplaintsQueryKey = ["assigned-complaints"];
 
 // Get all complaints
 export function useComplaints(params?: ComplaintQueryParams) {
@@ -175,5 +177,13 @@ export function useDeleteComplaint() {
         queryKey: complaintsQueryKey,
       });
     },
+  });
+}
+
+// Get complaints assigned to current officer
+export function useAssignedComplaints() {
+  return useQuery({
+    queryKey: assignedComplaintsQueryKey,
+    queryFn: getAssignedComplaints,
   });
 }
