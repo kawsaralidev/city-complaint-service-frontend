@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  assignComplaint,
   cancelComplaint,
   createComplaint,
+  getActiveOfficers,
   getComplaintById,
   getComplaints,
   getMyComplaints,
@@ -39,6 +41,31 @@ export function useComplaint(complaintId: string) {
     queryKey: [...complaintQueryKey, complaintId],
     queryFn: () => getComplaintById(complaintId),
     enabled: Boolean(complaintId),
+  });
+}
+
+export function useActiveOfficers() {
+  return useQuery({
+    queryKey: ["active-officers"],
+    queryFn: getActiveOfficers,
+  });
+}
+
+export function useAssignComplaint() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: assignComplaint,
+
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...complaintQueryKey, variables.complaintId],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: complaintsQueryKey,
+      });
+    },
   });
 }
 

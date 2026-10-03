@@ -3,6 +3,7 @@ import { ApiResponse } from "@/types/api";
 
 import type {
   Complaint,
+  ComplaintOfficer,
   ComplaintQueryParams,
   ComplaintStatus,
 } from "@/types/complaint";
@@ -118,5 +119,40 @@ export const cancelComplaint = async (
 ): Promise<ApiResponse<Complaint>> => {
   return api<ApiResponse<Complaint>>(`/complaints/${complaintId}/cancel`, {
     method: "PATCH",
+  });
+};
+
+export const getActiveOfficers = async (): Promise<
+  ApiResponse<
+    {
+      id: string;
+      name: string;
+      imageUrl?: string | null;
+    }[]
+  >
+> => {
+  return api<
+    ApiResponse<
+      {
+        id: string;
+        name: string;
+        imageUrl?: string | null;
+      }[]
+    >
+  >("/complaints/officers");
+};
+
+export const assignComplaint = async ({
+  complaintId,
+  officerId,
+}: {
+  complaintId: string;
+  officerId: string;
+}): Promise<ApiResponse<Complaint>> => {
+  return api<ApiResponse<Complaint>>(`/complaints/${complaintId}/assign`, {
+    method: "PATCH",
+    body: {
+      officerId,
+    },
   });
 };

@@ -35,6 +35,12 @@ export interface ComplaintCitizen {
   email: string;
 }
 
+export interface ComplaintOfficer {
+  id: string;
+  name: string;
+  imageUrl?: string | null;
+}
+
 export interface ComplaintAssignment {
   id: string;
   officerId: string;
@@ -45,6 +51,7 @@ export interface ComplaintAssignment {
     id: string;
     name: string;
     email: string;
+    imageUrl?: string | null;
   } | null;
 }
 
