@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import {
-  useComplaints,
+  useAssignedComplaints,
   useUpdateComplaintStatus,
 } from "@/hooks/complaint.hook";
 
@@ -71,30 +71,25 @@ const ComplaintsPage = () => {
     null,
   );
 
-  // =========================================
   // PAGINATION
-  // =========================================
-
   const [page, setPage] = useState(1);
 
-  // =========================================
   // GET COMPLAINTS
-  // =========================================
-
   const {
     data: complaintsResponse,
     isLoading,
     isFetching,
     error,
     refetch,
-  } = useComplaints({
-    page,
-    limit: PAGE_LIMIT,
-  });
+  } = useAssignedComplaints();
 
   const updateStatusMutation = useUpdateComplaintStatus();
 
-  const complaints = complaintsResponse?.data ?? [];
+  const assignments = complaintsResponse?.data ?? [];
+
+  const complaints = assignments
+    .map((assignment) => assignment.complaint)
+    .filter((complaint): complaint is Complaint => complaint !== null);
 
   // Backend pagination data
   const pagination = complaintsResponse?.meta;

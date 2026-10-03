@@ -1,6 +1,5 @@
 import { api } from "@/lib/api";
 import { ApiResponse } from "@/types/api";
-import { Complaint } from "@/types/complaint";
 
 import type { Category } from "@/types/dashboard";
 
@@ -60,13 +59,5 @@ export const updateCategoryStatus = async ({
     body: {
       isActive,
     },
-  });
-};
-
-export const deleteComplaint = async (
-  complaintId: string,
-): Promise<ApiResponse<Complaint>> => {
-  return api<ApiResponse<Complaint>>(`/complaints/${complaintId}`, {
-    method: "DELETE",
   });
 };

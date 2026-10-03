@@ -4,6 +4,7 @@ import {
   assignComplaint,
   cancelComplaint,
   createComplaint,
+  deleteComplaint,
   getActiveOfficers,
   getAssignedComplaints,
   getComplaintById,
@@ -14,7 +15,6 @@ import {
 } from "@/services/complaint.service";
 
 import type { ComplaintQueryParams } from "@/types/complaint";
-import { deleteComplaint } from "@/services/category.service";
 
 const complaintsQueryKey = ["complaints"];
 const myComplaintsQueryKey = ["my-complaints"];
@@ -46,6 +46,7 @@ export function useComplaint(complaintId: string) {
   });
 }
 
+// Get active officers
 export function useActiveOfficers() {
   return useQuery({
     queryKey: ["active-officers"],
@@ -53,6 +54,7 @@ export function useActiveOfficers() {
   });
 }
 
+// Assign complaint to officer
 export function useAssignComplaint() {
   const queryClient = useQueryClient();
 
@@ -66,6 +68,11 @@ export function useAssignComplaint() {
 
       queryClient.invalidateQueries({
         queryKey: complaintsQueryKey,
+      });
+
+      // Refresh officer assigned complaints
+      queryClient.invalidateQueries({
+        queryKey: assignedComplaintsQueryKey,
       });
     },
   });
@@ -90,6 +97,7 @@ export function useCreateComplaint() {
   });
 }
 
+// Cancel complaint
 export function useCancelComplaint() {
   const queryClient = useQueryClient();
 
@@ -131,6 +139,11 @@ export function useUpdateComplaintStatus() {
       queryClient.invalidateQueries({
         queryKey: myComplaintsQueryKey,
       });
+
+      // Refresh officer assigned complaints
+      queryClient.invalidateQueries({
+        queryKey: assignedComplaintsQueryKey,
+      });
     },
   });
 }
@@ -154,10 +167,16 @@ export function useUpdateComplaintAdminStatus() {
       queryClient.invalidateQueries({
         queryKey: myComplaintsQueryKey,
       });
+
+      // Refresh officer assigned complaints
+      queryClient.invalidateQueries({
+        queryKey: assignedComplaintsQueryKey,
+      });
     },
   });
 }
 
+// Delete complaint
 export function useDeleteComplaint() {
   const queryClient = useQueryClient();
 
@@ -175,6 +194,11 @@ export function useDeleteComplaint() {
 
       queryClient.invalidateQueries({
         queryKey: complaintsQueryKey,
+      });
+
+      // Refresh officer assigned complaints
+      queryClient.invalidateQueries({
+        queryKey: assignedComplaintsQueryKey,
       });
     },
   });

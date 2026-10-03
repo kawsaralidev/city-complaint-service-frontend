@@ -1,6 +1,5 @@
 import { api } from "@/lib/api";
 import { ApiResponse } from "@/types/api";
-
 import type {
   Complaint,
   ComplaintQueryParams,
@@ -31,6 +30,10 @@ export const getComplaints = async (
 
   if (params?.categoryId) {
     searchParams.set("categoryId", params.categoryId);
+  }
+
+  if (params?.sortOrder) {
+    searchParams.set("sortOrder", params.sortOrder);
   }
 
   const queryString = searchParams.toString();
@@ -121,6 +124,7 @@ export const cancelComplaint = async (
   });
 };
 
+// Get active officers
 export const getActiveOfficers = async (): Promise<
   ApiResponse<
     {
@@ -141,6 +145,7 @@ export const getActiveOfficers = async (): Promise<
   >("/complaints/officers");
 };
 
+// Assign complaint to officer
 export const assignComplaint = async ({
   complaintId,
   officerId,
@@ -181,4 +186,13 @@ export const getAssignedComplaints = async (): Promise<
       }[]
     >
   >("/complaints/assigned");
+};
+
+// Delete complaint
+export const deleteComplaint = async (
+  complaintId: string,
+): Promise<ApiResponse<Complaint>> => {
+  return api<ApiResponse<Complaint>>(`/complaints/${complaintId}`, {
+    method: "DELETE",
+  });
 };

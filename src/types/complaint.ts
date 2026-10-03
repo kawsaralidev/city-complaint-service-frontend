@@ -13,6 +13,7 @@ export interface ComplaintQueryParams {
   search?: string;
   status?: ComplaintStatus;
   categoryId?: string;
+  sortOrder?: "asc" | "desc";
 }
 
 export interface ComplaintPagination {
@@ -55,13 +56,6 @@ export interface ComplaintAssignment {
   } | null;
 }
 
-export interface ComplaintResolution {
-  id: string;
-  description: string;
-  imageUrl?: string | null;
-  resolvedAt: string;
-}
-
 export interface Complaint {
   id: string;
   title: string;
@@ -79,8 +73,6 @@ export interface Complaint {
   citizen: ComplaintCitizen;
 
   assignment?: ComplaintAssignment | null;
-
-  resolution?: ComplaintResolution | null;
 }
 
 export interface GetComplaintsResponse {
