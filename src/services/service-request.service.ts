@@ -25,7 +25,7 @@ const createServiceRequest = async (
     formData.append("image", data.image);
   }
 
-  const response = await api<ServiceRequest>("/service-request", {
+  const response = await api<ServiceRequest>("/service-requests", {
     method: "POST",
     body: formData,
   });

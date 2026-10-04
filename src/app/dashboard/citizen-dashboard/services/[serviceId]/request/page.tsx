@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import RoleGuard from "../../../../guard/role-guard";
+
 import { useActiveServices } from "@/hooks/service.hook";
 import { useCreateServiceRequest } from "@/hooks/service-request.hook";
 
@@ -15,17 +16,17 @@ import {
   type ServiceRequestFormValues,
 } from "@/lib/validations/service-request.schema";
 
-const CitizenServiceRequestPage = () => {
+const CreateServiceRequestPage = () => {
   const params = useParams();
   const router = useRouter();
-
-  const [step, setStep] = useState(1);
-  const [image, setImage] = useState<File | undefined>();
 
   const serviceId =
     typeof params.serviceId === "string" ? params.serviceId : "";
 
-  const { data, isLoading, isError } = useActiveServices({
+  const [step, setStep] = useState(1);
+  const [selectedImage, setSelectedImage] = useState<File | undefined>();
+
+  const { data, isLoading: isServicesLoading } = useActiveServices({
     page: 1,
     limit: 100,
   });
@@ -67,9 +68,23 @@ const CitizenServiceRequestPage = () => {
   };
 
   const handleBack = () => {
-    if (step > 1) {
-      setStep((currentStep) => currentStep - 1);
+    if (step === 1) {
+      router.back();
+      return;
     }
+
+    setStep((currentStep) => currentStep - 1);
+  };
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      setSelectedImage(undefined);
+      return;
+    }
+
+    setSelectedImage(file);
   };
 
   const onSubmit = (formData: ServiceRequestFormValues) => {
@@ -78,86 +93,41 @@ const CitizenServiceRequestPage = () => {
         serviceId: formData.serviceId,
         location: formData.location,
         description: formData.description || undefined,
-        image,
+        image: selectedImage,
       },
       {
         onSuccess: () => {
-          router.push("/dashboard/citizen-dashboard/service-requests");
+          router.push("/dashboard/citizen-dashboard/service-request");
         },
       },
     );
   };
 
-  if (isLoading) {
-    return (
-      <RoleGuard requiredRole="CITIZEN">
-        <div className="p-6">
-          <div className="h-8 w-64 animate-pulse rounded bg-muted" />
-
-          <div className="mt-6 h-64 animate-pulse rounded-lg bg-muted" />
-        </div>
-      </RoleGuard>
-    );
-  }
-
-  if (isError) {
-    return (
-      <RoleGuard requiredRole="CITIZEN">
-        <div className="p-6">
-          <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-red-700">
-            Failed to load service information.
-          </div>
-        </div>
-      </RoleGuard>
-    );
-  }
-
-  if (!service) {
-    return (
-      <RoleGuard requiredRole="CITIZEN">
-        <div className="p-6">
-          <div className="rounded-lg border p-6">
-            <h1 className="text-xl font-semibold">Service Not Found</h1>
-
-            <p className="mt-2 text-sm text-muted-foreground">
-              The selected service is no longer available.
-            </p>
-
-            <Link
-              href="/dashboard/citizen-dashboard/services"
-              className="mt-4 inline-block text-sm font-medium underline"
-            >
-              Back to Services
-            </Link>
-          </div>
-        </div>
-      </RoleGuard>
-    );
-  }
+  const values = getValues();
 
   return (
     <RoleGuard requiredRole="CITIZEN">
       <div className="space-y-6 p-6">
         <div>
           <Link
-            href={`/dashboard/citizen-dashboard/services/${service.id}`}
+            href={`/dashboard/citizen-dashboard/services/${serviceId}`}
             className="text-sm text-muted-foreground hover:underline"
           >
             ← Back to Service
           </Link>
 
-          <h1 className="mt-3 text-2xl font-bold">Request Service</h1>
+          <h1 className="mt-3 text-2xl font-bold">Request a Service</h1>
 
           <p className="mt-1 text-sm text-muted-foreground">
             Complete the steps below to submit your service request.
           </p>
         </div>
 
-        {/* Progress */}
+        {/* Steps */}
         <div className="grid gap-3 sm:grid-cols-3">
           <div
             className={`rounded-lg border p-4 ${
-              step >= 1 ? "border-primary" : ""
+              step === 1 ? "border-primary bg-primary/5" : ""
             }`}
           >
             <p className="text-sm font-medium">Step 1</p>
@@ -166,16 +136,16 @@ const CitizenServiceRequestPage = () => {
 
           <div
             className={`rounded-lg border p-4 ${
-              step >= 2 ? "border-primary" : ""
+              step === 2 ? "border-primary bg-primary/5" : ""
             }`}
           >
             <p className="text-sm font-medium">Step 2</p>
-            <p className="text-sm text-muted-foreground">Request Details</p>
+            <p className="text-sm text-muted-foreground">Request Information</p>
           </div>
 
           <div
             className={`rounded-lg border p-4 ${
-              step >= 3 ? "border-primary" : ""
+              step === 3 ? "border-primary bg-primary/5" : ""
             }`}
           >
             <p className="text-sm font-medium">Step 3</p>
@@ -183,215 +153,253 @@ const CitizenServiceRequestPage = () => {
           </div>
         </div>
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="rounded-xl border bg-background p-6"
-        >
-          {/* Step 1 */}
-          {step === 1 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-semibold">Confirm Service</h2>
-
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Make sure you selected the correct service.
-                </p>
-              </div>
-
-              <div className="rounded-lg border p-5">
-                <h3 className="text-lg font-semibold">{service.name}</h3>
-
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {service.description || "No description available."}
-                </p>
-
-                <div className="mt-5">
-                  <p className="text-sm text-muted-foreground">Base Fee</p>
-
-                  <p className="mt-1 text-2xl font-bold">৳{service.baseFee}</p>
-                </div>
-              </div>
-
-              <input
-                type="hidden"
-                {...register("serviceId")}
-                value={service.id}
-              />
-            </div>
-          )}
-
-          {/* Step 2 */}
-          {step === 2 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-semibold">Request Details</h2>
-
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Provide the information needed to process your request.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="location" className="text-sm font-medium">
-                  Location
-                </label>
-
-                <input
-                  id="location"
-                  {...register("location")}
-                  placeholder="Enter service location"
-                  className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2"
-                />
-
-                {errors.location && (
-                  <p className="text-sm text-red-500">
-                    {errors.location.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="description" className="text-sm font-medium">
-                  Description
-                </label>
-
-                <textarea
-                  id="description"
-                  {...register("description")}
-                  placeholder="Describe your service requirement"
-                  rows={5}
-                  className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2"
-                />
-
-                {errors.description && (
-                  <p className="text-sm text-red-500">
-                    {errors.description.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="image" className="text-sm font-medium">
-                  Image
-                  <span className="ml-1 text-muted-foreground">(Optional)</span>
-                </label>
-
-                <input
-                  id="image"
-                  type="file"
-                  accept="image/*"
-                  onChange={(event) => {
-                    const selectedFile = event.target.files?.[0];
-
-                    setImage(selectedFile);
-                  }}
-                  className="w-full rounded-md border p-2 text-sm"
-                />
-
-                {image && (
-                  <p className="text-sm text-muted-foreground">
-                    Selected: {image.name}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Step 3 */}
-          {step === 3 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-semibold">Review Your Request</h2>
-
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Check your information before submitting.
-                </p>
-              </div>
-
-              <div className="space-y-4 rounded-lg border p-5">
-                <div>
-                  <p className="text-sm text-muted-foreground">Service</p>
-
-                  <p className="font-medium">{service.name}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-muted-foreground">Base Fee</p>
-
-                  <p className="font-medium">৳{service.baseFee}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-muted-foreground">Location</p>
-
-                  <p className="font-medium">{getValues("location")}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-muted-foreground">Description</p>
-
-                  <p className="font-medium">
-                    {getValues("description") || "No description"}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-muted-foreground">Image</p>
-
-                  <p className="font-medium">
-                    {image ? image.name : "No image"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-lg bg-muted p-4 text-sm">
-                After submission, your request will be sent to the
-                administration for review.
-              </div>
-            </div>
-          )}
-
-          {/* Navigation */}
-          <div className="mt-8 flex items-center justify-between border-t pt-6">
-            <button
-              type="button"
-              onClick={handleBack}
-              disabled={step === 1}
-              className="rounded-md border px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Back
-            </button>
-
-            {step < 3 ? (
-              <button
-                type="button"
-                onClick={handleNext}
-                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={createServiceRequestMutation.isPending}
-                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
-              >
-                {createServiceRequestMutation.isPending
-                  ? "Submitting..."
-                  : "Submit Request"}
-              </button>
-            )}
+        {/* Loading */}
+        {isServicesLoading && (
+          <div className="rounded-lg border p-6">
+            <p className="text-sm text-muted-foreground">
+              Loading service information...
+            </p>
           </div>
+        )}
 
-          {createServiceRequestMutation.isError && (
-            <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-              Failed to submit service request. Please try again.
-            </div>
-          )}
-        </form>
+        {/* Service not found */}
+        {!isServicesLoading && !service && (
+          <div className="rounded-lg border p-6">
+            <h2 className="text-lg font-semibold">Service not found</h2>
+
+            <p className="mt-2 text-sm text-muted-foreground">
+              The selected service is no longer available.
+            </p>
+
+            <Link
+              href="/dashboard/citizen-dashboard/services"
+              className="mt-4 inline-block rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
+            >
+              Back to Services
+            </Link>
+          </div>
+        )}
+
+        {/* Wizard */}
+        {!isServicesLoading && service && (
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="rounded-xl border bg-background p-6 shadow-sm"
+          >
+            {/* STEP 1 */}
+            {step === 1 && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold">Confirm Service</h2>
+
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Confirm the service you want to request.
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-5">
+                  <h3 className="text-lg font-semibold">{service.name}</h3>
+
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {service.description || "No description available."}
+                  </p>
+
+                  <div className="mt-5">
+                    <p className="text-sm text-muted-foreground">Base Fee</p>
+
+                    <p className="mt-1 text-2xl font-bold">
+                      ৳{service.baseFee}
+                    </p>
+                  </div>
+                </div>
+
+                <input type="hidden" {...register("serviceId")} />
+
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    className="rounded-md bg-primary px-5 py-2 text-sm text-primary-foreground"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2 */}
+            {step === 2 && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold">Request Information</h2>
+
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Provide the information needed to process your request.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="location" className="text-sm font-medium">
+                    Location
+                  </label>
+
+                  <input
+                    id="location"
+                    type="text"
+                    placeholder="Enter service location"
+                    {...register("location")}
+                    className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                  />
+
+                  {errors.location && (
+                    <p className="text-sm text-destructive">
+                      {errors.location.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="description" className="text-sm font-medium">
+                    Description
+                  </label>
+
+                  <textarea
+                    id="description"
+                    rows={5}
+                    placeholder="Describe what you need..."
+                    {...register("description")}
+                    className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                  />
+
+                  {errors.description && (
+                    <p className="text-sm text-destructive">
+                      {errors.description.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="image" className="text-sm font-medium">
+                    Image (Optional)
+                  </label>
+
+                  <input
+                    id="image"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="block w-full rounded-md border p-2 text-sm"
+                  />
+
+                  {selectedImage && (
+                    <p className="text-sm text-muted-foreground">
+                      Selected: {selectedImage.name}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex justify-between">
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="rounded-md border px-5 py-2 text-sm"
+                  >
+                    Back
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    className="rounded-md bg-primary px-5 py-2 text-sm text-primary-foreground"
+                  >
+                    Review
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3 */}
+            {step === 3 && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold">Review Your Request</h2>
+
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Check your information before submitting.
+                  </p>
+                </div>
+
+                <div className="space-y-4 rounded-lg border p-5">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Service</p>
+
+                    <p className="font-medium">{service.name}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-muted-foreground">Location</p>
+
+                    <p className="font-medium">{values.location}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-muted-foreground">Description</p>
+
+                    <p className="font-medium">
+                      {values.description || "No description provided"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-muted-foreground">Image</p>
+
+                    <p className="font-medium">
+                      {selectedImage ? selectedImage.name : "No image selected"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-muted-foreground">Service Fee</p>
+
+                    <p className="text-xl font-bold">৳{service.baseFee}</p>
+                  </div>
+                </div>
+
+                {createServiceRequestMutation.isError && (
+                  <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4">
+                    <p className="text-sm text-destructive">
+                      Failed to submit the service request. Please try again.
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex justify-between">
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    disabled={createServiceRequestMutation.isPending}
+                    className="rounded-md border px-5 py-2 text-sm disabled:opacity-50"
+                  >
+                    Back
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={createServiceRequestMutation.isPending}
+                    className="rounded-md bg-primary px-5 py-2 text-sm text-primary-foreground disabled:opacity-50"
+                  >
+                    {createServiceRequestMutation.isPending
+                      ? "Submitting..."
+                      : "Submit Request"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </form>
+        )}
       </div>
     </RoleGuard>
   );
 };
 
-export default CitizenServiceRequestPage;
+export default CreateServiceRequestPage;
