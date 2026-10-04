@@ -192,7 +192,7 @@ const CitizenServiceRequestsPage = () => {
                       {/* Action */}
                       <div>
                         <Link
-                          href={`/dashboard/citizen-dashboard/service-requests/${request.id}`}
+                          href={`/dashboard/citizen-dashboard/service-request/${request.id}`}
                           className="inline-flex rounded-md border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
                         >
                           View Details

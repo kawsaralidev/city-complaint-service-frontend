@@ -92,11 +92,13 @@ const getAssignedServiceRequests = async (): Promise<ServiceRequest[]> => {
 };
 
 const getServiceRequestById = async (id: string): Promise<ServiceRequest> => {
-  const response = await api<ServiceRequest>(`/service-requests/${id}`, {
+  const response = await api<{
+    data: ServiceRequest;
+  }>(`/service-requests/${id}`, {
     method: "GET",
   });
 
-  return response;
+  return response.data;
 };
 
 const assignServiceRequest = async (
