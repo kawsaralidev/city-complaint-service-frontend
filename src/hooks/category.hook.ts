@@ -5,12 +5,9 @@ import {
   getCategories,
   updateCategory,
   updateCategoryStatus,
-} from "@/services/category.service";
+} from "@/api/category.api";
 
-import type {
-  CreateCategoryInput,
-  UpdateCategoryInput,
-} from "@/services/category.service";
+import type { CreateCategoryInput, UpdateCategoryInput } from "@/types/category";
 
 const categoriesQueryKey = ["categories"];
 

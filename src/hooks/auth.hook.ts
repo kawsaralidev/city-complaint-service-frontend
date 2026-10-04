@@ -9,7 +9,7 @@ import {
   registerUser,
   resetPassword,
   verifyRegisterEmail,
-} from "@/services/auth.service";
+} from "@/api/auth.api";
 
 const currentUserQueryKey = ["current-user"];
 

@@ -1,4 +1,5 @@
-import { Service } from "./service";
+import type { ApiPaginatedData } from "./api";
+import type { Service } from "./service";
 
 export type ServiceRequestStatus =
   | "PENDING"
@@ -34,10 +35,17 @@ export interface ServiceRequest {
 
 export interface ServiceRequestPayment {
   id: string;
+  serviceRequestId?: string;
+  citizenId?: string;
   amount: string;
+  currency: string;
   status: string;
+  stripeSessionId?: string | null;
   stripePaymentId?: string | null;
+  initiatedAt?: string | null;
   paidAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ServiceRequestAssignment {
@@ -64,17 +72,7 @@ export interface ServiceRequestListParams {
   sortOrder?: "asc" | "desc";
 }
 
-export interface ServiceRequestPagination {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-}
-
-export interface ServiceRequestListResponse {
-  data: ServiceRequest[];
-  pagination: ServiceRequestPagination;
-}
+export type ServiceRequestListResponse = ApiPaginatedData<ServiceRequest>;
 
 export interface ReviewServiceRequestData {
   status: "APPROVED" | "REJECTED";

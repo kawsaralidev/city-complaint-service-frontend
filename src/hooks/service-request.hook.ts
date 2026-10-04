@@ -3,6 +3,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  assignServiceRequest,
+  createServiceRequest,
+  deleteServiceRequest,
+  getAllServiceRequests,
+  getAssignedServiceRequests,
+  getMyServiceRequests,
+  getServiceRequestById,
+  reviewServiceRequest,
+  updateServiceRequestStatus,
+} from "@/api/service-request.api";
+
+import type {
   AssignServiceRequestData,
   CreateServiceRequestData,
   ReviewServiceRequestData,
@@ -10,18 +22,18 @@ import {
   UpdateServiceRequestStatusData,
 } from "@/types/service-request";
 
-import { serviceRequestService } from "@/services/service-request.service";
+const serviceRequestsQueryKey = ["service-requests"] as const;
+const serviceRequestQueryKey = ["service-request"] as const;
 
 export const useCreateServiceRequest = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateServiceRequestData) =>
-      serviceRequestService.createServiceRequest(data),
+    mutationFn: (data: CreateServiceRequestData) => createServiceRequest(data),
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["service-requests"],
+        queryKey: serviceRequestsQueryKey,
       });
     },
   });
@@ -29,29 +41,29 @@ export const useCreateServiceRequest = () => {
 
 export const useAllServiceRequests = (params?: ServiceRequestListParams) => {
   return useQuery({
-    queryKey: ["service-request", "all", params],
-    queryFn: () => serviceRequestService.getAllServiceRequests(params),
+    queryKey: [...serviceRequestsQueryKey, "all", params],
+    queryFn: () => getAllServiceRequests(params),
   });
 };
 
 export const useMyServiceRequests = () => {
   return useQuery({
-    queryKey: ["service-request", "my"],
-    queryFn: () => serviceRequestService.getMyServiceRequests(),
+    queryKey: [...serviceRequestsQueryKey, "my"],
+    queryFn: getMyServiceRequests,
   });
 };
 
 export const useAssignedServiceRequests = () => {
   return useQuery({
-    queryKey: ["service-requests", "assigned"],
-    queryFn: () => serviceRequestService.getAssignedServiceRequests(),
+    queryKey: [...serviceRequestsQueryKey, "assigned"],
+    queryFn: getAssignedServiceRequests,
   });
 };
 
 export const useServiceRequestById = (id: string) => {
   return useQuery({
-    queryKey: ["service-requests", id],
-    queryFn: () => serviceRequestService.getServiceRequestById(id),
+    queryKey: [...serviceRequestQueryKey, id],
+    queryFn: () => getServiceRequestById(id),
     enabled: Boolean(id),
   });
 };
@@ -66,11 +78,15 @@ export const useAssignServiceRequest = () => {
     }: {
       id: string;
       data: AssignServiceRequestData;
-    }) => serviceRequestService.assignServiceRequest(id, data),
+    }) => assignServiceRequest(id, data),
 
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["service-requests"],
+        queryKey: serviceRequestsQueryKey,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: [...serviceRequestQueryKey, variables.id],
       });
     },
   });
@@ -86,11 +102,15 @@ export const useReviewServiceRequest = () => {
     }: {
       id: string;
       data: ReviewServiceRequestData;
-    }) => serviceRequestService.reviewServiceRequest(id, data),
+    }) => reviewServiceRequest(id, data),
 
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["service-requests"],
+        queryKey: serviceRequestsQueryKey,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: [...serviceRequestQueryKey, variables.id],
       });
     },
   });
@@ -106,11 +126,15 @@ export const useUpdateServiceRequestStatus = () => {
     }: {
       id: string;
       data: UpdateServiceRequestStatusData;
-    }) => serviceRequestService.updateServiceRequestStatus(id, data),
+    }) => updateServiceRequestStatus(id, data),
 
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["service-requests"],
+        queryKey: serviceRequestsQueryKey,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: [...serviceRequestQueryKey, variables.id],
       });
     },
   });
@@ -120,11 +144,15 @@ export const useDeleteServiceRequest = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => serviceRequestService.deleteServiceRequest(id),
+    mutationFn: deleteServiceRequest,
 
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({
-        queryKey: ["service-requests"],
+        queryKey: serviceRequestsQueryKey,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: [...serviceRequestQueryKey, id],
       });
     },
   });

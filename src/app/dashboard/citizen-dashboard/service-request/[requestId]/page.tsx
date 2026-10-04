@@ -3,293 +3,354 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useServiceRequestById } from "@/hooks/service-request.hook";
-import RoleGuard from "@/app/dashboard/guard/role-guard";
 
-const CitizenServiceRequestDetailsPage = () => {
+import RoleGuard from "../../../guard/role-guard";
+import { useServiceRequestById } from "@/hooks/service-request.hook";
+
+const getStatusStyle = (status: string) => {
+  switch (status) {
+    case "PENDING":
+      return "bg-yellow-100 text-yellow-700";
+
+    case "APPROVED":
+      return "bg-blue-100 text-blue-700";
+
+    case "PAYMENT_PENDING":
+      return "bg-orange-100 text-orange-700";
+
+    case "CONFIRMED":
+      return "bg-cyan-100 text-cyan-700";
+
+    case "ASSIGNED":
+      return "bg-purple-100 text-purple-700";
+
+    case "IN_PROGRESS":
+      return "bg-indigo-100 text-indigo-700";
+
+    case "COMPLETED":
+      return "bg-green-100 text-green-700";
+
+    case "REJECTED":
+      return "bg-red-100 text-red-700";
+
+    case "CANCELED":
+      return "bg-gray-100 text-gray-700";
+
+    default:
+      return "bg-gray-100 text-gray-700";
+  }
+};
+
+const formatStatus = (status: string) => {
+  return status
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+};
+
+const formatDate = (date: string | null | undefined) => {
+  if (!date) {
+    return "Not available";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(date));
+};
+
+const ServiceRequestDetailsPage = () => {
   const params = useParams();
 
   const requestId =
     typeof params.requestId === "string" ? params.requestId : "";
 
   const {
-    data: serviceRequest,
+    data: request,
     isLoading,
     isError,
   } = useServiceRequestById(requestId);
 
-  if (isLoading) {
-    return (
-      <RoleGuard requiredRole="CITIZEN">
-        <div className="space-y-6 p-6">
-          <div className="h-8 w-64 animate-pulse rounded bg-muted" />
-          <div className="h-5 w-96 animate-pulse rounded bg-muted" />
-
-          <div className="space-y-4 rounded-lg border p-6">
-            <div className="h-6 w-48 animate-pulse rounded bg-muted" />
-            <div className="h-5 w-full animate-pulse rounded bg-muted" />
-            <div className="h-5 w-3/4 animate-pulse rounded bg-muted" />
-            <div className="h-5 w-1/2 animate-pulse rounded bg-muted" />
-          </div>
-        </div>
-      </RoleGuard>
-    );
-  }
-
-  if (isError || !serviceRequest) {
-    return (
-      <RoleGuard requiredRole="CITIZEN">
-        <div className="space-y-6 p-6">
-          <Link
-            href="/dashboard/citizen-dashboard/service-request"
-            className="text-sm text-primary hover:underline"
-          >
-            ← Back to My Requests
-          </Link>
-
-          <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-red-600">
-            <h1 className="text-lg font-semibold">Service request not found</h1>
-
-            <p className="mt-2 text-sm">
-              We could not load this service request. Please try again.
-            </p>
-          </div>
-        </div>
-      </RoleGuard>
-    );
-  }
-
-  const getStatusClassName = () => {
-    switch (serviceRequest.status) {
-      case "COMPLETED":
-        return "bg-green-100 text-green-700";
-
-      case "IN_PROGRESS":
-        return "bg-blue-100 text-blue-700";
-
-      case "ASSIGNED":
-        return "bg-purple-100 text-purple-700";
-
-      case "CONFIRMED":
-        return "bg-cyan-100 text-cyan-700";
-
-      case "APPROVED":
-        return "bg-yellow-100 text-yellow-700";
-
-      case "PAYMENT_PENDING":
-        return "bg-orange-100 text-orange-700";
-
-      case "REJECTED":
-      case "CANCELED":
-        return "bg-red-100 text-red-700";
-
-      case "PENDING":
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
-  };
-
-  const formatStatus = (status: string) => {
-    return status
-      .toLowerCase()
-      .split("_")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-  };
-
-  const formatDate = (date: string | null) => {
-    if (!date) {
-      return "Not available";
-    }
-
-    return new Date(date).toLocaleString();
-  };
-
-  const paymentStatus = serviceRequest.payment?.status ?? "NOT PAID";
-
   return (
     <RoleGuard requiredRole="CITIZEN">
       <div className="space-y-6 p-6">
-        {/* Header */}
-        <div>
-          <Link
-            href="/dashboard/citizen-dashboard/service-request"
-            className="text-sm text-primary hover:underline"
-          >
-            ← Back to My Requests
-          </Link>
+        {/* Back */}
+        <Link
+          href="/dashboard/citizen-dashboard/service-request"
+          className="inline-flex items-center rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted"
+        >
+          ← Back to My Requests
+        </Link>
 
-          <div className="mt-4">
-            <h1 className="text-2xl font-bold">Service Request Details</h1>
-
-            <p className="mt-1 text-sm text-muted-foreground">
-              View the complete information about your service request.
+        {/* Loading */}
+        {isLoading && (
+          <div className="rounded-xl border border-border bg-card p-8">
+            <p className="text-sm text-muted-foreground">
+              Loading service request...
             </p>
-          </div>
-        </div>
-
-        {/* Main information */}
-        <div className="rounded-lg border bg-background">
-          <div className="border-b p-6">
-            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-              <div>
-                <h2 className="text-xl font-semibold">
-                  {serviceRequest.service.name}
-                </h2>
-
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Request ID: {serviceRequest.id}
-                </p>
-              </div>
-
-              <span
-                className={`inline-flex w-fit rounded-full px-3 py-1 text-sm font-medium ${getStatusClassName()}`}
-              >
-                {formatStatus(serviceRequest.status)}
-              </span>
-            </div>
-          </div>
-
-          <div className="grid gap-6 p-6 md:grid-cols-2">
-            {/* Service */}
-            <div>
-              <p className="text-sm text-muted-foreground">Service</p>
-
-              <p className="mt-1 font-medium">{serviceRequest.service.name}</p>
-            </div>
-
-            {/* Amount */}
-            <div>
-              <p className="text-sm text-muted-foreground">Amount</p>
-
-              <p className="mt-1 font-medium">৳{serviceRequest.amount}</p>
-            </div>
-
-            {/* Location */}
-            <div>
-              <p className="text-sm text-muted-foreground">Location</p>
-
-              <p className="mt-1 font-medium">{serviceRequest.location}</p>
-            </div>
-
-            {/* Payment */}
-            <div>
-              <p className="text-sm text-muted-foreground">Payment Status</p>
-
-              <p className="mt-1 font-medium">{paymentStatus}</p>
-            </div>
-
-            {/* Created */}
-            <div>
-              <p className="text-sm text-muted-foreground">Submitted</p>
-
-              <p className="mt-1 font-medium">
-                {formatDate(serviceRequest.createdAt)}
-              </p>
-            </div>
-
-            {/* Confirmed */}
-            <div>
-              <p className="text-sm text-muted-foreground">Confirmed</p>
-
-              <p className="mt-1 font-medium">
-                {formatDate(serviceRequest.confirmedAt)}
-              </p>
-            </div>
-
-            {/* Assigned */}
-            <div>
-              <p className="text-sm text-muted-foreground">Assigned</p>
-
-              <p className="mt-1 font-medium">
-                {formatDate(serviceRequest.assignedAt)}
-              </p>
-            </div>
-
-            {/* Completed */}
-            <div>
-              <p className="text-sm text-muted-foreground">Completed</p>
-
-              <p className="mt-1 font-medium">
-                {formatDate(serviceRequest.completedAt)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Service description */}
-        <div className="rounded-lg border p-6">
-          <h2 className="text-lg font-semibold">Service Information</h2>
-
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            {serviceRequest.service.description ||
-              "No service description available."}
-          </p>
-        </div>
-
-        {/* Request description */}
-        <div className="rounded-lg border p-6">
-          <h2 className="text-lg font-semibold">Your Request</h2>
-
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            {serviceRequest.description ||
-              "No additional description provided."}
-          </p>
-        </div>
-
-        {/* Uploaded image */}
-        {serviceRequest.imageUrl && (
-          <div className="rounded-lg border p-6">
-            <h2 className="text-lg font-semibold">Uploaded Image</h2>
-
-            <div className="relative mt-4 h-72 w-full overflow-hidden rounded-lg border">
-              <Image
-                src={serviceRequest.imageUrl}
-                alt="Service request image"
-                fill
-                className="object-contain"
-                unoptimized
-              />
-            </div>
           </div>
         )}
 
-        {/* Payment action */}
-        {serviceRequest.status === "APPROVED" && (
-          <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6">
-            <h2 className="text-lg font-semibold text-yellow-800">
-              Payment Required
+        {/* Error */}
+        {isError && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+            <h2 className="font-semibold text-red-700">
+              Failed to load service request
             </h2>
 
-            <p className="mt-2 text-sm text-yellow-700">
-              Your service request has been approved. Please complete the
-              payment to continue the service process.
-            </p>
-
-            <button
-              type="button"
-              className="mt-4 rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              Pay Now
-            </button>
+            <p className="mt-1 text-sm text-red-600">Please try again later.</p>
           </div>
         )}
 
-        {/* Current status */}
-        <div className="rounded-lg border p-6">
-          <h2 className="text-lg font-semibold">Current Status</h2>
+        {/* Request details */}
+        {!isLoading && !isError && request && (
+          <>
+            {/* Header */}
+            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Service Request
+                  </p>
 
-          <div className="mt-4">
-            <span
-              className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${getStatusClassName()}`}
-            >
-              {formatStatus(serviceRequest.status)}
-            </span>
+                  <h1 className="mt-1 text-2xl font-bold">
+                    {request.service.name}
+                  </h1>
+
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Request ID: {request.id}
+                  </p>
+                </div>
+
+                <span
+                  className={`inline-flex w-fit rounded-full px-3 py-1.5 text-sm font-medium ${getStatusStyle(
+                    request.status,
+                  )}`}
+                >
+                  {formatStatus(request.status)}
+                </span>
+              </div>
+            </div>
+
+            {/* Service Information */}
+            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <h2 className="text-lg font-semibold">Service Information</h2>
+
+              <div className="mt-5 grid gap-5 md:grid-cols-2">
+                <div>
+                  <p className="text-sm text-muted-foreground">Service</p>
+
+                  <p className="mt-1 font-medium">{request.service.name}</p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground">Service Fee</p>
+
+                  <p className="mt-1 font-medium">৳{request.amount}</p>
+                </div>
+
+                <div className="md:col-span-2">
+                  <p className="text-sm text-muted-foreground">
+                    Service Description
+                  </p>
+
+                  <p className="mt-1 leading-6">
+                    {request.service.description ||
+                      "No service description available."}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Request Information */}
+            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <h2 className="text-lg font-semibold">Request Information</h2>
+
+              <div className="mt-5 space-y-5">
+                <div>
+                  <p className="text-sm text-muted-foreground">Location</p>
+
+                  <p className="mt-1 font-medium">{request.location}</p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground">Description</p>
+
+                  <p className="mt-1 leading-6">
+                    {request.description ||
+                      "No additional description provided."}
+                  </p>
+                </div>
+
+                {request.imageUrl && (
+                  <div>
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      Uploaded Image
+                    </p>
+
+                    <div className="relative h-64 w-full max-w-xl overflow-hidden rounded-xl border border-border">
+                      <Image
+                        src={request.imageUrl}
+                        alt={request.service.name}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 576px"
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Payment Information */}
+            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <h2 className="text-lg font-semibold">Payment Information</h2>
+
+              <div className="mt-5 grid gap-5 md:grid-cols-2">
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Payment Status
+                  </p>
+
+                  <p className="mt-1 font-medium">
+                    {request.payment?.status || "Not paid"}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Payment Amount
+                  </p>
+
+                  <p className="mt-1 font-medium">
+                    ৳{request.payment?.amount || request.amount}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground">Currency</p>
+
+                  <p className="mt-1 font-medium">
+                    {request.payment?.currency || "BDT"}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground">Paid At</p>
+
+                  <p className="mt-1 font-medium">
+                    {formatDate(request.payment?.paidAt)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Timeline */}
+            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <h2 className="text-lg font-semibold">Request Timeline</h2>
+
+              <div className="mt-6 space-y-6">
+                <div className="flex gap-4">
+                  <div className="mt-1 h-3 w-3 shrink-0 rounded-full bg-blue-500" />
+
+                  <div>
+                    <p className="font-medium">Request Submitted</p>
+
+                    <p className="text-sm text-muted-foreground">
+                      {formatDate(request.createdAt)}
+                    </p>
+                  </div>
+                </div>
+
+                {request.confirmedAt && (
+                  <div className="flex gap-4">
+                    <div className="mt-1 h-3 w-3 shrink-0 rounded-full bg-cyan-500" />
+
+                    <div>
+                      <p className="font-medium">Payment Confirmed</p>
+
+                      <p className="text-sm text-muted-foreground">
+                        {formatDate(request.confirmedAt)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {request.assignedAt && (
+                  <div className="flex gap-4">
+                    <div className="mt-1 h-3 w-3 shrink-0 rounded-full bg-purple-500" />
+
+                    <div>
+                      <p className="font-medium">Officer Assigned</p>
+
+                      <p className="text-sm text-muted-foreground">
+                        {formatDate(request.assignedAt)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {request.completedAt && (
+                  <div className="flex gap-4">
+                    <div className="mt-1 h-3 w-3 shrink-0 rounded-full bg-green-500" />
+
+                    <div>
+                      <p className="font-medium">Request Completed</p>
+
+                      <p className="text-sm text-muted-foreground">
+                        {formatDate(request.completedAt)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Assignment */}
+            {request.assignment && (
+              <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+                <h2 className="text-lg font-semibold">
+                  Assignment Information
+                </h2>
+
+                <div className="mt-5 grid gap-5 md:grid-cols-2">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Officer ID</p>
+
+                    <p className="mt-1 font-medium">
+                      {request.assignment.officerId}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-muted-foreground">Assigned At</p>
+
+                    <p className="mt-1 font-medium">
+                      {formatDate(request.assignment.assignedAt)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Not found */}
+        {!isLoading && !isError && !request && (
+          <div className="rounded-xl border border-border bg-card p-8 text-center">
+            <h2 className="text-lg font-semibold">Service request not found</h2>
+
+            <p className="mt-1 text-sm text-muted-foreground">
+              The service request may have been removed or does not exist.
+            </p>
           </div>
-        </div>
+        )}
       </div>
     </RoleGuard>
   );
 };
 
-export default CitizenServiceRequestDetailsPage;
+export default ServiceRequestDetailsPage;

@@ -12,7 +12,7 @@ import {
   getMyComplaints,
   updateComplaintAdminStatus,
   updateComplaintStatus,
-} from "@/services/complaint.service";
+} from "@/api/complaint.api";
 
 import type { ComplaintQueryParams } from "@/types/complaint";
 

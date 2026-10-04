@@ -22,3 +22,10 @@ export interface ApiErrorResponse {
   message: string;
   errors: ApiError[];
 }
+
+export interface ApiPaginatedData<T> {
+  data: T[];
+  pagination: ApiMeta;
+}
+
+export type ApiPaginatedResponse<T> = ApiResponse<ApiPaginatedData<T>>;

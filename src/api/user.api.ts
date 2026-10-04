@@ -1,16 +1,13 @@
 import { api } from "@/lib/api";
-import { ApiResponse } from "@/types/api";
-import { User } from "@/types/auth";
-import {
+import type { ApiResponse } from "@/types/api";
+import type { User } from "@/types/auth";
+import type {
   AdminUsersResponse,
+  ChangePasswordInput,
   GetAdminUsersParams,
+  UpdateProfileInput,
   UpdateUserStatusInput,
 } from "@/types/user";
-
-export interface UpdateProfileInput {
-  name: string;
-  image?: File;
-}
 
 // Update logged-in user's profile
 export const updateMyProfile = async (
@@ -83,12 +80,6 @@ export const updateUserStatus = async ({
 };
 
 // Change current user's password
-export interface ChangePasswordInput {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
-
 export const changePassword = async (
   data: ChangePasswordInput,
 ): Promise<ApiResponse<null>> => {

@@ -1,3 +1,5 @@
+import type { ApiPaginatedData } from "./api";
+
 export interface Service {
   id: string;
   name: string;
@@ -17,17 +19,7 @@ export interface ServiceListParams {
   sortOrder?: "asc" | "desc";
 }
 
-export interface ServicePagination {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-}
-
-export interface ServiceListResponse {
-  data: Service[];
-  pagination: ServicePagination;
-}
+export type ServiceListResponse = ApiPaginatedData<Service>;
 
 export interface CreateServiceData {
   name: string;

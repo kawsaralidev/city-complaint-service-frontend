@@ -15,8 +15,8 @@ import RoleGuard from "@/app/dashboard/guard/role-guard";
 import {
   useAdminDashboardAnalytics,
   useAdminDashboardOverview,
-  useCategories,
 } from "@/hooks/dashboard.hook";
+import { useCategories } from "@/hooks/category.hook";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorState } from "@/components/common/error-state";

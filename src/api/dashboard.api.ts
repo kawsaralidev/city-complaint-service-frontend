@@ -3,7 +3,6 @@ import { ApiResponse } from "@/types/api";
 import {
   AdminDashboardAnalytics,
   AdminDashboardOverview,
-  Category,
 } from "@/types/dashboard";
 
 // Get admin dashboard overview
@@ -25,10 +24,3 @@ export const getAdminDashboardAnalytics =
 
     return response.data;
   };
-
-// Get all categories
-export const getCategories = async (): Promise<Category[]> => {
-  const response = await api<ApiResponse<Category[]>>("/categories");
-
-  return response.data;
-};

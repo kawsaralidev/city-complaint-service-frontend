@@ -5,9 +5,9 @@ import {
   getAdminUsers,
   updateMyProfile,
   updateUserStatus,
-} from "@/services/user.service";
+} from "@/api/user.api";
 
-import type { UpdateProfileInput } from "@/services/user.service";
+import type { UpdateProfileInput } from "@/types/user";
 import type { GetAdminUsersParams, UpdateUserStatusInput } from "@/types/user";
 
 const adminUsersQueryKey = ["admin-users"];

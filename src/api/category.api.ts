@@ -1,16 +1,7 @@
 import { api } from "@/lib/api";
-import { ApiResponse } from "@/types/api";
-
+import type { ApiResponse } from "@/types/api";
 import type { Category } from "@/types/dashboard";
-
-export interface CreateCategoryInput {
-  name: string;
-}
-
-export interface UpdateCategoryInput {
-  categoryId: string;
-  name: string;
-}
+import type { CreateCategoryInput, UpdateCategoryInput } from "@/types/category";
 
 // Get all active categories
 export const getCategories = async (): Promise<Category[]> => {

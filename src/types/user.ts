@@ -1,3 +1,5 @@
+import type { ApiPaginatedData } from "./api";
+
 export type UserRole = "CITIZEN" | "OFFICER" | "ADMIN";
 
 export type UserStatus = "ACTIVE" | "BLOCKED" | "DELETED";
@@ -17,17 +19,7 @@ export interface AdminUser {
   updatedAt: string;
 }
 
-export interface UserPagination {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-}
-
-export interface AdminUsersResponse {
-  data: AdminUser[];
-  pagination: UserPagination;
-}
+export type AdminUsersResponse = ApiPaginatedData<AdminUser>;
 
 export interface GetAdminUsersParams {
   page?: number;
@@ -41,4 +33,15 @@ export interface GetAdminUsersParams {
 export interface UpdateUserStatusInput {
   userId: string;
   status: "ACTIVE" | "BLOCKED";
+}
+
+export interface UpdateProfileInput {
+  name: string;
+  image?: File;
+}
+
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 }
