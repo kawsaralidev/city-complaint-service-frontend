@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import {
   useAllServices,
   useCreateService,
@@ -8,21 +11,25 @@ import {
 } from "@/hooks/service.hook";
 
 import type { Service } from "@/types/service";
+import {
+  serviceSchema,
+  type ServiceFormValues,
+} from "@/lib/validations/service.schema";
+
 import RoleGuard from "../../guard/role-guard";
 
 const AdminServicesPage = () => {
+  // Search, filter and pagination states
   const [search, setSearch] = useState("");
   const [minFee, setMinFee] = useState("");
   const [maxFee, setMaxFee] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
 
+  // Currently selected service for editing
   const [selectedService, setSelectedService] = useState<Service | null>(null);
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [baseFee, setBaseFee] = useState("");
-
+  // Service API hooks
   const { data, isLoading, isError } = useAllServices({
     page,
     limit: 10,
@@ -35,35 +42,55 @@ const AdminServicesPage = () => {
   const createServiceMutation = useCreateService();
   const updateServiceMutation = useUpdateService();
 
+  // React Hook Form + Zod
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ServiceFormValues>({
+    resolver: zodResolver(serviceSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      baseFee: "",
+    },
+  });
+
   const services = data?.data ?? [];
   const pagination = data?.pagination;
 
+  // Reset service form
   const resetForm = () => {
     setSelectedService(null);
-    setName("");
-    setDescription("");
-    setBaseFee("");
+
+    reset({
+      name: "",
+      description: "",
+      baseFee: "",
+    });
   };
 
+  // Load selected service into form
   const handleEdit = (service: Service) => {
     setSelectedService(service);
-    setName(service.name);
-    setDescription(service.description ?? "");
-    setBaseFee(service.baseFee);
+
+    reset({
+      name: service.name,
+      description: service.description ?? "",
+      baseFee: service.baseFee,
+    });
   };
 
-  const handleSubmit = () => {
-    if (!name.trim() || !baseFee) {
-      return;
-    }
-
+  // Create or update service
+  const onSubmit = (data: ServiceFormValues) => {
     if (selectedService) {
       updateServiceMutation.mutate({
         id: selectedService.id,
         data: {
-          name: name.trim(),
-          description: description.trim() || undefined,
-          baseFee: Number(baseFee),
+          name: data.name,
+          description: data.description || undefined,
+          baseFee: Number(data.baseFee),
         },
       });
 
@@ -72,14 +99,15 @@ const AdminServicesPage = () => {
     }
 
     createServiceMutation.mutate({
-      name: name.trim(),
-      description: description.trim() || undefined,
-      baseFee: Number(baseFee),
+      name: data.name,
+      description: data.description || undefined,
+      baseFee: Number(data.baseFee),
     });
 
     resetForm();
   };
 
+  // Activate / deactivate service
   const handleToggleStatus = (service: Service) => {
     updateServiceMutation.mutate({
       id: service.id,
@@ -92,6 +120,7 @@ const AdminServicesPage = () => {
   return (
     <RoleGuard requiredRole="ADMIN">
       <div className="space-y-6 p-6">
+        {/* Page Header */}
         <div>
           <h1 className="text-2xl font-bold">Service Management</h1>
 
@@ -101,7 +130,10 @@ const AdminServicesPage = () => {
         </div>
 
         {/* Service Form */}
-        <div className="rounded-lg border bg-white p-6 shadow-sm">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="rounded-lg border bg-white p-6 shadow-sm"
+        >
           <div className="mb-5">
             <h2 className="text-lg font-semibold">
               {selectedService ? "Update Service" : "Create Service"}
@@ -109,6 +141,7 @@ const AdminServicesPage = () => {
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
+            {/* Service Name */}
             <div>
               <label
                 htmlFor="service-name"
@@ -119,13 +152,19 @@ const AdminServicesPage = () => {
 
               <input
                 id="service-name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
+                {...register("name")}
                 placeholder="Enter service name"
                 className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2"
               />
+
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.name.message}
+                </p>
+              )}
             </div>
 
+            {/* Base Fee */}
             <div>
               <label
                 htmlFor="base-fee"
@@ -138,13 +177,19 @@ const AdminServicesPage = () => {
                 id="base-fee"
                 type="number"
                 min="0"
-                value={baseFee}
-                onChange={(event) => setBaseFee(event.target.value)}
+                {...register("baseFee")}
                 placeholder="Enter base fee"
                 className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2"
               />
+
+              {errors.baseFee && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.baseFee.message}
+                </p>
+              )}
             </div>
 
+            {/* Description */}
             <div>
               <label
                 htmlFor="service-description"
@@ -155,18 +200,23 @@ const AdminServicesPage = () => {
 
               <input
                 id="service-description"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
+                {...register("description")}
                 placeholder="Enter description"
                 className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2"
               />
+
+              {errors.description && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.description.message}
+                </p>
+              )}
             </div>
           </div>
 
+          {/* Form Buttons */}
           <div className="mt-4 flex gap-2">
             <button
-              type="button"
-              onClick={handleSubmit}
+              type="submit"
               disabled={
                 createServiceMutation.isPending ||
                 updateServiceMutation.isPending
@@ -191,58 +241,102 @@ const AdminServicesPage = () => {
               </button>
             )}
           </div>
-        </div>
+        </form>
 
         {/* Filters */}
         <div className="rounded-lg border bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-semibold">Filters</h2>
 
           <div className="grid gap-4 md:grid-cols-4">
-            <input
-              value={search}
-              onChange={(event) => {
-                setSearch(event.target.value);
-                setPage(1);
-              }}
-              placeholder="Search service..."
-              className="rounded-md border px-3 py-2 text-sm outline-none"
-            />
+            {/* Search */}
+            <div>
+              <label
+                htmlFor="service-search"
+                className="mb-1 block text-sm font-medium"
+              >
+                Search
+              </label>
 
-            <input
-              type="number"
-              min="0"
-              value={minFee}
-              onChange={(event) => {
-                setMinFee(event.target.value);
-                setPage(1);
-              }}
-              placeholder="Minimum fee"
-              className="rounded-md border px-3 py-2 text-sm outline-none"
-            />
+              <input
+                id="service-search"
+                value={search}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setPage(1);
+                }}
+                placeholder="Search service..."
+                className="w-full rounded-md border px-3 py-2 text-sm outline-none"
+              />
+            </div>
 
-            <input
-              type="number"
-              min="0"
-              value={maxFee}
-              onChange={(event) => {
-                setMaxFee(event.target.value);
-                setPage(1);
-              }}
-              placeholder="Maximum fee"
-              className="rounded-md border px-3 py-2 text-sm outline-none"
-            />
+            {/* Minimum Fee */}
+            <div>
+              <label
+                htmlFor="minimum-fee"
+                className="mb-1 block text-sm font-medium"
+              >
+                Minimum Fee
+              </label>
 
-            <select
-              value={sortOrder}
-              onChange={(event) => {
-                setSortOrder(event.target.value as "asc" | "desc");
-                setPage(1);
-              }}
-              className="rounded-md border px-3 py-2 text-sm outline-none"
-            >
-              <option value="desc">Newest First</option>
-              <option value="asc">Oldest First</option>
-            </select>
+              <input
+                id="minimum-fee"
+                type="number"
+                min="0"
+                value={minFee}
+                onChange={(event) => {
+                  setMinFee(event.target.value);
+                  setPage(1);
+                }}
+                placeholder="Minimum fee"
+                className="w-full rounded-md border px-3 py-2 text-sm outline-none"
+              />
+            </div>
+
+            {/* Maximum Fee */}
+            <div>
+              <label
+                htmlFor="maximum-fee"
+                className="mb-1 block text-sm font-medium"
+              >
+                Maximum Fee
+              </label>
+
+              <input
+                id="maximum-fee"
+                type="number"
+                min="0"
+                value={maxFee}
+                onChange={(event) => {
+                  setMaxFee(event.target.value);
+                  setPage(1);
+                }}
+                placeholder="Maximum fee"
+                className="w-full rounded-md border px-3 py-2 text-sm outline-none"
+              />
+            </div>
+
+            {/* Sort */}
+            <div>
+              <label
+                htmlFor="sort-order"
+                className="mb-1 block text-sm font-medium"
+              >
+                Sort Order
+              </label>
+
+              <select
+                id="sort-order"
+                value={sortOrder}
+                onChange={(event) => {
+                  setSortOrder(event.target.value as "asc" | "desc");
+                  setPage(1);
+                }}
+                className="w-full rounded-md border px-3 py-2 text-sm outline-none"
+              >
+                <option value="desc">Newest First</option>
+                <option value="asc">Oldest First</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -252,24 +346,28 @@ const AdminServicesPage = () => {
             <h2 className="text-lg font-semibold">All Services</h2>
           </div>
 
+          {/* Loading */}
           {isLoading && (
             <div className="p-6 text-sm text-muted-foreground">
               Loading services...
             </div>
           )}
 
+          {/* Error */}
           {isError && (
             <div className="p-6 text-sm text-red-500">
               Failed to load services.
             </div>
           )}
 
+          {/* Empty State */}
           {!isLoading && !isError && services.length === 0 && (
             <div className="p-6 text-center text-sm text-muted-foreground">
               No services found.
             </div>
           )}
 
+          {/* Service Table */}
           {!isLoading && !isError && services.length > 0 && (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[800px]">
@@ -298,8 +396,8 @@ const AdminServicesPage = () => {
                         <span
                           className={
                             service.isActive
-                              ? "rounded-full px-2 py-1 text-xs font-medium bg-green-100 text-green-700"
-                              : "rounded-full px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600"
+                              ? "rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
+                              : "rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
                           }
                         >
                           {service.isActive ? "Active" : "Inactive"}

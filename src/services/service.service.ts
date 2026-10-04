@@ -81,12 +81,13 @@ const getAllServices = async (
 
   const query = searchParams.toString();
 
-  return api<ServiceListResponse>(
-    query ? `/services/all?${query}` : "/services/all",
-    {
-      method: "GET",
-    },
-  );
+  const response = await api<{
+    data: ServiceListResponse;
+  }>(query ? `/services/all?${query}` : "/services/all", {
+    method: "GET",
+  });
+
+  return response.data;
 };
 
 const updateService = async (
