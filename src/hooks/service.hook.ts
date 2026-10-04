@@ -3,27 +3,30 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
-  CreateServiceData,
-  ServiceListParams,
-  UpdateServiceData,
-} from "@/types/service";
-import {
   createService,
   getActiveServices,
   getAllServices,
   updateService,
-} from "@/api";
+} from "@/api/service.api";
+
+import type {
+  CreateServiceData,
+  ServiceListParams,
+  UpdateServiceData,
+} from "@/types/service";
+
+const servicesQueryKey = ["services"] as const;
 
 export const useActiveServices = (params?: ServiceListParams) => {
   return useQuery({
-    queryKey: ["services", "active", params],
+    queryKey: [...servicesQueryKey, "active", params],
     queryFn: () => getActiveServices(params),
   });
 };
 
 export const useAllServices = (params?: ServiceListParams) => {
   return useQuery({
-    queryKey: ["services", "all", params],
+    queryKey: [...servicesQueryKey, "all", params],
     queryFn: () => getAllServices(params),
   });
 };
@@ -36,7 +39,7 @@ export const useCreateService = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["services"],
+        queryKey: servicesQueryKey,
       });
     },
   });
@@ -51,7 +54,7 @@ export const useUpdateService = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["services"],
+        queryKey: servicesQueryKey,
       });
     },
   });

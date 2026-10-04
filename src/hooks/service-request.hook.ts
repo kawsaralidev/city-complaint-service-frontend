@@ -1,6 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryResult,
+} from "@tanstack/react-query";
 
 import {
   assignServiceRequest,
@@ -19,6 +24,7 @@ import type {
   CreateServiceRequestData,
   ReviewServiceRequestData,
   ServiceRequestListParams,
+  ServiceRequestListResponse,
   UpdateServiceRequestStatusData,
 } from "@/types/service-request";
 
@@ -39,8 +45,10 @@ export const useCreateServiceRequest = () => {
   });
 };
 
-export const useAllServiceRequests = (params?: ServiceRequestListParams) => {
-  return useQuery({
+export const useAllServiceRequests = (
+  params?: ServiceRequestListParams,
+): UseQueryResult<ServiceRequestListResponse, Error> => {
+  return useQuery<ServiceRequestListResponse, Error>({
     queryKey: [...serviceRequestsQueryKey, "all", params],
     queryFn: () => getAllServiceRequests(params),
   });

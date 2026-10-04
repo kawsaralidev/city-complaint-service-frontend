@@ -12,6 +12,12 @@ export type ServiceRequestStatus =
   | "REJECTED"
   | "CANCELED";
 
+export interface ServiceRequestCitizen {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export interface ServiceRequest {
   id: string;
   citizenId: string;
@@ -28,6 +34,7 @@ export interface ServiceRequest {
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  citizen?: ServiceRequestCitizen;
   service: Service;
   payment?: ServiceRequestPayment | null;
   assignment?: ServiceRequestAssignment | null;

@@ -163,15 +163,3 @@ export const deleteServiceRequest = async (
 
   return response.data;
 };
-
-// export const serviceRequestService = {
-//   createServiceRequest,
-//   getAllServiceRequests,
-//   getMyServiceRequests,
-//   getAssignedServiceRequests,
-//   getServiceRequestById,
-//   assignServiceRequest,
-//   reviewServiceRequest,
-//   updateServiceRequestStatus,
-//   deleteServiceRequest,
-// };

@@ -118,6 +118,20 @@ const DashboardSidebarMenu = ({
             <BriefcaseBusiness className="h-[18px] w-[18px]" />
             <span>Services</span>
           </Link>
+
+          {/* Service Requests */}
+          <Link
+            href="/dashboard/admin-dashboard/service-requests"
+            onClick={onClose}
+            className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
+              isActive("/dashboard/admin-dashboard/service-requests")
+                ? "bg-secondary/10 font-medium text-secondary"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
+          >
+            <ClipboardList className="h-[18px] w-[18px]" />
+            <span>Service Requests</span>
+          </Link>
         </>
       )}
 
