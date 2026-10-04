@@ -201,10 +201,10 @@ const DashboardSidebarMenu = ({
 
           {/* My Requests */}
           <Link
-            href="/dashboard/citizen-dashboard/service-requests"
+            href="/dashboard/citizen-dashboard/service-request"
             onClick={onClose}
             className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
-              isActive("/dashboard/citizen-dashboard/service-requests")
+              isActive("/dashboard/citizen-dashboard/service-request")
                 ? "bg-secondary/10 font-medium text-secondary"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}

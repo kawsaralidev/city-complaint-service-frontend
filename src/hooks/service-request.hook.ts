@@ -29,14 +29,14 @@ export const useCreateServiceRequest = () => {
 
 export const useAllServiceRequests = (params?: ServiceRequestListParams) => {
   return useQuery({
-    queryKey: ["service-requests", "all", params],
+    queryKey: ["service-request", "all", params],
     queryFn: () => serviceRequestService.getAllServiceRequests(params),
   });
 };
 
 export const useMyServiceRequests = () => {
   return useQuery({
-    queryKey: ["service-requests", "my"],
+    queryKey: ["service-request", "my"],
     queryFn: () => serviceRequestService.getMyServiceRequests(),
   });
 };

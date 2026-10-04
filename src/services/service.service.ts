@@ -45,9 +45,13 @@ const getActiveServices = async (
 
   const query = searchParams.toString();
 
-  return api<ServiceListResponse>(query ? `/services?${query}` : "/services", {
+  const response = await api<{
+    data: ServiceListResponse;
+  }>(query ? `/services?${query}` : "/services", {
     method: "GET",
   });
+
+  return response.data;
 };
 
 const getAllServices = async (

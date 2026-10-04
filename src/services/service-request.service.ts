@@ -25,7 +25,7 @@ const createServiceRequest = async (
     formData.append("image", data.image);
   }
 
-  const response = await api<ServiceRequest>("/service-requests", {
+  const response = await api<ServiceRequest>("/service-request", {
     method: "POST",
     body: formData,
   });
@@ -66,7 +66,7 @@ const getAllServiceRequests = async (
 
   const response = await api<{
     data: ServiceRequestListResponse;
-  }>(query ? `/service-requests?${query}` : "/service-requests", {
+  }>(query ? `/service-request?${query}` : "/service-request", {
     method: "GET",
   });
 
@@ -74,14 +74,13 @@ const getAllServiceRequests = async (
 };
 
 const getMyServiceRequests = async (): Promise<ServiceRequest[]> => {
-  const response = await api<ServiceRequest[]>(
-    "/service-requests/my-service-request",
-    {
-      method: "GET",
-    },
-  );
+  const response = await api<{
+    data: ServiceRequest[];
+  }>("/service-requests/my-service-request", {
+    method: "GET",
+  });
 
-  return response;
+  return response.data;
 };
 
 const getAssignedServiceRequests = async (): Promise<ServiceRequest[]> => {
