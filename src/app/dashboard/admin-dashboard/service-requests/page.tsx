@@ -24,6 +24,7 @@ import {
 import { useActiveServices } from "@/hooks/service.hook";
 
 import type { ServiceRequestStatus } from "@/types/service-request";
+import Link from "next/link";
 
 const PAGE_LIMIT = 10;
 
@@ -379,176 +380,213 @@ const AdminServiceRequestsPage = () => {
         {!isLoading && !isError && serviceRequests.length > 0 && (
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[1100px] text-sm">
-                <thead className="border-b border-border bg-muted/40">
-                  <tr>
-                    <th className="px-5 py-4 text-left font-semibold">
-                      Citizen
-                    </th>
+              {/* Desktop / Tablet Table */}
+              <div className="hidden overflow-hidden rounded-xl border border-border md:block">
+                <div className="w-full overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="border-b border-border bg-muted/40">
+                      <tr>
+                        <th className="px-4 py-4 text-left font-semibold">
+                          Citizen
+                        </th>
 
-                    <th className="px-5 py-4 text-left font-semibold">
-                      Service
-                    </th>
+                        <th className="px-4 py-4 text-left font-semibold">
+                          Service
+                        </th>
 
-                    <th className="px-5 py-4 text-left font-semibold">
-                      Location
-                    </th>
+                        <th className="px-4 py-4 text-left font-semibold">
+                          Location
+                        </th>
 
-                    <th className="px-5 py-4 text-left font-semibold">
-                      Amount
-                    </th>
+                        <th className="px-4 py-4 text-left font-semibold">
+                          Amount
+                        </th>
 
-                    <th className="px-5 py-4 text-left font-semibold">
-                      Status
-                    </th>
+                        <th className="px-4 py-4 text-left font-semibold">
+                          Status
+                        </th>
 
-                    <th className="px-5 py-4 text-left font-semibold">
-                      Created
-                    </th>
+                        <th className="px-4 py-4 text-left font-semibold">
+                          Created
+                        </th>
 
-                    <th className="px-5 py-4 text-left font-semibold">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
+                        <th className="px-4 py-4 text-left font-semibold">
+                          Action
+                        </th>
+                      </tr>
+                    </thead>
 
-                <tbody>
-                  {serviceRequests.map((request) => (
-                    <tr
-                      key={request.id}
-                      className="border-b border-border last:border-0 hover:bg-muted/20"
-                    >
-                      {/* Citizen */}
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary">
-                            <UserRound className="h-4 w-4" />
-                          </div>
+                    <tbody>
+                      {serviceRequests.map((request) => (
+                        <tr
+                          key={request.id}
+                          className="border-b border-border last:border-0 hover:bg-muted/20"
+                        >
+                          {/* Citizen */}
+                          <td className="px-4 py-4">
+                            <div className="flex min-w-0 items-center gap-3">
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary">
+                                <UserRound className="h-4 w-4" />
+                              </div>
 
-                          <div className="min-w-0">
+                              <div className="min-w-0">
+                                <p className="truncate font-medium">
+                                  {request.citizen?.name ?? "Unknown Citizen"}
+                                </p>
+
+                                <p className="max-w-[150px] truncate text-xs text-muted-foreground">
+                                  {request.citizen?.email ?? "—"}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Service */}
+                          <td className="max-w-[220px] px-4 py-4">
                             <p className="truncate font-medium">
-                              {request.citizen?.name ?? "Unknown Citizen"}
+                              {request.service.name}
                             </p>
 
-                            <p className="truncate text-xs text-muted-foreground">
-                              {request.citizen?.email ?? "—"}
+                            <p className="mt-1 truncate text-xs text-muted-foreground">
+                              {request.service.description ?? "No description"}
                             </p>
-                          </div>
+                          </td>
+
+                          {/* Location */}
+                          <td className="max-w-[150px] px-4 py-4">
+                            <p className="truncate">{request.location}</p>
+                          </td>
+
+                          {/* Amount */}
+                          <td className="whitespace-nowrap px-4 py-4 font-semibold">
+                            ৳{request.amount}
+                          </td>
+
+                          {/* Status */}
+                          <td className="px-4 py-4">
+                            <span
+                              className={`inline-flex whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium ${getStatusStyle(
+                                request.status,
+                              )}`}
+                            >
+                              {formatStatus(request.status)}
+                            </span>
+                          </td>
+
+                          {/* Created */}
+                          <td className="whitespace-nowrap px-4 py-4 text-muted-foreground">
+                            {formatDate(request.createdAt)}
+                          </td>
+
+                          {/* Action */}
+                          <td className="px-4 py-4">
+                            <Link
+                              href={`/dashboard/admin-dashboard/service-requests/${request.id}`}
+                              className="inline-flex items-center rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground transition hover:bg-muted"
+                            >
+                              View
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="space-y-4 md:hidden">
+                {serviceRequests.map((request) => (
+                  <div
+                    key={request.id}
+                    className="rounded-xl border border-border bg-card p-4 shadow-sm"
+                  >
+                    {/* Citizen */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary">
+                          <UserRound className="h-4 w-4" />
                         </div>
-                      </td>
 
-                      {/* Service */}
-                      <td className="px-5 py-4">
-                        <p className="font-medium">{request.service.name}</p>
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">
+                            {request.citizen?.name ?? "Unknown Citizen"}
+                          </p>
 
-                        <p className="mt-1 max-w-[220px] truncate text-xs text-muted-foreground">
-                          {request.service.description ?? "No description"}
-                        </p>
-                      </td>
-
-                      {/* Location */}
-                      <td className="px-5 py-4">
-                        <p className="max-w-[180px] truncate">
-                          {request.location}
-                        </p>
-                      </td>
-
-                      {/* Amount */}
-                      <td className="px-5 py-4 font-semibold">
-                        ৳{request.amount}
-                      </td>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {request.citizen?.email ?? "—"}
+                          </p>
+                        </div>
+                      </div>
 
                       {/* Status */}
-                      <td className="px-5 py-4">
-                        <span
-                          className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${getStatusStyle(
-                            request.status,
-                          )}`}
-                        >
-                          {formatStatus(request.status)}
-                        </span>
-                      </td>
+                      <span
+                        className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium ${getStatusStyle(
+                          request.status,
+                        )}`}
+                      >
+                        {formatStatus(request.status)}
+                      </span>
+                    </div>
 
-                      {/* Created */}
-                      <td className="whitespace-nowrap px-5 py-4 text-muted-foreground">
-                        {formatDate(request.createdAt)}
-                      </td>
+                    {/* Service */}
+                    <div className="mt-4">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Service
+                      </p>
 
-                      {/* Action */}
-                      <td className="px-5 py-4">
-                        {/* Pending → Review */}
-                        {request.status === "PENDING" && (
-                          <div className="flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleReview(request.id, "APPROVED")
-                              }
-                              disabled={reviewMutation.isPending}
-                              className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                              Approve
-                            </button>
+                      <p className="mt-1 font-medium">{request.service.name}</p>
 
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleReview(request.id, "REJECTED")
-                              }
-                              disabled={reviewMutation.isPending}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              <XCircle className="h-3.5 w-3.5" />
-                              Reject
-                            </button>
-                          </div>
-                        )}
+                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                        {request.service.description ?? "No description"}
+                      </p>
+                    </div>
 
-                        {/* Confirmed → Assign */}
-                        {request.status === "CONFIRMED" && (
-                          <div className="flex min-w-[260px] flex-col gap-2">
-                            <select
-                              value={selectedOfficer[request.id] ?? ""}
-                              onChange={(event) =>
-                                setSelectedOfficer((current) => ({
-                                  ...current,
-                                  [request.id]: event.target.value,
-                                }))
-                              }
-                              className="h-9 rounded-lg border border-border bg-background px-2 text-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
-                            >
-                              <option value="">Select officer</option>
+                    {/* Details */}
+                    <div className="mt-4 grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">
+                          Location
+                        </p>
 
-                              {officers.map((officer) => (
-                                <option key={officer.id} value={officer.id}>
-                                  {officer.name}
-                                </option>
-                              ))}
-                            </select>
+                        <p className="mt-1 truncate text-sm">
+                          {request.location}
+                        </p>
+                      </div>
 
-                            <button
-                              type="button"
-                              onClick={() => handleAssign(request.id)}
-                              disabled={assignMutation.isPending}
-                              className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              Assign Officer
-                            </button>
-                          </div>
-                        )}
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">
+                          Amount
+                        </p>
 
-                        {/* Other statuses */}
-                        {!["PENDING", "CONFIRMED"].includes(request.status) && (
-                          <span className="text-xs text-muted-foreground">
-                            No admin action required
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        <p className="mt-1 text-sm font-semibold">
+                          ৳{request.amount}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">
+                          Created
+                        </p>
+
+                        <p className="mt-1 text-sm">
+                          {formatDate(request.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Action */}
+                    <div className="mt-4 border-t border-border pt-4">
+                      <Link
+                        href={`/dashboard/admin-dashboard/service-requests/${request.id}`}
+                        className="flex w-full items-center justify-center rounded-lg border border-border bg-background px-3 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
+                      >
+                        View Details
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Pagination */}
