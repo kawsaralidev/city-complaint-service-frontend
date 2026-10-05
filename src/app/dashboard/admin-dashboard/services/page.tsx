@@ -1,8 +1,18 @@
 "use client";
 
 import { useState } from "react";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import {
   useAllServices,
@@ -11,6 +21,7 @@ import {
 } from "@/hooks/service.hook";
 
 import type { Service } from "@/types/service";
+
 import {
   serviceSchema,
   type ServiceFormValues,
@@ -25,6 +36,9 @@ const AdminServicesPage = () => {
   const [maxFee, setMaxFee] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
+
+  // Dialog state
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   // Currently selected service for editing
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -60,7 +74,9 @@ const AdminServicesPage = () => {
   const services = data?.data ?? [];
   const pagination = data?.pagination;
 
-  // Reset service form
+  /**
+   * Reset form and close dialog
+   */
   const resetForm = () => {
     setSelectedService(null);
 
@@ -69,9 +85,28 @@ const AdminServicesPage = () => {
       description: "",
       baseFee: "",
     });
+
+    setIsFormOpen(false);
   };
 
-  // Load selected service into form
+  /**
+   * Open create service dialog
+   */
+  const handleCreate = () => {
+    setSelectedService(null);
+
+    reset({
+      name: "",
+      description: "",
+      baseFee: "",
+    });
+
+    setIsFormOpen(true);
+  };
+
+  /**
+   * Load selected service into form and open dialog
+   */
   const handleEdit = (service: Service) => {
     setSelectedService(service);
 
@@ -80,34 +115,51 @@ const AdminServicesPage = () => {
       description: service.description ?? "",
       baseFee: service.baseFee,
     });
+
+    setIsFormOpen(true);
   };
 
-  // Create or update service
-  const onSubmit = (data: ServiceFormValues) => {
+  /**
+   * Create or update service
+   */
+  const onSubmit = (formData: ServiceFormValues) => {
     if (selectedService) {
-      updateServiceMutation.mutate({
-        id: selectedService.id,
-        data: {
-          name: data.name,
-          description: data.description || undefined,
-          baseFee: Number(data.baseFee),
+      updateServiceMutation.mutate(
+        {
+          id: selectedService.id,
+          data: {
+            name: formData.name,
+            description: formData.description || undefined,
+            baseFee: Number(formData.baseFee),
+          },
         },
-      });
+        {
+          onSuccess: () => {
+            resetForm();
+          },
+        },
+      );
 
-      resetForm();
       return;
     }
 
-    createServiceMutation.mutate({
-      name: data.name,
-      description: data.description || undefined,
-      baseFee: Number(data.baseFee),
-    });
-
-    resetForm();
+    createServiceMutation.mutate(
+      {
+        name: formData.name,
+        description: formData.description || undefined,
+        baseFee: Number(formData.baseFee),
+      },
+      {
+        onSuccess: () => {
+          resetForm();
+        },
+      },
+    );
   };
 
-  // Activate / deactivate service
+  /**
+   * Activate / deactivate service
+   */
   const handleToggleStatus = (service: Service) => {
     updateServiceMutation.mutate({
       id: service.id,
@@ -117,131 +169,154 @@ const AdminServicesPage = () => {
     });
   };
 
+  const isSaving =
+    createServiceMutation.isPending || updateServiceMutation.isPending;
+
   return (
     <RoleGuard requiredRole="ADMIN">
       <div className="space-y-6 p-6">
         {/* Page Header */}
-        <div>
-          <h1 className="text-2xl font-bold">Service Management</h1>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Service Management</h1>
 
-          <p className="text-sm text-muted-foreground">
-            Create and manage city services.
-          </p>
+            <p className="text-sm text-muted-foreground">
+              Create and manage city services.
+            </p>
+          </div>
+
+          {/* Create Service Button */}
+          <button
+            type="button"
+            onClick={handleCreate}
+            className="w-full rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
+          >
+            Create Service
+          </button>
         </div>
 
-        {/* Service Form */}
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="rounded-lg border bg-white p-6 shadow-sm"
+        {/* Create / Update Service Dialog */}
+        <Dialog
+          open={isFormOpen}
+          onOpenChange={(open) => {
+            if (!open && !isSaving) {
+              resetForm();
+            }
+          }}
         >
-          <div className="mb-5">
-            <h2 className="text-lg font-semibold">
-              {selectedService ? "Update Service" : "Create Service"}
-            </h2>
-          </div>
+          <DialogContent className="sm:max-w-[650px]">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedService ? "Update Service" : "Create Service"}
+              </DialogTitle>
 
-          <div className="grid gap-4 md:grid-cols-3">
-            {/* Service Name */}
-            <div>
-              <label
-                htmlFor="service-name"
-                className="mb-1 block text-sm font-medium"
-              >
-                Service Name
-              </label>
+              <DialogDescription>
+                {selectedService
+                  ? "Update the service information below."
+                  : "Fill in the information below to create a new city service."}
+              </DialogDescription>
+            </DialogHeader>
 
-              <input
-                id="service-name"
-                {...register("name")}
-                placeholder="Enter service name"
-                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2"
-              />
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 pt-2">
+              {/* Service Name */}
+              <div>
+                <label
+                  htmlFor="service-name"
+                  className="mb-1.5 block text-sm font-medium"
+                >
+                  Service Name
+                </label>
 
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-500">
-                  {errors.name.message}
-                </p>
-              )}
-            </div>
+                <input
+                  id="service-name"
+                  {...register("name")}
+                  placeholder="Enter service name"
+                  className="w-full rounded-md border bg-background px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-primary"
+                />
 
-            {/* Base Fee */}
-            <div>
-              <label
-                htmlFor="base-fee"
-                className="mb-1 block text-sm font-medium"
-              >
-                Base Fee
-              </label>
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.name.message}
+                  </p>
+                )}
+              </div>
 
-              <input
-                id="base-fee"
-                type="number"
-                min="0"
-                {...register("baseFee")}
-                placeholder="Enter base fee"
-                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2"
-              />
+              {/* Base Fee */}
+              <div>
+                <label
+                  htmlFor="base-fee"
+                  className="mb-1.5 block text-sm font-medium"
+                >
+                  Base Fee
+                </label>
 
-              {errors.baseFee && (
-                <p className="mt-1 text-sm text-red-500">
-                  {errors.baseFee.message}
-                </p>
-              )}
-            </div>
+                <input
+                  id="base-fee"
+                  type="number"
+                  min="0"
+                  {...register("baseFee")}
+                  placeholder="Enter base fee"
+                  className="w-full rounded-md border bg-background px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-primary"
+                />
 
-            {/* Description */}
-            <div>
-              <label
-                htmlFor="service-description"
-                className="mb-1 block text-sm font-medium"
-              >
-                Description
-              </label>
+                {errors.baseFee && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.baseFee.message}
+                  </p>
+                )}
+              </div>
 
-              <input
-                id="service-description"
-                {...register("description")}
-                placeholder="Enter description"
-                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2"
-              />
+              {/* Description */}
+              <div>
+                <label
+                  htmlFor="service-description"
+                  className="mb-1.5 block text-sm font-medium"
+                >
+                  Description
+                </label>
 
-              {errors.description && (
-                <p className="mt-1 text-sm text-red-500">
-                  {errors.description.message}
-                </p>
-              )}
-            </div>
-          </div>
+                <textarea
+                  id="service-description"
+                  {...register("description")}
+                  placeholder="Enter service description"
+                  rows={4}
+                  className="w-full resize-none rounded-md border bg-background px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-primary"
+                />
 
-          {/* Form Buttons */}
-          <div className="mt-4 flex gap-2">
-            <button
-              type="submit"
-              disabled={
-                createServiceMutation.isPending ||
-                updateServiceMutation.isPending
-              }
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
-            >
-              {createServiceMutation.isPending ||
-              updateServiceMutation.isPending
-                ? "Saving..."
-                : selectedService
-                  ? "Update Service"
-                  : "Create Service"}
-            </button>
+                {errors.description && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.description.message}
+                  </p>
+                )}
+              </div>
 
-            {selectedService && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="rounded-md border px-4 py-2 text-sm font-medium"
-              >
-                Cancel
-              </button>
-            )}
-          </div>
-        </form>
+              <DialogFooter className="gap-2">
+                {/* Cancel */}
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  disabled={isSaving}
+                  className="rounded-md border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isSaving
+                    ? "Saving..."
+                    : selectedService
+                      ? "Update Service"
+                      : "Create Service"}
+                </button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {/* Filters */}
         <div className="rounded-lg border bg-white p-6 shadow-sm">
@@ -406,19 +481,21 @@ const AdminServicesPage = () => {
 
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
+                          {/* Edit */}
                           <button
                             type="button"
                             onClick={() => handleEdit(service)}
-                            className="rounded-md border px-3 py-1.5 text-sm"
+                            className="rounded-md border px-3 py-1.5 text-sm transition-colors hover:bg-muted"
                           >
                             Edit
                           </button>
 
+                          {/* Activate / Deactivate */}
                           <button
                             type="button"
                             onClick={() => handleToggleStatus(service)}
                             disabled={updateServiceMutation.isPending}
-                            className="rounded-md border px-3 py-1.5 text-sm"
+                            className="rounded-md border px-3 py-1.5 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             {service.isActive ? "Deactivate" : "Activate"}
                           </button>

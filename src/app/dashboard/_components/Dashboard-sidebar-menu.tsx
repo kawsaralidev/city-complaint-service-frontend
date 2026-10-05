@@ -165,20 +165,6 @@ const DashboardSidebarMenu = ({
             <ClipboardList className="h-[18px] w-[18px]" />
             <span>Service Requests</span>
           </Link>
-
-          {/* Services */}
-          <Link
-            href="/dashboard/officer-dashboard/services"
-            onClick={onClose}
-            className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
-              isActive("/dashboard/officer-dashboard/services")
-                ? "bg-secondary/10 font-medium text-secondary"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            }`}
-          >
-            <BriefcaseBusiness className="h-[18px] w-[18px]" />
-            <span>Services</span>
-          </Link>
         </>
       )}
 
@@ -224,7 +210,7 @@ const DashboardSidebarMenu = ({
             }`}
           >
             <ClipboardList className="h-[18px] w-[18px]" />
-            <span>My Requests</span>
+            <span>Service Requests</span>
           </Link>
 
           {/* Payments */}
