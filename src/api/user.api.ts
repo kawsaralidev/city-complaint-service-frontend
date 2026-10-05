@@ -79,6 +79,18 @@ export const updateUserStatus = async ({
   });
 };
 
+// Update user role
+export const updateUserRole = async (
+  userId: string,
+): Promise<ApiResponse<User>> => {
+  return api<ApiResponse<User>>(`/users/${userId}/role`, {
+    method: "PATCH",
+    body: {
+      role: "OFFICER",
+    },
+  });
+};
+
 // Change current user's password
 export const changePassword = async (
   data: ChangePasswordInput,

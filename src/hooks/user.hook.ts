@@ -4,6 +4,7 @@ import {
   changePassword,
   getAdminUsers,
   updateMyProfile,
+  updateUserRole,
   updateUserStatus,
 } from "@/api/user.api";
 
@@ -47,6 +48,20 @@ export function useUpdateUserStatus() {
     },
   });
 }
+
+export const useUpdateUserRole = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: string) => updateUserRole(userId),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      });
+    },
+  });
+};
 
 // Change current user's password
 export function useChangePassword() {

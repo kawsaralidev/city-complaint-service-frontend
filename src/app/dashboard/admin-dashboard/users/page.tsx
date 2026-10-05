@@ -13,7 +13,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { useAdminUsers, useUpdateUserStatus } from "@/hooks/user.hook";
+import {
+  useAdminUsers,
+  useUpdateUserRole,
+  useUpdateUserStatus,
+} from "@/hooks/user.hook";
+
 import RoleGuard from "../../guard/role-guard";
 
 const AdminUsersPage = () => {
@@ -31,6 +36,7 @@ const AdminUsersPage = () => {
   });
 
   const { mutate: updateUserStatus } = useUpdateUserStatus();
+  const { mutate: updateUserRole } = useUpdateUserRole();
 
   const users = data?.data || [];
   const pagination = data?.pagination;
@@ -68,6 +74,25 @@ const AdminUsersPage = () => {
     );
   };
 
+  // Change user role: CITIZEN -> OFFICER
+  const handleRoleChange = (userId: string, userName: string) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to convert ${userName} from Citizen to Officer?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setUpdatingUserId(userId);
+
+    updateUserRole(userId, {
+      onSettled: () => {
+        setUpdatingUserId(null);
+      },
+    });
+  };
+
   return (
     <RoleGuard requiredRole="ADMIN">
       <div className="w-full p-4 sm:p-6 lg:p-8">
@@ -103,27 +128,27 @@ const AdminUsersPage = () => {
             <Table className="min-w-[950px] table-fixed">
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="w-[30%]  text-[16px] px-5 py-4">
+                  <TableHead className="w-[30%] px-5 py-4 text-[16px]">
                     User
                   </TableHead>
 
-                  <TableHead className="w-[12%] text-[16px] px-5 py-4">
+                  <TableHead className="w-[12%] px-5 py-4 text-[16px]">
                     Role
                   </TableHead>
 
-                  <TableHead className="w-[12%] text-[16px] px-5 py-4">
+                  <TableHead className="w-[12%] px-5 py-4 text-[16px]">
                     Status
                   </TableHead>
 
-                  <TableHead className="w-[18%] text-[16px] px-5 py-4">
+                  <TableHead className="w-[18%] px-5 py-4 text-[16px]">
                     Email Verified
                   </TableHead>
 
-                  <TableHead className="w-[16%] text-[16px] px-5 py-4">
+                  <TableHead className="w-[16%] px-5 py-4 text-[16px]">
                     Joined
                   </TableHead>
 
-                  <TableHead className="w-[12%] text-[16px] px-5 py-4 text-right">
+                  <TableHead className="w-[12%] px-5 py-4 text-right text-[16px]">
                     Action
                   </TableHead>
                 </TableRow>
@@ -238,31 +263,51 @@ const AdminUsersPage = () => {
 
                       {/* Action */}
                       <TableCell className="w-[12%] px-5 py-4 text-right">
-                        {user.status === "ACTIVE" ||
-                        user.status === "BLOCKED" ? (
-                          <button
-                            type="button"
-                            disabled={updatingUserId === user.id}
-                            onClick={() =>
-                              handleStatusChange(user.id, user.status)
-                            }
-                            className={`inline-flex h-8 w-[80px] items-center justify-center rounded-lg text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-                              user.status === "ACTIVE"
-                                ? "border border-destructive/30 text-destructive hover:bg-destructive/10"
-                                : "border border-secondary/30 text-secondary hover:bg-secondary/10"
-                            }`}
-                          >
-                            {updatingUserId === user.id
-                              ? "Updating..."
-                              : user.status === "ACTIVE"
-                                ? "Block"
-                                : "Activate"}
-                          </button>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">
-                            No action
-                          </span>
-                        )}
+                        <div className="flex flex-col items-end gap-2">
+                          {/* Make Officer */}
+                          {user.role === "CITIZEN" &&
+                            user.status !== "DELETED" && (
+                              <button
+                                type="button"
+                                disabled={updatingUserId === user.id}
+                                onClick={() =>
+                                  handleRoleChange(user.id, user.name)
+                                }
+                                className="inline-flex h-8 w-[100px] items-center justify-center rounded-lg border border-primary/30 text-xs font-medium text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                {updatingUserId === user.id
+                                  ? "Updating..."
+                                  : "Make Officer"}
+                              </button>
+                            )}
+
+                          {/* Block / Activate */}
+                          {user.status === "ACTIVE" ||
+                          user.status === "BLOCKED" ? (
+                            <button
+                              type="button"
+                              disabled={updatingUserId === user.id}
+                              onClick={() =>
+                                handleStatusChange(user.id, user.status)
+                              }
+                              className={`inline-flex h-8 w-[80px] items-center justify-center rounded-lg text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                                user.status === "ACTIVE"
+                                  ? "border border-destructive/30 text-destructive hover:bg-destructive/10"
+                                  : "border border-secondary/30 text-secondary hover:bg-secondary/10"
+                              }`}
+                            >
+                              {updatingUserId === user.id
+                                ? "Updating..."
+                                : user.status === "ACTIVE"
+                                  ? "Block"
+                                  : "Activate"}
+                            </button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">
+                              No action
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
