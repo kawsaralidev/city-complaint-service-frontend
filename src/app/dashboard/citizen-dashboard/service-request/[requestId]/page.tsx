@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 
 import RoleGuard from "../../../guard/role-guard";
 import { useServiceRequestById } from "@/hooks/service-request.hook";
+import { useCreatePayment } from "@/hooks/payment.hook";
 
 const getStatusStyle = (status: string) => {
   switch (status) {
@@ -74,6 +75,23 @@ const ServiceRequestDetailsPage = () => {
     isError,
   } = useServiceRequestById(requestId);
 
+  const paymentMutation = useCreatePayment();
+
+  const handlePayment = () => {
+    if (!request) return;
+
+    paymentMutation.mutate(
+      {
+        serviceRequestId: request.id,
+      },
+      {
+        onSuccess: (data) => {
+          window.location.href = data.checkoutUrl;
+        },
+      },
+    );
+  };
+
   return (
     <RoleGuard requiredRole="CITIZEN">
       <div className="space-y-6 p-6">
@@ -124,6 +142,17 @@ const ServiceRequestDetailsPage = () => {
                     Request ID: {request.id}
                   </p>
                 </div>
+
+                {request.status === "APPROVED" && (
+                  <button
+                    type="button"
+                    onClick={handlePayment}
+                    disabled={paymentMutation.isPending}
+                    className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {paymentMutation.isPending ? "Processing..." : "Pay Now"}
+                  </button>
+                )}
 
                 <span
                   className={`inline-flex w-fit rounded-full px-3 py-1.5 text-sm font-medium ${getStatusStyle(
