@@ -1,5 +1,13 @@
 export type PaymentStatus = "PENDING" | "PAID" | "FAILED" | "CANCELED";
 
+export interface PaymentService {
+  name: string;
+}
+
+export interface PaymentServiceRequest {
+  service: PaymentService;
+}
+
 export interface Payment {
   id: string;
   serviceRequestId: string;
@@ -13,6 +21,7 @@ export interface Payment {
   paidAt?: string | null;
   createdAt: string;
   updatedAt: string;
+  serviceRequest: PaymentServiceRequest;
 }
 
 export interface CreatePaymentData {

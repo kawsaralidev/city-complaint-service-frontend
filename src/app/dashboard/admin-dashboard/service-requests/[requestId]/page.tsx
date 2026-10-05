@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useState } from "react";
 import {
   ArrowLeft,
   CalendarDays,
@@ -16,11 +17,13 @@ import {
 import RoleGuard from "../../../guard/role-guard";
 
 import {
+  useAssignServiceRequest,
   useReviewServiceRequest,
   useServiceRequestById,
 } from "@/hooks/service-request.hook";
-
 import type { ServiceRequestStatus } from "@/types/service-request";
+
+import { useActiveOfficers } from "@/hooks/complaint.hook";
 
 const formatStatus = (status: ServiceRequestStatus) => {
   return status
@@ -73,8 +76,12 @@ const formatDate = (date?: string | null) => {
 };
 
 const AdminServiceRequestDetailsPage = () => {
+  const [selectedOfficerId, setSelectedOfficerId] = useState("");
+
   const params = useParams();
+
   const reviewMutation = useReviewServiceRequest();
+  const assignMutation = useAssignServiceRequest();
 
   const requestId =
     typeof params.requestId === "string" ? params.requestId : "";
@@ -84,6 +91,11 @@ const AdminServiceRequestDetailsPage = () => {
     isLoading,
     isError,
   } = useServiceRequestById(requestId);
+
+  const { data: officersData, isLoading: officersLoading } =
+    useActiveOfficers();
+
+  const officers = officersData?.data ?? [];
 
   const handleReview = (status: "APPROVED" | "REJECTED") => {
     if (!request) return;
@@ -95,6 +107,21 @@ const AdminServiceRequestDetailsPage = () => {
       },
     });
   };
+
+  const handleAssignOfficer = () => {
+    if (!request || !selectedOfficerId) return;
+
+    assignMutation.mutate({
+      id: request.id,
+      data: {
+        officerId: selectedOfficerId,
+      },
+    });
+  };
+
+  const assignedOfficer = request?.assignment
+    ? officers.find((officer) => officer.id === request.assignment?.officerId)
+    : undefined;
 
   return (
     <RoleGuard requiredRole="ADMIN">
@@ -158,35 +185,37 @@ const AdminServiceRequestDetailsPage = () => {
                   </h1>
                 </div>
 
-                {request.status === "PENDING" && (
-                  <div className=" flex flex-wrap gap-3  border-border pt-5">
-                    <button
-                      type="button"
-                      onClick={() => handleReview("APPROVED")}
-                      disabled={reviewMutation.isPending}
-                      className="inline-flex items-center justify-center rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {reviewMutation.isPending ? "Processing..." : "Approve"}
-                    </button>
+                <div className="flex flex-wrap items-center gap-3">
+                  {request.status === "PENDING" && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleReview("APPROVED")}
+                        disabled={reviewMutation.isPending}
+                        className="inline-flex items-center justify-center rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {reviewMutation.isPending ? "Processing..." : "Approve"}
+                      </button>
 
-                    <button
-                      type="button"
-                      onClick={() => handleReview("REJECTED")}
-                      disabled={reviewMutation.isPending}
-                      className="inline-flex items-center justify-center rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {reviewMutation.isPending ? "Processing..." : "Reject"}
-                    </button>
-                  </div>
-                )}
+                      <button
+                        type="button"
+                        onClick={() => handleReview("REJECTED")}
+                        disabled={reviewMutation.isPending}
+                        className="inline-flex items-center justify-center rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {reviewMutation.isPending ? "Processing..." : "Reject"}
+                      </button>
+                    </>
+                  )}
 
-                <span
-                  className={`inline-flex w-fit rounded-full border px-3 py-1.5 text-sm font-medium ${getStatusStyle(
-                    request.status,
-                  )}`}
-                >
-                  {formatStatus(request.status)}
-                </span>
+                  <span
+                    className={`inline-flex w-fit rounded-full border px-3 py-1.5 text-sm font-medium ${getStatusStyle(
+                      request.status,
+                    )}`}
+                  >
+                    {formatStatus(request.status)}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -429,6 +458,74 @@ const AdminServiceRequestDetailsPage = () => {
                   )}
                 </section>
 
+                {/* Assign Officer */}
+                {request.status === "CONFIRMED" && !request.assignment && (
+                  <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <UserRound className="h-5 w-5 text-primary" />
+
+                      <h2 className="font-semibold">Assign Officer</h2>
+                    </div>
+
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      Select an active officer to handle this confirmed service
+                      request.
+                    </p>
+
+                    <div className="mt-5">
+                      <label
+                        htmlFor="officer"
+                        className="mb-2 block text-sm font-medium text-foreground"
+                      >
+                        Select Officer
+                      </label>
+
+                      <select
+                        id="officer"
+                        value={selectedOfficerId}
+                        onChange={(event) =>
+                          setSelectedOfficerId(event.target.value)
+                        }
+                        disabled={officersLoading || assignMutation.isPending}
+                        className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <option value="">
+                          {officersLoading
+                            ? "Loading officers..."
+                            : "Select an officer"}
+                        </option>
+
+                        {officers.map((officer) => (
+                          <option key={officer.id} value={officer.id}>
+                            {officer.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {!officersLoading && officers.length === 0 && (
+                      <p className="mt-3 text-sm text-muted-foreground">
+                        No active officers are currently available.
+                      </p>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={handleAssignOfficer}
+                      disabled={
+                        !selectedOfficerId ||
+                        officersLoading ||
+                        assignMutation.isPending
+                      }
+                      className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {assignMutation.isPending
+                        ? "Assigning..."
+                        : "Assign Officer"}
+                    </button>
+                  </section>
+                )}
+
                 {/* Assignment */}
                 <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
                   <div className="flex items-center gap-2">
@@ -444,12 +541,11 @@ const AdminServiceRequestDetailsPage = () => {
                   ) : (
                     <div className="mt-5 space-y-3">
                       <div>
-                        <p className="text-xs text-muted-foreground">
-                          Officer ID
-                        </p>
+                        <p className="text-xs text-muted-foreground">Officer</p>
 
-                        <p className="mt-1 break-all text-sm font-medium">
-                          {request.assignment.officerId}
+                        <p className="mt-1 text-sm font-medium">
+                          {assignedOfficer?.name ??
+                            request.assignment.officerId}
                         </p>
                       </div>
 

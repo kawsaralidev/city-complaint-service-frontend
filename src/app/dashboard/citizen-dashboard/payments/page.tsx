@@ -132,7 +132,7 @@ export default function CitizenPaymentsPage() {
               <thead>
                 <tr className="border-b bg-muted/50">
                   <th className="px-5 py-4 text-left text-sm font-semibold text-foreground">
-                    Payment
+                    Service
                   </th>
 
                   <th className="px-5 py-4 text-left text-sm font-semibold text-foreground">
@@ -172,7 +172,7 @@ export default function CitizenPaymentsPage() {
 
                           <div>
                             <p className="font-medium text-foreground">
-                              Service Payment
+                              {payment.serviceRequest.service.name}
                             </p>
 
                             <p className="text-xs text-muted-foreground">
