@@ -132,6 +132,20 @@ const DashboardSidebarMenu = ({
             <ClipboardList className="h-[18px] w-[18px]" />
             <span>Service Requests</span>
           </Link>
+
+          {/* Payments */}
+          <Link
+            href="/dashboard/admin-dashboard/payments"
+            onClick={onClose}
+            className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
+              isActive("/dashboard/admin-dashboard/payments")
+                ? "bg-secondary/10 font-medium text-secondary"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
+          >
+            <CreditCard className="h-[18px] w-[18px]" />
+            <span>Payments</span>
+          </Link>
         </>
       )}
 

@@ -25,3 +25,9 @@ export const getMyPayments = async (): Promise<Payment[]> => {
 
   return response.data;
 };
+
+export const getAllPayments = async (): Promise<Payment[]> => {
+  const response = await api<ApiResponse<Payment[]>>("/payments");
+
+  return response.data;
+};

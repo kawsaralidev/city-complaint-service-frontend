@@ -2,7 +2,11 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { createPayment, getMyPayments } from "@/api/payment.api";
+import {
+  createPayment,
+  getAllPayments,
+  getMyPayments,
+} from "@/api/payment.api";
 
 import type { CreatePaymentData } from "@/types/payment";
 
@@ -34,5 +38,12 @@ export const useMyPayments = () => {
   return useQuery({
     queryKey: [...paymentsQueryKey, "my"],
     queryFn: getMyPayments,
+  });
+};
+
+export const useAllPayments = () => {
+  return useQuery({
+    queryKey: [...paymentsQueryKey, "all"],
+    queryFn: getAllPayments,
   });
 };
