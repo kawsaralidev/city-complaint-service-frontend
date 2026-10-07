@@ -35,7 +35,7 @@ const ServiceDetailsPage = () => {
       return;
     }
 
-    const requestUrl = `/dashboard/citizen-dashboard/services/${serviceId}/request`;
+    const requestUrl = `/services/${serviceId}/request`;
 
     // User is not logged in
     if (!user) {
