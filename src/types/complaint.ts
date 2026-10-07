@@ -1,3 +1,5 @@
+import { ApiPaginatedData } from "./api";
+
 export type ComplaintStatus =
   | "PENDING"
   | "APPROVED"
@@ -14,6 +16,20 @@ export interface ComplaintQueryParams {
   status?: ComplaintStatus;
   categoryId?: string;
   sortOrder?: "asc" | "desc";
+}
+
+export interface ComplaintListParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: ComplaintStatus;
+  categoryId?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+export interface ComplaintListResponse {
+  data: Complaint[];
+  meta: ComplaintPagination;
 }
 
 export interface ComplaintPagination {

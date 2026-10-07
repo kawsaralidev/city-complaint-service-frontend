@@ -1,9 +1,12 @@
 import { api } from "@/lib/api";
-import { ApiResponse } from "@/types/api";
+import { ApiPaginatedData, ApiResponse } from "@/types/api";
 import type {
   Complaint,
+  ComplaintListParams,
+  ComplaintListResponse,
   ComplaintQueryParams,
   ComplaintStatus,
+  GetComplaintsResponse,
 } from "@/types/complaint";
 
 // Get all complaints
@@ -41,6 +44,25 @@ export const getComplaints = async (
   return api<ApiResponse<Complaint[]>>(
     `/complaints${queryString ? `?${queryString}` : ""}`,
   );
+};
+
+export const getPublicComplaints = async (
+  params?: ComplaintQueryParams,
+): Promise<GetComplaintsResponse> => {
+  const response = await api<ApiResponse<Complaint[]>>("/complaints/public", {
+    method: "GET",
+    query: params,
+  });
+
+  return {
+    complaints: response.data,
+    pagination: {
+      page: response.meta?.page ?? 1,
+      limit: response.meta?.limit ?? 10,
+      total: response.meta?.total ?? 0,
+      totalPages: response.meta?.totalPages ?? 1,
+    },
+  };
 };
 
 // Get current citizen's complaints

@@ -10,11 +10,15 @@ import {
   getComplaintById,
   getComplaints,
   getMyComplaints,
+  getPublicComplaints,
   updateComplaintAdminStatus,
   updateComplaintStatus,
 } from "@/api/complaint.api";
 
-import type { ComplaintQueryParams } from "@/types/complaint";
+import type {
+  ComplaintListParams,
+  ComplaintQueryParams,
+} from "@/types/complaint";
 
 const complaintsQueryKey = ["complaints"];
 const myComplaintsQueryKey = ["my-complaints"];
@@ -28,6 +32,13 @@ export function useComplaints(params?: ComplaintQueryParams) {
     queryFn: () => getComplaints(params),
   });
 }
+
+export const usePublicComplaints = (params?: ComplaintListParams) => {
+  return useQuery({
+    queryKey: ["complaints", "public", params],
+    queryFn: () => getPublicComplaints(params),
+  });
+};
 
 // Get current citizen's complaints
 export function useMyComplaints() {
