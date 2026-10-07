@@ -1,3 +1,4 @@
+import CityCareCTA from "@/components/home/city-care-cta";
 import HeroSection from "@/components/home/hero-section";
 import HowItWorksSection from "@/components/home/how-it-works";
 import PopularServicesSection from "@/components/home/popular-services";
@@ -10,6 +11,7 @@ export default function HomePage() {
       <HowItWorksSection />
       <PopularServicesSection />
       <WhyChooseCityCare />
+      <CityCareCTA />
     </main>
   );
 }
