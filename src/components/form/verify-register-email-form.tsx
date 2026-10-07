@@ -41,15 +41,21 @@ export function VerifyRegisterEmailForm() {
         otp,
       });
 
+      const redirect = sessionStorage.getItem("registrationRedirect");
+
       sessionStorage.removeItem("registrationEmail");
+      sessionStorage.removeItem("registrationRedirect");
 
       toast.add({
         title: "Registration successful.",
         type: "success",
       });
 
-      // Go to home after successful verification
-      router.push("/");
+      if (redirect && redirect.startsWith("/") && !redirect.startsWith("//")) {
+        router.push(redirect);
+      } else {
+        router.push("/");
+      }
     } catch (error) {
       toast.add({
         title:

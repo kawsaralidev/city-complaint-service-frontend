@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+
 import {
-  ArrowLeft,
   ArrowRight,
   CheckCircle2,
   Clock3,
@@ -12,15 +13,45 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { useCurrentUser } from "@/hooks/auth.hook";
 import { useServiceById } from "@/hooks/service.hook";
 
 const ServiceDetailsPage = () => {
   const params = useParams();
+  const router = useRouter();
+
   const id = params.id;
 
   const serviceId = Array.isArray(id) ? id[0] : id;
 
   const { data: service, isLoading, isError } = useServiceById(serviceId ?? "");
+
+  const { data: userResponse, isLoading: isUserLoading } = useCurrentUser();
+
+  const user = userResponse?.data;
+
+  const handleRequestService = () => {
+    if (!serviceId || isUserLoading) {
+      return;
+    }
+
+    const requestUrl = `/dashboard/citizen-dashboard/services/${serviceId}/request`;
+
+    // User is not logged in
+    if (!user) {
+      router.push(`/login?redirect=${encodeURIComponent(requestUrl)}`);
+
+      return;
+    }
+
+    // Only citizens can request a service
+    if (user.role !== "CITIZEN") {
+      return;
+    }
+
+    // Logged-in citizen goes directly to request form
+    router.push(requestUrl);
+  };
 
   if (isLoading) {
     return (
@@ -28,8 +59,11 @@ const ServiceDetailsPage = () => {
         <div className="mx-auto max-w-6xl px-4 py-16">
           <div className="animate-pulse space-y-6">
             <div className="h-6 w-32 rounded bg-slate-200" />
+
             <div className="h-[420px] rounded-3xl bg-slate-200" />
+
             <div className="h-10 w-2/3 rounded bg-slate-200" />
+
             <div className="h-20 rounded bg-slate-200" />
           </div>
         </div>
@@ -53,6 +87,14 @@ const ServiceDetailsPage = () => {
             We could not find the service you are looking for. Please go back
             and choose another service.
           </p>
+
+          <Link
+            href="/services"
+            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+          >
+            Back to Services
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       </main>
     );
@@ -67,13 +109,18 @@ const ServiceDetailsPage = () => {
         <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-8 sm:px-6 lg:px-8">
           {/* Breadcrumb */}
           <div className="mb-8 flex items-center gap-2 text-sm text-slate-500">
-            <a href="/" className="transition hover:text-emerald-600">
+            <Link href="/" className="transition hover:text-emerald-600">
               Home
-            </a>
+            </Link>
 
             <ArrowRight className="h-4 w-4" />
 
-            <span className="text-slate-900">Services</span>
+            <Link
+              href="/services"
+              className="transition hover:text-emerald-600"
+            >
+              Services
+            </Link>
 
             <ArrowRight className="h-4 w-4" />
 
@@ -162,10 +209,17 @@ const ServiceDetailsPage = () => {
                 {/* CTA */}
                 <button
                   type="button"
-                  className="group flex w-full items-center justify-center gap-3 rounded-xl bg-emerald-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-xl sm:text-base"
+                  onClick={handleRequestService}
+                  disabled={isUserLoading}
+                  className="group flex w-full items-center justify-center gap-3 rounded-xl bg-emerald-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60 sm:text-base"
                 >
-                  Request This Service
-                  <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+                  {isUserLoading
+                    ? "Checking account..."
+                    : "Request This Service"}
+
+                  {!isUserLoading && (
+                    <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+                  )}
                 </button>
 
                 <p className="mt-3 text-center text-xs text-slate-400">
@@ -190,7 +244,7 @@ const ServiceDetailsPage = () => {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Card 1 */}
+          {/* Easy & Fast */}
           <div className="group rounded-2xl border border-slate-200 bg-white p-6 transition duration-200 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg">
             <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 transition group-hover:bg-emerald-600 group-hover:text-white">
               <Clock3 className="h-5 w-5" />
@@ -203,7 +257,7 @@ const ServiceDetailsPage = () => {
             </p>
           </div>
 
-          {/* Card 2 */}
+          {/* Secure Process */}
           <div className="group rounded-2xl border border-slate-200 bg-white p-6 transition duration-200 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg">
             <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition group-hover:bg-blue-600 group-hover:text-white">
               <ShieldCheck className="h-5 w-5" />
@@ -217,7 +271,7 @@ const ServiceDetailsPage = () => {
             </p>
           </div>
 
-          {/* Card 3 */}
+          {/* City-wide Support */}
           <div className="group rounded-2xl border border-slate-200 bg-white p-6 transition duration-200 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg">
             <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-purple-50 text-purple-600 transition group-hover:bg-purple-600 group-hover:text-white">
               <MapPin className="h-5 w-5" />
@@ -251,10 +305,15 @@ const ServiceDetailsPage = () => {
 
           <button
             type="button"
-            className="group flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600 sm:w-auto"
+            onClick={handleRequestService}
+            disabled={isUserLoading}
+            className="group flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
-            Get Started
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            {isUserLoading ? "Checking account..." : "Get Started"}
+
+            {!isUserLoading && (
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            )}
           </button>
         </div>
       </section>

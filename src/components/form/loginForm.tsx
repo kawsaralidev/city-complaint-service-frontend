@@ -4,12 +4,11 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth.schema";
 
 import { useDemoLogin, useLogin } from "@/hooks/auth.hook";
-
-import { useRouter } from "next/navigation";
 
 import GoogleAuthButton from "@/app/(public)/(authentication)/google-auth/google-auth-button";
 
@@ -18,6 +17,7 @@ import { toast } from "@/components/ui/toast";
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -28,14 +28,31 @@ export function LoginForm() {
 
   const [showPassword, setShowPassword] = useState(false);
 
+  const getRedirectUrl = () => {
+    const redirect = searchParams.get("redirect");
+
+    if (redirect && redirect.startsWith("/") && !redirect.startsWith("//")) {
+      return redirect;
+    }
+
+    return "/";
+  };
+
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await loginMutation.mutateAsync(data);
+      const response = await loginMutation.mutateAsync(data);
 
       toast.add({
         title: "Login successful.",
         type: "success",
       });
+
+      const user = response.data.user;
+
+      if (user.role === "CITIZEN") {
+        router.push(getRedirectUrl());
+        return;
+      }
 
       router.push("/");
     } catch (error) {
@@ -53,11 +70,20 @@ export function LoginForm() {
 
   const handleDemoLogin = async (role: "CITIZEN" | "OFFICER" | "ADMIN") => {
     try {
-      await demoLoginMutation.mutateAsync(role);
+      const response = await demoLoginMutation.mutateAsync(role);
+
       toast.add({
         title: `${role} demo login successful.`,
         type: "success",
       });
+
+      const user = response.data.user;
+
+      if (user.role === "CITIZEN") {
+        router.push(getRedirectUrl());
+        return;
+      }
+
       router.push("/");
     } catch (error) {
       toast.add({
@@ -69,6 +95,12 @@ export function LoginForm() {
       });
     }
   };
+
+  const redirectParam = searchParams.get("redirect");
+
+  const registerUrl = redirectParam
+    ? `/register?redirect=${encodeURIComponent(redirectParam)}`
+    : "/register";
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -172,8 +204,8 @@ export function LoginForm() {
           <p className="my-5 text-center text-sm text-muted-foreground">
             Don't have an account?
             <a
-              href="/register"
-              className="font-semibold text-secondary hover:underline"
+              href={registerUrl}
+              className="ml-1 font-semibold text-secondary hover:underline"
             >
               Create an account
             </a>
@@ -183,6 +215,7 @@ export function LoginForm() {
 
           <GoogleAuthButton />
 
+          {/* Demo Login */}
           <div className="mt-6 space-y-3">
             <p className="text-center text-sm font-medium text-muted-foreground">
               Demo Login
@@ -192,7 +225,8 @@ export function LoginForm() {
               <button
                 type="button"
                 onClick={() => handleDemoLogin("CITIZEN")}
-                className="rounded-lg border border-secondary bg-background px-3 py-2 text-sm font-medium text-secondary transition-all hover:bg-secondary hover:text-secondary-foreground hover:shadow-lg hover:shadow-secondary/25"
+                disabled={demoLoginMutation.isPending}
+                className="rounded-lg border border-secondary bg-background px-3 py-2 text-sm font-medium text-secondary transition-all hover:bg-secondary hover:text-secondary-foreground hover:shadow-lg hover:shadow-secondary/25 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Citizen
               </button>
@@ -200,7 +234,8 @@ export function LoginForm() {
               <button
                 type="button"
                 onClick={() => handleDemoLogin("OFFICER")}
-                className="rounded-lg border border-secondary bg-background px-3 py-2 text-sm font-medium text-secondary transition-all hover:bg-secondary hover:text-secondary-foreground hover:shadow-lg hover:shadow-secondary/25"
+                disabled={demoLoginMutation.isPending}
+                className="rounded-lg border border-secondary bg-background px-3 py-2 text-sm font-medium text-secondary transition-all hover:bg-secondary hover:text-secondary-foreground hover:shadow-lg hover:shadow-secondary/25 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Officer
               </button>
@@ -208,7 +243,8 @@ export function LoginForm() {
               <button
                 type="button"
                 onClick={() => handleDemoLogin("ADMIN")}
-                className="rounded-lg border border-secondary bg-background px-3 py-2 text-sm font-medium text-secondary transition-all hover:bg-secondary hover:text-secondary-foreground hover:shadow-lg hover:shadow-secondary/25"
+                disabled={demoLoginMutation.isPending}
+                className="rounded-lg border border-secondary bg-background px-3 py-2 text-sm font-medium text-secondary transition-all hover:bg-secondary hover:text-secondary-foreground hover:shadow-lg hover:shadow-secondary/25 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Admin
               </button>

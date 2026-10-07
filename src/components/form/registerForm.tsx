@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +21,7 @@ import { toast } from "@/components/ui/toast";
 
 export function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const registerMutation = useRegister();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -49,6 +50,14 @@ export function RegisterForm() {
 
       // Save email for OTP verification
       sessionStorage.setItem("registrationEmail", response.data.email);
+
+      const redirect = searchParams.get("redirect");
+
+      if (redirect && redirect.startsWith("/") && !redirect.startsWith("//")) {
+        sessionStorage.setItem("registrationRedirect", redirect);
+      } else {
+        sessionStorage.removeItem("registrationRedirect");
+      }
 
       router.push("/verify-register-email");
     } catch (error) {
@@ -195,7 +204,13 @@ export function RegisterForm() {
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?
         <Link
-          href="/login"
+          href={
+            searchParams.get("redirect")
+              ? `/login?redirect=${encodeURIComponent(
+                  searchParams.get("redirect")!,
+                )}`
+              : "/login"
+          }
           className="font-semibold text-secondary hover:underline"
         >
           Login
