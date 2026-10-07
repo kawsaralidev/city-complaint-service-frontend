@@ -26,8 +26,8 @@ import { useCategories } from "@/hooks/category.hook";
 import { useComplaints, useDeleteComplaint } from "@/hooks/complaint.hook";
 
 import type { Complaint, ComplaintStatus } from "@/types/complaint";
-import { EmptyState } from "@/components/common/empty-state";
-import { ErrorState } from "@/components/common/error-state";
+import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Category } from "@/types/dashboard";
 import RoleGuard from "../../guard/role-guard";
 

@@ -18,8 +18,8 @@ import {
 } from "@/hooks/dashboard.hook";
 import { useCategories } from "@/hooks/category.hook";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/common/empty-state";
-import { ErrorState } from "@/components/common/error-state";
+import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 
 const AdminDashboardSkeleton = () => {
   return (
