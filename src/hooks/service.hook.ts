@@ -6,6 +6,7 @@ import {
   createService,
   getActiveServices,
   getAllServices,
+  getServiceById,
   updateService,
 } from "@/api/service.api";
 
@@ -30,6 +31,13 @@ export const useAllServices = (params?: ServiceListParams) => {
     queryFn: () => getAllServices(params),
   });
 };
+
+export const useServiceById = (id: string) =>
+  useQuery({
+    queryKey: [...servicesQueryKey, "details", id],
+    queryFn: () => getServiceById(id),
+    enabled: Boolean(id),
+  });
 
 export const useCreateService = () => {
   const queryClient = useQueryClient();

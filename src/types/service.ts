@@ -5,6 +5,8 @@ export interface Service {
   name: string;
   description: string | null;
   baseFee: string;
+  imageUrl: string | null;
+  imagePublicId: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -25,6 +27,7 @@ export interface CreateServiceData {
   name: string;
   description?: string;
   baseFee: number;
+  image?: File;
 }
 
 export interface UpdateServiceData {
@@ -32,4 +35,5 @@ export interface UpdateServiceData {
   description?: string;
   baseFee?: number;
   isActive?: boolean;
+  image?: File;
 }

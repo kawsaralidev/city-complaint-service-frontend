@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -28,6 +27,7 @@ import {
 } from "@/lib/validations/service.schema";
 
 import RoleGuard from "../../guard/role-guard";
+import { toast } from "@/components/ui/toast";
 
 const AdminServicesPage = () => {
   // Search, filter and pagination states
@@ -40,8 +40,17 @@ const AdminServicesPage = () => {
   // Dialog state
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  // Currently selected service for editing
+  // Selected service for editing
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+
+  // Selected image file
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+
+  // Image preview
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  // File input reference
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
 
   // Service API hooks
   const { data, isLoading, isError } = useAllServices({
@@ -79,6 +88,12 @@ const AdminServicesPage = () => {
    */
   const resetForm = () => {
     setSelectedService(null);
+    setSelectedImage(null);
+    setImagePreview(null);
+
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
+    }
 
     reset({
       name: "",
@@ -94,6 +109,12 @@ const AdminServicesPage = () => {
    */
   const handleCreate = () => {
     setSelectedService(null);
+    setSelectedImage(null);
+    setImagePreview(null);
+
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
+    }
 
     reset({
       name: "",
@@ -105,11 +126,23 @@ const AdminServicesPage = () => {
   };
 
   /**
-   * Load selected service into form and open dialog
+   * Open edit dialog and load service data
    */
   const handleEdit = (service: Service) => {
     setSelectedService(service);
 
+    // No new image selected yet
+    setSelectedImage(null);
+
+    // Show existing Cloudinary image
+    setImagePreview(service.imageUrl ?? null);
+
+    // Clear file input
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
+    }
+
+    // Load existing service information
     reset({
       name: service.name,
       description: service.description ?? "",
@@ -120,9 +153,30 @@ const AdminServicesPage = () => {
   };
 
   /**
+   * Handle image selection
+   */
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    // Store selected image
+    setSelectedImage(file);
+
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
+  };
+
+  /**
    * Create or update service
    */
   const onSubmit = (formData: ServiceFormValues) => {
+    // =========================
+    // UPDATE SERVICE
+    // =========================
     if (selectedService) {
       updateServiceMutation.mutate(
         {
@@ -131,11 +185,29 @@ const AdminServicesPage = () => {
             name: formData.name,
             description: formData.description || undefined,
             baseFee: Number(formData.baseFee),
+
+            // Send selected image during update
+            image: selectedImage ?? undefined,
           },
         },
         {
           onSuccess: () => {
+            toast.add({
+              title: "Service updated successfully.",
+              type: "success",
+            });
+
             resetForm();
+          },
+
+          onError: (error) => {
+            toast.add({
+              title:
+                error instanceof Error
+                  ? error.message
+                  : "Failed to update service. Please try again.",
+              type: "error",
+            });
           },
         },
       );
@@ -143,15 +215,36 @@ const AdminServicesPage = () => {
       return;
     }
 
+    // =========================
+    // CREATE SERVICE
+    // =========================
     createServiceMutation.mutate(
       {
         name: formData.name,
         description: formData.description || undefined,
         baseFee: Number(formData.baseFee),
+
+        // Send selected image during create
+        image: selectedImage ?? undefined,
       },
       {
         onSuccess: () => {
+          toast.add({
+            title: "Service created successfully.",
+            type: "success",
+          });
+
           resetForm();
+        },
+
+        onError: (error) => {
+          toast.add({
+            title:
+              error instanceof Error
+                ? error.message
+                : "Failed to create service. Please try again.",
+            type: "error",
+          });
         },
       },
     );
@@ -161,12 +254,34 @@ const AdminServicesPage = () => {
    * Activate / deactivate service
    */
   const handleToggleStatus = (service: Service) => {
-    updateServiceMutation.mutate({
-      id: service.id,
-      data: {
-        isActive: !service.isActive,
+    updateServiceMutation.mutate(
+      {
+        id: service.id,
+        data: {
+          isActive: !service.isActive,
+        },
       },
-    });
+      {
+        onSuccess: () => {
+          toast.add({
+            title: service.isActive
+              ? "Service deactivated successfully."
+              : "Service activated successfully.",
+            type: "success",
+          });
+        },
+
+        onError: (error) => {
+          toast.add({
+            title:
+              error instanceof Error
+                ? error.message
+                : "Failed to update service status.",
+            type: "error",
+          });
+        },
+      },
+    );
   };
 
   const isSaving =
@@ -204,7 +319,7 @@ const AdminServicesPage = () => {
             }
           }}
         >
-          <DialogContent className="sm:max-w-[650px]">
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[650px]">
             <DialogHeader>
               <DialogTitle>
                 {selectedService ? "Update Service" : "Create Service"}
@@ -290,7 +405,43 @@ const AdminServicesPage = () => {
                 )}
               </div>
 
-              <DialogFooter className="gap-2">
+              {/* Service Image */}
+              <div>
+                <label
+                  htmlFor="service-image"
+                  className="mb-1.5 block text-sm font-medium"
+                >
+                  Service Image
+                </label>
+
+                <input
+                  ref={imageInputRef}
+                  id="service-image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full rounded-md border bg-background px-3 py-2.5 text-sm"
+                />
+
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Upload an image for this service. JPG, PNG or WebP
+                  recommended.
+                </p>
+
+                {/* Image Preview */}
+                {imagePreview && (
+                  <div className="mt-3 overflow-hidden rounded-lg border">
+                    <img
+                      src={imagePreview}
+                      alt="Service preview"
+                      className="h-32 w-full object-cover sm:h-36"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Form Buttons */}
+              <DialogFooter className=" bottom-0 z-10 gap-2 border-t bg-background pt-4">
                 {/* Cancel */}
                 <button
                   type="button"
@@ -485,7 +636,8 @@ const AdminServicesPage = () => {
                           <button
                             type="button"
                             onClick={() => handleEdit(service)}
-                            className="rounded-md border px-3 py-1.5 text-sm transition-colors hover:bg-muted"
+                            disabled={isSaving}
+                            className="rounded-md border px-3 py-1.5 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             Edit
                           </button>
