@@ -27,6 +27,23 @@ export interface ComplaintListParams {
   sortOrder?: "asc" | "desc";
 }
 
+export interface PublicComplaint {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  status: ComplaintStatus;
+  imageUrl?: string | null;
+  createdAt: string;
+  updatedAt: string;
+
+  category: {
+    id: string;
+    name: string;
+    type: "COMPLAINT" | "SERVICE";
+  };
+}
+
 export interface ComplaintListResponse {
   data: Complaint[];
   meta: ComplaintPagination;

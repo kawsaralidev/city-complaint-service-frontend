@@ -1,12 +1,11 @@
 import { api } from "@/lib/api";
-import { ApiPaginatedData, ApiResponse } from "@/types/api";
+import { ApiResponse } from "@/types/api";
 import type {
   Complaint,
-  ComplaintListParams,
-  ComplaintListResponse,
   ComplaintQueryParams,
   ComplaintStatus,
   GetComplaintsResponse,
+  PublicComplaint,
 } from "@/types/complaint";
 
 // Get all complaints
@@ -73,8 +72,8 @@ export const getMyComplaints = async (): Promise<ApiResponse<Complaint[]>> => {
 // Get single complaint by ID
 export const getComplaintById = async (
   complaintId: string,
-): Promise<ApiResponse<Complaint>> => {
-  return api<ApiResponse<Complaint>>(`/complaints/${complaintId}`);
+): Promise<ApiResponse<PublicComplaint>> => {
+  return api<ApiResponse<PublicComplaint>>(`/complaints/${complaintId}`);
 };
 
 // Create complaint
