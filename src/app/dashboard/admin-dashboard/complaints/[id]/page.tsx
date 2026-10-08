@@ -484,10 +484,12 @@ const ComplaintDetailsPage = () => {
                     <UserRound className="h-4 w-4" />
 
                     {complaint.assignment.officer?.imageUrl && (
-                      <img
+                      <Image
                         src={complaint.assignment.officer.imageUrl}
                         alt={complaint.assignment.officer.name}
-                        className="absolute inset-0 h-full w-full object-cover"
+                        fill
+                        sizes="40px"
+                        className="object-cover"
                         onError={(event) => {
                           event.currentTarget.style.display = "none";
                         }}

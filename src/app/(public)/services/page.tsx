@@ -5,15 +5,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  ArrowLeft,
   ArrowRight,
   ArrowUpRight,
   BadgeCheck,
-  CheckCircle2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Clock3,
   Search,
   ShieldCheck,
   Sparkles,

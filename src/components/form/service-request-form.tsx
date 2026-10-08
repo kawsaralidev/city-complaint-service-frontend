@@ -372,10 +372,12 @@ const ServiceRequestForm = ({ serviceId }: ServiceRequestFormProps) => {
                     {/* Image */}
                     {service.imageUrl ? (
                       <div className="relative h-56 sm:h-72">
-                        <img
+                        <Image
                           src={service.imageUrl}
                           alt={service.name}
-                          className="h-full w-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="48px"
                         />
 
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />

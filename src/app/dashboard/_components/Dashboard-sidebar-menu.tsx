@@ -33,6 +33,15 @@ const DashboardSidebarMenu = ({
   // Check active navigation item
   const isActive = (path: string) => pathname === path;
 
+  const dashboardPath =
+    role === "ADMIN"
+      ? "/dashboard/admin-dashboard"
+      : role === "OFFICER"
+        ? "/dashboard/officer-dashboard"
+        : role === "CITIZEN"
+          ? "/dashboard/citizen-dashboard"
+          : "/dashboard";
+
   return (
     <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
       {/* Home */}
@@ -51,10 +60,10 @@ const DashboardSidebarMenu = ({
 
       {/* Dashboard */}
       <Link
-        href="/dashboard/admin-dashboard"
+        href={dashboardPath}
         onClick={onClose}
         className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
-          isActive("/dashboard/admin-dashboard")
+          isActive(dashboardPath)
             ? "bg-secondary-foreground/15 font-medium text-secondary-foreground"
             : "text-secondary-foreground/70 hover:bg-secondary-foreground/15 hover:text-secondary-foreground"
         }`}

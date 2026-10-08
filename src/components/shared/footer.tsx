@@ -1,7 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle2, Mail, MapPin, Phone } from "lucide-react";
-
-import Image from "next/image";
 
 const footerLinks = {
   Platform: [
@@ -31,7 +30,7 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <Link
-              href="#"
+              href="/"
               className="shrink-0 transition-opacity duration-200 hover:opacity-90"
               aria-label="CityCare Home"
             >
@@ -115,48 +114,21 @@ export default function Footer() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <a
+                href="mailto:support@citycare.com"
+                className="flex items-center gap-3 text-sm text-white/55 transition-colors hover:text-primary"
+              >
                 <Mail className="h-4 w-4 shrink-0 text-primary" />
+                <span>support@citycare.com</span>
+              </a>
 
-                <span className="text-sm text-white/55">
-                  support@citycare.com
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3">
+              <a
+                href="tel:+8801766554433"
+                className="flex items-center gap-3 text-sm text-white/55 transition-colors hover:text-primary"
+              >
                 <Phone className="h-4 w-4 shrink-0 text-primary" />
-
-                <span className="text-sm text-white/55">+880 1766554433</span>
-              </div>
-            </div>
-
-            {/* Social icons */}
-            <div className="mt-6 flex items-center gap-2">
-              <div className="mt-6 flex items-center gap-2">
-                <a
-                  href="asd"
-                  aria-label="Facebook"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-xs font-bold text-white/60 transition-all hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
-                >
-                  f
-                </a>
-
-                <a
-                  href="as"
-                  aria-label="Instagram"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-xs font-bold text-white/60 transition-all hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
-                >
-                  ig
-                </a>
-
-                <a
-                  href="as"
-                  aria-label="LinkedIn"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-xs font-bold text-white/60 transition-all hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
-                >
-                  in
-                </a>
-              </div>
+                <span>+880 1766554433</span>
+              </a>
             </div>
           </div>
         </div>
@@ -165,15 +137,7 @@ export default function Footer() {
         <div className="flex flex-col gap-4 border-t border-white/10 py-6 text-xs text-white/40 sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} CityCare. All rights reserved.</p>
 
-          <div className="flex items-center gap-5">
-            <Link href="#" className="transition-colors hover:text-white">
-              Privacy
-            </Link>
-
-            <Link href="#" className="transition-colors hover:text-white">
-              Terms
-            </Link>
-          </div>
+          <p>Built for better city services</p>
         </div>
       </div>
     </footer>

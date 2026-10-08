@@ -71,11 +71,10 @@ export const getMyComplaints = async (): Promise<ApiResponse<Complaint[]>> => {
 
 // Get single complaint by ID
 export const getComplaintById = async (
-  complaintId: string,
-): Promise<ApiResponse<PublicComplaint>> => {
-  return api<ApiResponse<PublicComplaint>>(`/complaints/${complaintId}`);
+  id: string,
+): Promise<ApiResponse<Complaint>> => {
+  return api<ApiResponse<Complaint>>(`/complaints/${id}`);
 };
-
 // Create complaint
 export const createComplaint = async (data: {
   title: string;

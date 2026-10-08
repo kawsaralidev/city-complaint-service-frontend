@@ -1,5 +1,3 @@
-import { ApiPaginatedData } from "./api";
-
 export type ComplaintStatus =
   | "PENDING"
   | "APPROVED"
@@ -34,6 +32,8 @@ export interface PublicComplaint {
   location: string;
   status: ComplaintStatus;
   imageUrl?: string | null;
+  assignedAt?: string | null;
+  resolvedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 
@@ -42,6 +42,8 @@ export interface PublicComplaint {
     name: string;
     type: "COMPLAINT" | "SERVICE";
   };
+
+  assignment?: ComplaintAssignment | null;
 }
 
 export interface ComplaintListResponse {
