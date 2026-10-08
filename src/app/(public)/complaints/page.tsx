@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 
 import { usePublicComplaints } from "@/hooks/complaint.hook";
+import { useCurrentUser } from "@/hooks/auth.hook";
+import CreateComplaintDialog from "@/components/complaint/CreateComplaintDialog";
 
 const PAGE_LIMIT = 9;
 
@@ -65,6 +67,54 @@ const ComplaintsPage = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const [isCreateComplaintOpen, setIsCreateComplaintOpen] = useState(false);
+
+  const { data: userResponse, isLoading: isUserLoading } = useCurrentUser();
+
+  const user = userResponse?.data;
+
+  useEffect(() => {
+    const shouldOpenComplaint = searchParams.get("createComplaint") === "true";
+
+    if (shouldOpenComplaint && !isUserLoading && user?.role === "CITIZEN") {
+      setIsCreateComplaintOpen(true);
+
+      const params = new URLSearchParams(searchParams.toString());
+
+      params.delete("createComplaint");
+
+      const queryString = params.toString();
+
+      router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+        scroll: false,
+      });
+    }
+  }, [searchParams, isUserLoading, user, pathname, router]);
+
+  const handleCreateComplaint = () => {
+    if (isUserLoading) {
+      return;
+    }
+
+    // Not logged in
+    if (!user) {
+      router.push(
+        `/login?redirect=${encodeURIComponent(
+          "/complaints?createComplaint=true",
+        )}`,
+      );
+
+      return;
+    }
+
+    // Only citizens can create complaints
+    if (user.role !== "CITIZEN") {
+      return;
+    }
+
+    // Logged-in citizen
+    setIsCreateComplaintOpen(true);
+  };
   /* =====================================================
      URL STATE
   ====================================================== */
@@ -293,14 +343,16 @@ const ComplaintsPage = () => {
             {/* Create Complaint CTA */}
 
             <div className="mt-7 flex justify-center">
-              <Link
-                href="/complaints/create"
-                className="group inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/15 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/20"
+              <button
+                type="button"
+                onClick={handleCreateComplaint}
+                disabled={isUserLoading}
+                className="group inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/15 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Plus className="h-4 w-4" />
                 Create a Complaint
                 <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
-              </Link>
+              </button>
             </div>
 
             <p className="mt-3 text-xs text-muted-foreground">
@@ -534,13 +586,15 @@ const ComplaintsPage = () => {
             )}
 
             {!search && (
-              <Link
-                href="/complaints/create"
-                className="mt-5 inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+              <button
+                type="button"
+                onClick={handleCreateComplaint}
+                disabled={isUserLoading}
+                className="mt-5 inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Plus className="h-4 w-4" />
                 Create a Complaint
-              </Link>
+              </button>
             )}
           </div>
         )}
@@ -754,6 +808,14 @@ const ComplaintsPage = () => {
           </div>
         )}
       </section>
+
+      {/* =====================================================
+          CREATE COMPLAINT DIALOG
+          ====================================================== */}
+      <CreateComplaintDialog
+        open={isCreateComplaintOpen}
+        onOpenChange={setIsCreateComplaintOpen}
+      />
     </main>
   );
 };
