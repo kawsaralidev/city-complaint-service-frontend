@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
   Search,
   UserRound,
-  XCircle,
+  X,
 } from "lucide-react";
 
 import RoleGuard from "../../guard/role-guard";
@@ -24,6 +24,7 @@ import {
 import { useActiveServices } from "@/hooks/service.hook";
 
 import type { ServiceRequestStatus } from "@/types/service-request";
+
 import Link from "next/link";
 
 const PAGE_LIMIT = 10;
@@ -119,23 +120,268 @@ const formatDate = (date: string) => {
   }).format(new Date(date));
 };
 
+const isValidStatus = (value: string): value is ServiceRequestStatus => {
+  return statusOptions.some((option) => option.value === value);
+};
+
 const AdminServiceRequestsPage = () => {
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const [status, setStatus] = useState<ServiceRequestStatus | undefined>(
-    undefined,
-  );
+  /*
+   * ============================================================
+   * URL STATE
+   * ============================================================
+   */
 
-  const [serviceId, setServiceId] = useState<string | undefined>(undefined);
+  const searchFromUrl = searchParams.get("search") ?? "";
 
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const statusFromUrl = searchParams.get("status") ?? "";
 
-  const [page, setPage] = useState(1);
+  const serviceIdFromUrl = searchParams.get("serviceId") ?? "";
 
+  const sortFromUrl = searchParams.get("sortOrder") === "asc" ? "asc" : "desc";
+
+  const pageFromUrl = Number(searchParams.get("page") ?? "1");
+
+  const currentPage =
+    Number.isInteger(pageFromUrl) && pageFromUrl > 0 ? pageFromUrl : 1;
+
+  const currentStatus: ServiceRequestStatus | undefined = isValidStatus(
+    statusFromUrl,
+  )
+    ? statusFromUrl
+    : undefined;
+
+  const currentServiceId = serviceIdFromUrl || undefined;
+
+  /*
+   * Search input is local while typing.
+   * It becomes URL state after submit.
+   */
+  const [searchInput, setSearchInput] = useState(searchFromUrl);
+
+  /*
+   * Officer selection is UI state.
+   * It should NOT be stored in URL.
+   */
   const [selectedOfficer, setSelectedOfficer] = useState<
     Record<string, string>
   >({});
+
+  /*
+   * ============================================================
+   * SYNC SEARCH INPUT WITH URL
+   * ============================================================
+   */
+
+  useEffect(() => {
+    setSearchInput(searchFromUrl);
+  }, [searchFromUrl]);
+
+  /*
+   * ============================================================
+   * UPDATE URL
+   * ============================================================
+   */
+
+  const updateUrl = (values: {
+    search?: string;
+    status?: ServiceRequestStatus;
+    serviceId?: string;
+    sortOrder?: "asc" | "desc";
+    page?: number;
+  }) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    /*
+     * Search
+     */
+    if (values.search !== undefined) {
+      const trimmedSearch = values.search.trim();
+
+      if (trimmedSearch) {
+        params.set("search", trimmedSearch);
+      } else {
+        params.delete("search");
+      }
+
+      /*
+       * Whenever search changes,
+       * go back to page 1.
+       */
+      params.delete("page");
+    }
+
+    /*
+     * Status
+     */
+    if (values.status !== undefined) {
+      params.set("status", values.status);
+
+      /*
+       * Filter change = page 1
+       */
+      params.delete("page");
+    }
+
+    /*
+     * Service
+     */
+    if (values.serviceId !== undefined) {
+      if (values.serviceId) {
+        params.set("serviceId", values.serviceId);
+      } else {
+        params.delete("serviceId");
+      }
+
+      /*
+       * Filter change = page 1
+       */
+      params.delete("page");
+    }
+
+    /*
+     * Sort
+     */
+    if (values.sortOrder !== undefined) {
+      params.set("sortOrder", values.sortOrder);
+
+      /*
+       * Sort change = page 1
+       */
+      params.delete("page");
+    }
+
+    /*
+     * Page
+     */
+    if (values.page !== undefined) {
+      if (values.page <= 1) {
+        params.delete("page");
+      } else {
+        params.set("page", values.page.toString());
+      }
+    }
+
+    const queryString = params.toString();
+
+    router.push(queryString ? `${pathname}?${queryString}` : pathname);
+  };
+
+  /*
+   * ============================================================
+   * SEARCH
+   * ============================================================
+   */
+
+  const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    updateUrl({
+      search: searchInput,
+    });
+  };
+
+  /*
+   * ============================================================
+   * CLEAR SEARCH
+   * ============================================================
+   */
+
+  const handleClearSearch = () => {
+    setSearchInput("");
+
+    updateUrl({
+      search: "",
+    });
+  };
+
+  /*
+   * ============================================================
+   * STATUS
+   * ============================================================
+   */
+
+  const handleStatusChange = (value: string) => {
+    if (!value) {
+      const params = new URLSearchParams(searchParams.toString());
+
+      params.delete("status");
+      params.delete("page");
+
+      const queryString = params.toString();
+
+      router.push(queryString ? `${pathname}?${queryString}` : pathname);
+
+      return;
+    }
+
+    if (!isValidStatus(value)) {
+      return;
+    }
+
+    updateUrl({
+      status: value,
+    });
+  };
+
+  /*
+   * ============================================================
+   * SERVICE
+   * ============================================================
+   */
+
+  const handleServiceChange = (value: string) => {
+    updateUrl({
+      serviceId: value,
+    });
+  };
+
+  /*
+   * ============================================================
+   * SORT
+   * ============================================================
+   */
+
+  const handleSortChange = (value: "asc" | "desc") => {
+    updateUrl({
+      sortOrder: value,
+    });
+  };
+
+  /*
+   * ============================================================
+   * PAGINATION
+   * ============================================================
+   */
+
+  const handlePreviousPage = () => {
+    if (currentPage <= 1 || isFetching) {
+      return;
+    }
+
+    updateUrl({
+      page: currentPage - 1,
+    });
+  };
+
+  const handleNextPage = () => {
+    if (currentPage >= totalPages || isFetching) {
+      return;
+    }
+
+    updateUrl({
+      page: currentPage + 1,
+    });
+  };
+
+  /*
+   * ============================================================
+   * API
+   * ============================================================
+   */
 
   const {
     data: requestsResponse,
@@ -143,12 +389,12 @@ const AdminServiceRequestsPage = () => {
     isFetching,
     isError,
   } = useAllServiceRequests({
-    page,
+    page: currentPage,
     limit: PAGE_LIMIT,
-    search: search || undefined,
-    status,
-    serviceId,
-    sortOrder,
+    search: searchFromUrl || undefined,
+    status: currentStatus,
+    serviceId: currentServiceId,
+    sortOrder: sortFromUrl,
   });
 
   const { data: servicesResponse } = useActiveServices({
@@ -160,37 +406,32 @@ const AdminServiceRequestsPage = () => {
   const { data: officersResponse } = useActiveOfficers();
 
   const reviewMutation = useReviewServiceRequest();
+
   const assignMutation = useAssignServiceRequest();
 
+  /*
+   * ============================================================
+   * RESPONSE DATA
+   * ============================================================
+   */
+
   const serviceRequests = requestsResponse?.data ?? [];
+
   const pagination = requestsResponse?.pagination;
 
   const totalRequests = pagination?.total ?? 0;
-  const totalPages = pagination?.totalPages ?? 1;
+
+  const totalPages = Math.max(pagination?.totalPages ?? 1, 1);
 
   const services = servicesResponse?.data ?? [];
+
   const officers = officersResponse?.data ?? [];
 
-  const handleSearchChange = (value: string) => {
-    setSearchInput(value);
-    setSearch(value.trim());
-    setPage(1);
-  };
-
-  const handleStatusChange = (value: string) => {
-    setStatus(value ? (value as ServiceRequestStatus) : undefined);
-    setPage(1);
-  };
-
-  const handleServiceChange = (value: string) => {
-    setServiceId(value || undefined);
-    setPage(1);
-  };
-
-  const handleSortChange = (value: "asc" | "desc") => {
-    setSortOrder(value);
-    setPage(1);
-  };
+  /*
+   * ============================================================
+   * REVIEW
+   * ============================================================
+   */
 
   const handleReview = (id: string, reviewStatus: "APPROVED" | "REJECTED") => {
     const confirmed = window.confirm(
@@ -199,7 +440,9 @@ const AdminServiceRequestsPage = () => {
         : "Are you sure you want to reject this service request?",
     );
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
 
     reviewMutation.mutate({
       id,
@@ -209,11 +452,18 @@ const AdminServiceRequestsPage = () => {
     });
   };
 
+  /*
+   * ============================================================
+   * ASSIGN OFFICER
+   * ============================================================
+   */
+
   const handleAssign = (id: string) => {
     const officerId = selectedOfficer[id];
 
     if (!officerId) {
       window.alert("Please select an officer first.");
+
       return;
     }
 
@@ -221,7 +471,9 @@ const AdminServiceRequestsPage = () => {
       "Are you sure you want to assign this service request to this officer?",
     );
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
 
     assignMutation.mutate({
       id,
@@ -231,22 +483,19 @@ const AdminServiceRequestsPage = () => {
     });
   };
 
-  const handlePreviousPage = () => {
-    if (page > 1) {
-      setPage((currentPage) => currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (page < totalPages) {
-      setPage((currentPage) => currentPage + 1);
-    }
-  };
+  /*
+   * ============================================================
+   * RENDER
+   * ============================================================
+   */
 
   return (
     <RoleGuard requiredRole="ADMIN">
       <div className="space-y-6 p-7 pb-8">
-        {/* Header */}
+        {/* ======================================================
+            HEADER
+        ======================================================= */}
+
         <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm">
           <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
 
@@ -285,25 +534,39 @@ const AdminServiceRequestsPage = () => {
           </div>
         </div>
 
-        {/* Filters */}
+        {/* ======================================================
+            FILTERS
+        ======================================================= */}
+
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm md:p-5">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {/* Search */}
-            <div className="relative">
+            <form onSubmit={handleSearch} className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
               <input
                 type="text"
                 value={searchInput}
-                onChange={(event) => handleSearchChange(event.target.value)}
+                onChange={(event) => setSearchInput(event.target.value)}
                 placeholder="Search requests..."
-                className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-10 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
               />
-            </div>
+
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                  aria-label="Clear search"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </form>
 
             {/* Status */}
             <select
-              value={status ?? ""}
+              value={currentStatus ?? ""}
               onChange={(event) => handleStatusChange(event.target.value)}
               className="h-10 rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
             >
@@ -318,7 +581,7 @@ const AdminServiceRequestsPage = () => {
 
             {/* Service */}
             <select
-              value={serviceId ?? ""}
+              value={currentServiceId ?? ""}
               onChange={(event) => handleServiceChange(event.target.value)}
               className="h-10 rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
             >
@@ -333,26 +596,69 @@ const AdminServiceRequestsPage = () => {
 
             {/* Sort */}
             <select
-              value={sortOrder}
+              value={sortFromUrl}
               onChange={(event) =>
-                handleSortChange(event.target.value as "asc" | "desc")
+                handleSortChange(event.target.value === "asc" ? "asc" : "desc")
               }
               className="h-10 rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
             >
               <option value="desc">Newest first</option>
+
               <option value="asc">Oldest first</option>
             </select>
           </div>
+
+          {/* Active Filters */}
+          {(searchFromUrl ||
+            currentStatus ||
+            currentServiceId ||
+            sortFromUrl === "asc") && (
+            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+              <span className="text-xs font-medium text-muted-foreground">
+                Active filters:
+              </span>
+
+              {searchFromUrl && (
+                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                  Search: {searchFromUrl}
+                </span>
+              )}
+
+              {currentStatus && (
+                <span className="rounded-full bg-secondary/10 px-3 py-1 text-xs font-medium text-secondary">
+                  Status: {formatStatus(currentStatus)}
+                </span>
+              )}
+
+              {currentServiceId && (
+                <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+                  Service selected
+                </span>
+              )}
+
+              {sortFromUrl === "asc" && (
+                <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+                  Oldest first
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Loading */}
+        {/* ======================================================
+            LOADING
+        ======================================================= */}
+
         {isLoading && (
           <div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
             Loading service requests...
           </div>
         )}
 
-        {/* Error */}
+        {/* ======================================================
+            ERROR
+        ======================================================= */}
+
         {!isLoading && isError && (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
             <p className="font-medium text-red-700">
@@ -363,7 +669,10 @@ const AdminServiceRequestsPage = () => {
           </div>
         )}
 
-        {/* Empty */}
+        {/* ======================================================
+            EMPTY
+        ======================================================= */}
+
         {!isLoading && !isError && serviceRequests.length === 0 && (
           <div className="rounded-2xl border border-border bg-card p-10 text-center">
             <ClipboardList className="mx-auto h-10 w-10 text-muted-foreground" />
@@ -376,7 +685,10 @@ const AdminServiceRequestsPage = () => {
           </div>
         )}
 
-        {/* Table */}
+        {/* ======================================================
+            TABLE
+        ======================================================= */}
+
         {!isLoading && !isError && serviceRequests.length > 0 && (
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             <div className="overflow-x-auto">
@@ -589,17 +901,28 @@ const AdminServiceRequestsPage = () => {
               </div>
             </div>
 
-            {/* Pagination */}
+            {/* ==================================================
+                  PAGINATION
+              =================================================== */}
+
             <div className="flex flex-col gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-muted-foreground">
-                Page {page} of {totalPages}
-              </p>
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </p>
+
+                {isFetching && !isLoading && (
+                  <p className="mt-1 text-xs text-primary">
+                    Updating results...
+                  </p>
+                )}
+              </div>
 
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handlePreviousPage}
-                  disabled={page <= 1 || isFetching}
+                  disabled={currentPage <= 1 || isFetching}
                   className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -609,7 +932,7 @@ const AdminServiceRequestsPage = () => {
                 <button
                   type="button"
                   onClick={handleNextPage}
-                  disabled={page >= totalPages || isFetching}
+                  disabled={currentPage >= totalPages || isFetching}
                   className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Next

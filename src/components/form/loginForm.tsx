@@ -103,7 +103,7 @@ export function LoginForm() {
     : "/register";
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4">
+    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-md">
         <div className="rounded-2xl border border-border bg-background p-8 shadow-xl">
           <div className="mb-8 text-center">

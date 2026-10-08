@@ -1,8 +1,28 @@
 "use client";
 
-import { useRef, useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+
+import {
+  Activity,
+  ArrowDownUp,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  CircleDollarSign,
+  Edit3,
+  ImageIcon,
+  Loader2,
+  Plus,
+  Search,
+  SlidersHorizontal,
+  ToggleLeft,
+  ToggleRight,
+  X,
+} from "lucide-react";
 
 import {
   Dialog,
@@ -29,43 +49,77 @@ import {
 import RoleGuard from "../../guard/role-guard";
 import { toast } from "@/components/ui/toast";
 
-const AdminServicesPage = () => {
-  // Search, filter and pagination states
-  const [search, setSearch] = useState("");
-  const [minFee, setMinFee] = useState("");
-  const [maxFee, setMaxFee] = useState("");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [page, setPage] = useState(1);
+const PAGE_LIMIT = 10;
 
-  // Dialog state
+type SortOrder = "asc" | "desc";
+
+const AdminServicesPage = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // =========================================================
+  // URL STATE
+  // =========================================================
+
+  const searchFromUrl = searchParams.get("search") ?? "";
+  const minFeeFromUrl = searchParams.get("minFee") ?? "";
+  const maxFeeFromUrl = searchParams.get("maxFee") ?? "";
+
+  const sortFromUrl: SortOrder =
+    searchParams.get("sortOrder") === "asc" ? "asc" : "desc";
+
+  const pageFromUrl = Number(searchParams.get("page") ?? "1");
+
+  const currentPage =
+    Number.isInteger(pageFromUrl) && pageFromUrl > 0 ? pageFromUrl : 1;
+
+  // =========================================================
+  // LOCAL FILTER STATE
+  // =========================================================
+
+  const [searchInput, setSearchInput] = useState(searchFromUrl);
+  const [minFeeInput, setMinFeeInput] = useState(minFeeFromUrl);
+  const [maxFeeInput, setMaxFeeInput] = useState(maxFeeFromUrl);
+
+  // =========================================================
+  // CREATE / EDIT
+  // =========================================================
+
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  // Selected service for editing
   const [selectedService, setSelectedService] = useState<Service | null>(null);
 
-  // Selected image file
+  // =========================================================
+  // IMAGE
+  // =========================================================
+
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
-  // Image preview
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  // File input reference
   const imageInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Service API hooks
-  const { data, isLoading, isError } = useAllServices({
-    page,
-    limit: 10,
-    search: search || undefined,
-    minFee: minFee ? Number(minFee) : undefined,
-    maxFee: maxFee ? Number(maxFee) : undefined,
-    sortOrder,
+  // =========================================================
+  // QUERY
+  // =========================================================
+
+  const { data, isLoading, isError, isFetching, refetch } = useAllServices({
+    page: currentPage,
+    limit: PAGE_LIMIT,
+    search: searchFromUrl || undefined,
+    minFee: minFeeFromUrl ? Number(minFeeFromUrl) : undefined,
+    maxFee: maxFeeFromUrl ? Number(maxFeeFromUrl) : undefined,
+    sortOrder: sortFromUrl,
   });
 
   const createServiceMutation = useCreateService();
   const updateServiceMutation = useUpdateService();
 
-  // React Hook Form + Zod
+  // =========================================================
+  // FORM
+  // =========================================================
+
   const {
     register,
     handleSubmit,
@@ -80,12 +134,165 @@ const AdminServicesPage = () => {
     },
   });
 
+  // =========================================================
+  // DATA
+  // =========================================================
+
   const services = data?.data ?? [];
   const pagination = data?.pagination;
 
-  /**
-   * Reset form and close dialog
-   */
+  const totalServices = pagination?.total ?? services.length;
+
+  const activeServices = useMemo(
+    () => services.filter((service) => service.isActive).length,
+    [services],
+  );
+
+  const inactiveServices = useMemo(
+    () => services.filter((service) => !service.isActive).length,
+    [services],
+  );
+
+  // =========================================================
+  // SYNC INPUT WITH URL
+  // =========================================================
+
+  useEffect(() => {
+    setSearchInput(searchFromUrl);
+  }, [searchFromUrl]);
+
+  useEffect(() => {
+    setMinFeeInput(minFeeFromUrl);
+  }, [minFeeFromUrl]);
+
+  useEffect(() => {
+    setMaxFeeInput(maxFeeFromUrl);
+  }, [maxFeeFromUrl]);
+
+  // =========================================================
+  // UPDATE URL
+  // =========================================================
+
+  const updateUrl = (values: {
+    search?: string;
+    minFee?: string;
+    maxFee?: string;
+    sortOrder?: SortOrder;
+    page?: number;
+  }) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (values.search !== undefined) {
+      const value = values.search.trim();
+
+      if (value) {
+        params.set("search", value);
+      } else {
+        params.delete("search");
+      }
+    }
+
+    if (values.minFee !== undefined) {
+      const value = values.minFee.trim();
+
+      if (value) {
+        params.set("minFee", value);
+      } else {
+        params.delete("minFee");
+      }
+    }
+
+    if (values.maxFee !== undefined) {
+      const value = values.maxFee.trim();
+
+      if (value) {
+        params.set("maxFee", value);
+      } else {
+        params.delete("maxFee");
+      }
+    }
+
+    if (values.sortOrder !== undefined) {
+      if (values.sortOrder === "desc") {
+        params.delete("sortOrder");
+      } else {
+        params.set("sortOrder", values.sortOrder);
+      }
+    }
+
+    if (values.page !== undefined) {
+      if (values.page <= 1) {
+        params.delete("page");
+      } else {
+        params.set("page", String(values.page));
+      }
+    }
+
+    const query = params.toString();
+
+    router.push(query ? `${pathname}?${query}` : pathname);
+  };
+
+  // =========================================================
+  // FILTER HANDLERS
+  // =========================================================
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    updateUrl({
+      search: searchInput,
+      page: 1,
+    });
+  };
+
+  const handleMinFeeChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+
+    setMinFeeInput(value);
+
+    updateUrl({
+      minFee: value,
+      page: 1,
+    });
+  };
+
+  const handleMaxFeeChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+
+    setMaxFeeInput(value);
+
+    updateUrl({
+      maxFee: value,
+      page: 1,
+    });
+  };
+
+  const handleSortChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    updateUrl({
+      sortOrder: event.target.value === "asc" ? "asc" : "desc",
+      page: 1,
+    });
+  };
+
+  const clearFilters = () => {
+    setSearchInput("");
+    setMinFeeInput("");
+    setMaxFeeInput("");
+
+    router.push(pathname);
+  };
+
+  const hasActiveFilters =
+    Boolean(searchFromUrl) ||
+    Boolean(minFeeFromUrl) ||
+    Boolean(maxFeeFromUrl) ||
+    sortFromUrl !== "desc";
+
+  // =========================================================
+  // FORM RESET
+  // =========================================================
+
   const resetForm = () => {
     setSelectedService(null);
     setSelectedImage(null);
@@ -104,9 +311,10 @@ const AdminServicesPage = () => {
     setIsFormOpen(false);
   };
 
-  /**
-   * Open create service dialog
-   */
+  // =========================================================
+  // CREATE
+  // =========================================================
+
   const handleCreate = () => {
     setSelectedService(null);
     setSelectedImage(null);
@@ -125,24 +333,20 @@ const AdminServicesPage = () => {
     setIsFormOpen(true);
   };
 
-  /**
-   * Open edit dialog and load service data
-   */
+  // =========================================================
+  // EDIT
+  // =========================================================
+
   const handleEdit = (service: Service) => {
     setSelectedService(service);
 
-    // No new image selected yet
     setSelectedImage(null);
-
-    // Show existing Cloudinary image
     setImagePreview(service.imageUrl ?? null);
 
-    // Clear file input
     if (imageInputRef.current) {
       imageInputRef.current.value = "";
     }
 
-    // Load existing service information
     reset({
       name: service.name,
       description: service.description ?? "",
@@ -152,31 +356,29 @@ const AdminServicesPage = () => {
     setIsFormOpen(true);
   };
 
-  /**
-   * Handle image selection
-   */
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // =========================================================
+  // IMAGE
+  // =========================================================
+
+  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
     if (!file) {
       return;
     }
 
-    // Store selected image
     setSelectedImage(file);
 
-    // Create preview URL
     const previewUrl = URL.createObjectURL(file);
+
     setImagePreview(previewUrl);
   };
 
-  /**
-   * Create or update service
-   */
+  // =========================================================
+  // CREATE / UPDATE
+  // =========================================================
+
   const onSubmit = (formData: ServiceFormValues) => {
-    // =========================
-    // UPDATE SERVICE
-    // =========================
     if (selectedService) {
       updateServiceMutation.mutate(
         {
@@ -185,8 +387,6 @@ const AdminServicesPage = () => {
             name: formData.name,
             description: formData.description || undefined,
             baseFee: Number(formData.baseFee),
-
-            // Send selected image during update
             image: selectedImage ?? undefined,
           },
         },
@@ -205,7 +405,7 @@ const AdminServicesPage = () => {
               title:
                 error instanceof Error
                   ? error.message
-                  : "Failed to update service. Please try again.",
+                  : "Failed to update service.",
               type: "error",
             });
           },
@@ -215,16 +415,11 @@ const AdminServicesPage = () => {
       return;
     }
 
-    // =========================
-    // CREATE SERVICE
-    // =========================
     createServiceMutation.mutate(
       {
         name: formData.name,
         description: formData.description || undefined,
         baseFee: Number(formData.baseFee),
-
-        // Send selected image during create
         image: selectedImage ?? undefined,
       },
       {
@@ -242,7 +437,7 @@ const AdminServicesPage = () => {
             title:
               error instanceof Error
                 ? error.message
-                : "Failed to create service. Please try again.",
+                : "Failed to create service.",
             type: "error",
           });
         },
@@ -250,9 +445,10 @@ const AdminServicesPage = () => {
     );
   };
 
-  /**
-   * Activate / deactivate service
-   */
+  // =========================================================
+  // TOGGLE STATUS
+  // =========================================================
+
   const handleToggleStatus = (service: Service) => {
     updateServiceMutation.mutate(
       {
@@ -287,83 +483,698 @@ const AdminServicesPage = () => {
   const isSaving =
     createServiceMutation.isPending || updateServiceMutation.isPending;
 
-  return (
-    <RoleGuard requiredRole="ADMIN">
-      <div className="space-y-6 p-6">
-        {/* Page Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Service Management</h1>
+  // =========================================================
+  // LOADING
+  // =========================================================
 
-            <p className="text-sm text-muted-foreground">
-              Create and manage city services.
-            </p>
+  if (isLoading) {
+    return (
+      <RoleGuard requiredRole="ADMIN">
+        <div className="space-y-6 p-7 pb-8">
+          <div className="h-40 animate-pulse rounded-2xl bg-card shadow-sm" />
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-28 animate-pulse rounded-2xl bg-card shadow-sm"
+              />
+            ))}
           </div>
 
-          {/* Create Service Button */}
-          <button
-            type="button"
-            onClick={handleCreate}
-            className="w-full rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
-          >
-            Create Service
-          </button>
+          <div className="h-32 animate-pulse rounded-2xl bg-card shadow-sm" />
+
+          <div className="overflow-hidden rounded-2xl bg-card shadow-sm">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={index}
+                className="flex h-20 animate-pulse items-center gap-4 border-b border-border px-6 last:border-b-0"
+              >
+                <div className="h-11 w-11 rounded-xl bg-muted" />
+                <div className="h-4 w-40 rounded bg-muted" />
+                <div className="h-4 flex-1 rounded bg-muted" />
+                <div className="h-4 w-20 rounded bg-muted" />
+              </div>
+            ))}
+          </div>
         </div>
+      </RoleGuard>
+    );
+  }
 
-        {/* Create / Update Service Dialog */}
-        <Dialog
-          open={isFormOpen}
-          onOpenChange={(open) => {
-            if (!open && !isSaving) {
-              resetForm();
-            }
-          }}
-        >
-          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[650px]">
-            <DialogHeader>
-              <DialogTitle>
-                {selectedService ? "Update Service" : "Create Service"}
-              </DialogTitle>
+  // =========================================================
+  // ERROR
+  // =========================================================
 
-              <DialogDescription>
-                {selectedService
-                  ? "Update the service information below."
-                  : "Fill in the information below to create a new city service."}
-              </DialogDescription>
-            </DialogHeader>
+  if (isError) {
+    return (
+      <RoleGuard requiredRole="ADMIN">
+        <div className="flex min-h-[500px] items-center justify-center p-7">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
+              <Activity className="h-7 w-7" />
+            </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 pt-2">
-              {/* Service Name */}
+            <h2 className="mt-5 text-xl font-bold text-foreground">
+              Unable to load services
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              Something went wrong while loading the service list.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="mt-6 inline-flex h-10 items-center justify-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </RoleGuard>
+    );
+  }
+
+  // =========================================================
+  // MAIN
+  // =========================================================
+
+  return (
+    <RoleGuard requiredRole="ADMIN">
+      <div className="space-y-6 p-7 pb-8">
+        {/* =====================================================
+            HEADER
+        ===================================================== */}
+
+        <section className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
+
+          <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div>
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-xs font-medium text-secondary">
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                Service Management
+              </div>
+
+              <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+                City Services
+              </h1>
+
+              <p className="mt-1.5 max-w-2xl text-sm leading-6 text-muted-foreground">
+                Manage all public services, update service information and
+                control their availability.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleCreate}
+              className="group inline-flex h-11 w-fit shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/10"
+            >
+              <Plus className="h-4 w-4 transition-transform duration-300 group-hover:rotate-90" />
+              Create Service
+            </button>
+          </div>
+        </section>
+
+        {/* =====================================================
+            STATS
+        ===================================================== */}
+
+        <section className="grid gap-4 md:grid-cols-3">
+          {/* Total */}
+          <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10">
+            <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/10 blur-2xl transition-transform duration-500 group-hover:scale-150" />
+
+            <div className="relative flex items-start justify-between">
               <div>
-                <label
-                  htmlFor="service-name"
-                  className="mb-1.5 block text-sm font-medium"
-                >
-                  Service Name
-                </label>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Services
+                </p>
+
+                <p className="mt-2 text-3xl font-bold tracking-tight text-foreground">
+                  {totalServices}
+                </p>
+
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Available in the system
+                </p>
+              </div>
+
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-110">
+                <BriefcaseIcon />
+              </div>
+            </div>
+          </div>
+
+          {/* Active */}
+          <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-secondary/25 hover:shadow-lg hover:shadow-secondary/5">
+            <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-secondary/10 blur-2xl transition-transform duration-500 group-hover:scale-150" />
+
+            <div className="relative flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Active Services
+                </p>
+
+                <p className="mt-2 text-3xl font-bold tracking-tight text-foreground">
+                  {activeServices}
+                </p>
+
+                <p className="mt-1 flex items-center gap-1 text-xs font-medium text-secondary">
+                  <Check className="h-3.5 w-3.5" />
+                  Currently available
+                </p>
+              </div>
+
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary/10 text-secondary transition-transform duration-300 group-hover:scale-110">
+                <ToggleRight className="h-5 w-5" />
+              </div>
+            </div>
+          </div>
+
+          {/* Inactive */}
+          <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5">
+            <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-accent/10 blur-2xl transition-transform duration-500 group-hover:scale-150" />
+
+            <div className="relative flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Inactive Services
+                </p>
+
+                <p className="mt-2 text-3xl font-bold tracking-tight text-foreground">
+                  {inactiveServices}
+                </p>
+
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Currently unavailable
+                </p>
+              </div>
+
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent-foreground transition-transform duration-300 group-hover:scale-110">
+                <ToggleLeft className="h-5 w-5" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =====================================================
+            FILTERS
+        ===================================================== */}
+
+        <section className="rounded-2xl border border-border bg-card p-4 shadow-sm md:p-5">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
+                <SlidersHorizontal className="h-4 w-4" />
+              </div>
+
+              <div>
+                <h2 className="text-sm font-bold text-foreground">
+                  Search & Filters
+                </h2>
+
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Refine the service list
+                </p>
+              </div>
+            </div>
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+                Clear all
+              </button>
+            )}
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {/* Search */}
+            <form onSubmit={handleSearchSubmit}>
+              <label
+                htmlFor="service-search"
+                className="mb-2 block text-xs font-medium text-muted-foreground"
+              >
+                Search
+              </label>
+
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
                 <input
-                  id="service-name"
-                  {...register("name")}
-                  placeholder="Enter service name"
-                  className="w-full rounded-md border bg-background px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-primary"
+                  id="service-search"
+                  value={searchInput}
+                  onChange={(event) => setSearchInput(event.target.value)}
+                  placeholder="Search service..."
+                  className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-4 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
                 />
+              </div>
+            </form>
 
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.name.message}
-                  </p>
+            {/* Minimum Fee */}
+            <div>
+              <label
+                htmlFor="minimum-fee"
+                className="mb-2 block text-xs font-medium text-muted-foreground"
+              >
+                Minimum Fee
+              </label>
+
+              <div className="relative">
+                <CircleDollarSign className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+
+                <input
+                  id="minimum-fee"
+                  type="number"
+                  min="0"
+                  value={minFeeInput}
+                  onChange={handleMinFeeChange}
+                  placeholder="Minimum fee"
+                  className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-4 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+                />
+              </div>
+            </div>
+
+            {/* Maximum Fee */}
+            <div>
+              <label
+                htmlFor="maximum-fee"
+                className="mb-2 block text-xs font-medium text-muted-foreground"
+              >
+                Maximum Fee
+              </label>
+
+              <div className="relative">
+                <CircleDollarSign className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+
+                <input
+                  id="maximum-fee"
+                  type="number"
+                  min="0"
+                  value={maxFeeInput}
+                  onChange={handleMaxFeeChange}
+                  placeholder="Maximum fee"
+                  className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-4 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+                />
+              </div>
+            </div>
+
+            {/* Sort */}
+            <div>
+              <label
+                htmlFor="sort-order"
+                className="mb-2 block text-xs font-medium text-muted-foreground"
+              >
+                Sort Order
+              </label>
+
+              <div className="relative">
+                <ArrowDownUp className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+
+                <select
+                  id="sort-order"
+                  value={sortFromUrl}
+                  onChange={handleSortChange}
+                  className="h-11 w-full appearance-none rounded-xl border border-border bg-background pl-10 pr-4 text-sm text-foreground outline-none transition-all focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+                >
+                  <option value="desc">Newest First</option>
+
+                  <option value="asc">Oldest First</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =====================================================
+            SERVICE LIST
+        ===================================================== */}
+
+        <section>
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-bold tracking-tight text-foreground">
+                  All Services
+                </h2>
+
+                {isFetching && (
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
                 )}
               </div>
 
-              {/* Base Fee */}
-              <div>
-                <label
-                  htmlFor="base-fee"
-                  className="mb-1.5 block text-sm font-medium"
+              <p className="mt-1 text-sm text-muted-foreground">
+                {totalServices} {totalServices === 1 ? "service" : "services"}{" "}
+                found
+              </p>
+            </div>
+
+            {hasActiveFilters && (
+              <div className="flex flex-wrap gap-2">
+                {searchFromUrl && (
+                  <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                    Search: {searchFromUrl}
+                  </span>
+                )}
+
+                {minFeeFromUrl && (
+                  <span className="rounded-md bg-secondary/10 px-2.5 py-1 text-xs font-medium text-secondary">
+                    Min: ৳{minFeeFromUrl}
+                  </span>
+                )}
+
+                {maxFeeFromUrl && (
+                  <span className="rounded-md bg-secondary/10 px-2.5 py-1 text-xs font-medium text-secondary">
+                    Max: ৳{maxFeeFromUrl}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ===================================================
+              TABLE
+          =================================================== */}
+
+          {services.length > 0 ? (
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[900px]">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/40 text-left">
+                      <th className="w-[78px] px-5 py-4 text-xs font-semibold text-muted-foreground">
+                        Image
+                      </th>
+
+                      <th className="px-5 py-4 text-xs font-semibold text-muted-foreground">
+                        Service
+                      </th>
+
+                      <th className="px-5 py-4 text-xs font-semibold text-muted-foreground">
+                        Description
+                      </th>
+
+                      <th className="px-5 py-4 text-xs font-semibold text-muted-foreground">
+                        Base Fee
+                      </th>
+
+                      <th className="px-5 py-4 text-xs font-semibold text-muted-foreground">
+                        Status
+                      </th>
+
+                      <th className="px-5 py-4 text-right text-xs font-semibold text-muted-foreground">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody className="divide-y divide-border">
+                    {services.map((service) => (
+                      <tr
+                        key={service.id}
+                        className="group transition-colors duration-200 hover:bg-muted/30"
+                      >
+                        {/* Image */}
+                        <td className="px-5 py-3.5">
+                          <div className="h-11 w-11 overflow-hidden rounded-xl border border-border bg-muted shadow-sm">
+                            {service.imageUrl ? (
+                              <img
+                                src={service.imageUrl}
+                                alt={service.name}
+                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                                <ImageIcon className="h-4 w-4" />
+                              </div>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Service */}
+                        <td className="px-5 py-3.5">
+                          <div className="min-w-[180px]">
+                            <p className="truncate text-sm font-semibold text-foreground">
+                              {service.name}
+                            </p>
+
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              City service
+                            </p>
+                          </div>
+                        </td>
+
+                        {/* Description */}
+                        <td className="max-w-[360px] px-5 py-3.5">
+                          <p className="line-clamp-2 text-sm leading-5 text-muted-foreground">
+                            {service.description || "No description available."}
+                          </p>
+                        </td>
+
+                        {/* Fee */}
+                        <td className="px-5 py-3.5">
+                          <div className="inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-1.5 text-primary">
+                            <CircleDollarSign className="h-3.5 w-3.5" />
+
+                            <span className="text-sm font-semibold">
+                              ৳{service.baseFee}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Status */}
+                        <td className="px-5 py-3.5">
+                          <span
+                            className={`inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium ${
+                              service.isActive
+                                ? "bg-secondary/10 text-secondary"
+                                : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            <span
+                              className={`h-1.5 w-1.5 rounded-full ${
+                                service.isActive
+                                  ? "bg-secondary"
+                                  : "bg-muted-foreground"
+                              }`}
+                            />
+
+                            {service.isActive ? "Active" : "Inactive"}
+                          </span>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="px-5 py-3.5">
+                          <div className="flex justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleEdit(service)}
+                              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground shadow-sm transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary hover:shadow-md"
+                            >
+                              <Edit3 className="h-3.5 w-3.5" />
+                              Edit
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleToggleStatus(service)}
+                              disabled={updateServiceMutation.isPending}
+                              className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-medium shadow-sm transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+                                service.isActive
+                                  ? "bg-accent/10 text-accent-foreground hover:bg-accent/20 hover:shadow-md"
+                                  : "bg-secondary/10 text-secondary hover:bg-secondary/20 hover:shadow-md"
+                              }`}
+                            >
+                              {updateServiceMutation.isPending ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : service.isActive ? (
+                                <ToggleLeft className="h-3.5 w-3.5" />
+                              ) : (
+                                <ToggleRight className="h-3.5 w-3.5" />
+                              )}
+
+                              {service.isActive ? "Deactivate" : "Activate"}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* =================================================
+                  PAGINATION
+              ================================================= */}
+
+              {pagination && pagination.totalPages > 1 && (
+                <div className="flex flex-col gap-4 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      Page {pagination.page} of {pagination.totalPages}
+                    </p>
+
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Showing {services.length} of {pagination.total} services
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={currentPage <= 1 || isFetching}
+                      onClick={() =>
+                        updateUrl({
+                          page: currentPage - 1,
+                        })
+                      }
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground shadow-sm transition-all hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5" />
+                      Previous
+                    </button>
+
+                    <div className="flex h-9 min-w-9 items-center justify-center rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm">
+                      {currentPage}
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={
+                        currentPage >= pagination.totalPages || isFetching
+                      }
+                      onClick={() =>
+                        updateUrl({
+                          page: currentPage + 1,
+                        })
+                      }
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground shadow-sm transition-all hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Next
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* =================================================
+               EMPTY STATE
+            ================================================= */
+
+            <div className="rounded-2xl border border-border bg-card px-6 py-16 text-center shadow-sm">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                <ImageIcon className="h-6 w-6" />
+              </div>
+
+              <h3 className="mt-5 text-lg font-bold text-foreground">
+                No services found
+              </h3>
+
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+                No service matches your current search or filters.
+              </p>
+
+              <div className="mt-6 flex justify-center gap-3">
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"
+                  >
+                    <X className="h-4 w-4" />
+                    Clear Filters
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleCreate}
+                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md"
                 >
-                  Base Fee
-                </label>
+                  <Plus className="h-4 w-4" />
+                  Create Service
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* =======================================================
+          CREATE / EDIT DIALOG
+      ======================================================= */}
+
+      <Dialog
+        open={isFormOpen}
+        onOpenChange={(open) => {
+          if (!open && !isSaving) {
+            resetForm();
+          }
+        }}
+      >
+        <DialogContent className="max-h-[92vh] overflow-y-auto rounded-2xl border border-border bg-card shadow-xl sm:max-w-[680px]">
+          <DialogHeader>
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              {selectedService ? (
+                <Edit3 className="h-5 w-5" />
+              ) : (
+                <Plus className="h-5 w-5" />
+              )}
+            </div>
+
+            <DialogTitle className="mt-3 text-xl text-foreground">
+              {selectedService ? "Update Service" : "Create New Service"}
+            </DialogTitle>
+
+            <DialogDescription className="text-muted-foreground">
+              {selectedService
+                ? "Update the service information below."
+                : "Add a new city service for citizens."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 pt-3">
+            {/* Name */}
+            <div>
+              <label
+                htmlFor="service-name"
+                className="mb-2 block text-sm font-medium text-foreground"
+              >
+                Service Name
+              </label>
+
+              <input
+                id="service-name"
+                {...register("name")}
+                placeholder="e.g. Footpath Repair Service"
+                className="h-11 w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+              />
+
+              {errors.name && (
+                <p className="mt-1.5 text-xs font-medium text-destructive">
+                  {errors.name.message}
+                </p>
+              )}
+            </div>
+
+            {/* Fee */}
+            <div>
+              <label
+                htmlFor="base-fee"
+                className="mb-2 block text-sm font-medium text-foreground"
+              >
+                Base Fee
+              </label>
+
+              <div className="relative">
+                <CircleDollarSign className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
                 <input
                   id="base-fee"
@@ -371,48 +1182,67 @@ const AdminServicesPage = () => {
                   min="0"
                   {...register("baseFee")}
                   placeholder="Enter base fee"
-                  className="w-full rounded-md border bg-background px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-primary"
+                  className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-4 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
                 />
-
-                {errors.baseFee && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.baseFee.message}
-                  </p>
-                )}
               </div>
 
-              {/* Description */}
-              <div>
-                <label
-                  htmlFor="service-description"
-                  className="mb-1.5 block text-sm font-medium"
-                >
-                  Description
-                </label>
+              {errors.baseFee && (
+                <p className="mt-1.5 text-xs font-medium text-destructive">
+                  {errors.baseFee.message}
+                </p>
+              )}
+            </div>
 
-                <textarea
-                  id="service-description"
-                  {...register("description")}
-                  placeholder="Enter service description"
-                  rows={4}
-                  className="w-full resize-none rounded-md border bg-background px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-primary"
-                />
+            {/* Description */}
+            <div>
+              <label
+                htmlFor="service-description"
+                className="mb-2 block text-sm font-medium text-foreground"
+              >
+                Description
+              </label>
 
-                {errors.description && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.description.message}
+              <textarea
+                id="service-description"
+                {...register("description")}
+                placeholder="Describe this service..."
+                rows={4}
+                className="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+              />
+
+              {errors.description && (
+                <p className="mt-1.5 text-xs font-medium text-destructive">
+                  {errors.description.message}
+                </p>
+              )}
+            </div>
+
+            {/* Image */}
+            <div>
+              <label
+                htmlFor="service-image"
+                className="mb-2 block text-sm font-medium text-foreground"
+              >
+                Service Image
+              </label>
+
+              <label
+                htmlFor="service-image"
+                className="group flex cursor-pointer items-center gap-4 rounded-xl border border-border bg-background p-4 shadow-sm transition-all hover:border-primary/30 hover:bg-primary/5 hover:shadow-md"
+              >
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <ImageIcon className="h-5 w-5" />
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    Choose service image
                   </p>
-                )}
-              </div>
 
-              {/* Service Image */}
-              <div>
-                <label
-                  htmlFor="service-image"
-                  className="mb-1.5 block text-sm font-medium"
-                >
-                  Service Image
-                </label>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    JPG, PNG or WebP
+                  </p>
+                </div>
 
                 <input
                   ref={imageInputRef}
@@ -420,277 +1250,79 @@ const AdminServicesPage = () => {
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
-                  className="w-full rounded-md border bg-background px-3 py-2.5 text-sm"
+                  className="sr-only"
                 />
+              </label>
 
-                <p className="mt-1.5 text-xs text-muted-foreground">
-                  Upload an image for this service. JPG, PNG or WebP
-                  recommended.
-                </p>
+              {imagePreview && (
+                <div className="relative mt-4 overflow-hidden rounded-xl border border-border bg-muted shadow-sm">
+                  <img
+                    src={imagePreview}
+                    alt="Service preview"
+                    className="h-40 w-full object-cover"
+                  />
 
-                {/* Image Preview */}
-                {imagePreview && (
-                  <div className="mt-3 overflow-hidden rounded-lg border">
-                    <img
-                      src={imagePreview}
-                      alt="Service preview"
-                      className="h-32 w-full object-cover sm:h-36"
-                    />
+                  <div className="absolute left-3 top-3 rounded-md bg-background/90 px-3 py-1 text-xs font-medium text-foreground shadow-sm backdrop-blur">
+                    Image Preview
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+            </div>
 
-              {/* Form Buttons */}
-              <DialogFooter className=" bottom-0 z-10 gap-2 border-t bg-background pt-4">
-                {/* Cancel */}
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  disabled={isSaving}
-                  className="rounded-md border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-
-                {/* Submit */}
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isSaving
-                    ? "Saving..."
-                    : selectedService
-                      ? "Update Service"
-                      : "Create Service"}
-                </button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-
-        {/* Filters */}
-        <div className="rounded-lg border bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold">Filters</h2>
-
-          <div className="grid gap-4 md:grid-cols-4">
-            {/* Search */}
-            <div>
-              <label
-                htmlFor="service-search"
-                className="mb-1 block text-sm font-medium"
+            {/* Footer */}
+            <DialogFooter className="gap-2 pt-2">
+              <button
+                type="button"
+                onClick={resetForm}
+                disabled={isSaving}
+                className="h-10 rounded-xl border border-border bg-background px-4 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted disabled:opacity-50"
               >
-                Search
-              </label>
+                Cancel
+              </button>
 
-              <input
-                id="service-search"
-                value={search}
-                onChange={(event) => {
-                  setSearch(event.target.value);
-                  setPage(1);
-                }}
-                placeholder="Search service..."
-                className="w-full rounded-md border px-3 py-2 text-sm outline-none"
-              />
-            </div>
-
-            {/* Minimum Fee */}
-            <div>
-              <label
-                htmlFor="minimum-fee"
-                className="mb-1 block text-sm font-medium"
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Minimum Fee
-              </label>
+                {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
 
-              <input
-                id="minimum-fee"
-                type="number"
-                min="0"
-                value={minFee}
-                onChange={(event) => {
-                  setMinFee(event.target.value);
-                  setPage(1);
-                }}
-                placeholder="Minimum fee"
-                className="w-full rounded-md border px-3 py-2 text-sm outline-none"
-              />
-            </div>
-
-            {/* Maximum Fee */}
-            <div>
-              <label
-                htmlFor="maximum-fee"
-                className="mb-1 block text-sm font-medium"
-              >
-                Maximum Fee
-              </label>
-
-              <input
-                id="maximum-fee"
-                type="number"
-                min="0"
-                value={maxFee}
-                onChange={(event) => {
-                  setMaxFee(event.target.value);
-                  setPage(1);
-                }}
-                placeholder="Maximum fee"
-                className="w-full rounded-md border px-3 py-2 text-sm outline-none"
-              />
-            </div>
-
-            {/* Sort */}
-            <div>
-              <label
-                htmlFor="sort-order"
-                className="mb-1 block text-sm font-medium"
-              >
-                Sort Order
-              </label>
-
-              <select
-                id="sort-order"
-                value={sortOrder}
-                onChange={(event) => {
-                  setSortOrder(event.target.value as "asc" | "desc");
-                  setPage(1);
-                }}
-                className="w-full rounded-md border px-3 py-2 text-sm outline-none"
-              >
-                <option value="desc">Newest First</option>
-                <option value="asc">Oldest First</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Service List */}
-        <div className="rounded-lg border bg-white shadow-sm">
-          <div className="border-b p-6">
-            <h2 className="text-lg font-semibold">All Services</h2>
-          </div>
-
-          {/* Loading */}
-          {isLoading && (
-            <div className="p-6 text-sm text-muted-foreground">
-              Loading services...
-            </div>
-          )}
-
-          {/* Error */}
-          {isError && (
-            <div className="p-6 text-sm text-red-500">
-              Failed to load services.
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!isLoading && !isError && services.length === 0 && (
-            <div className="p-6 text-center text-sm text-muted-foreground">
-              No services found.
-            </div>
-          )}
-
-          {/* Service Table */}
-          {!isLoading && !isError && services.length > 0 && (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[800px]">
-                <thead>
-                  <tr className="border-b text-left text-sm">
-                    <th className="px-6 py-3">Name</th>
-                    <th className="px-6 py-3">Description</th>
-                    <th className="px-6 py-3">Base Fee</th>
-                    <th className="px-6 py-3">Status</th>
-                    <th className="px-6 py-3">Actions</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {services.map((service) => (
-                    <tr key={service.id} className="border-b last:border-b-0">
-                      <td className="px-6 py-4 font-medium">{service.name}</td>
-
-                      <td className="px-6 py-4 text-sm text-muted-foreground">
-                        {service.description || "—"}
-                      </td>
-
-                      <td className="px-6 py-4">৳{service.baseFee}</td>
-
-                      <td className="px-6 py-4">
-                        <span
-                          className={
-                            service.isActive
-                              ? "rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
-                              : "rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
-                          }
-                        >
-                          {service.isActive ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2">
-                          {/* Edit */}
-                          <button
-                            type="button"
-                            onClick={() => handleEdit(service)}
-                            disabled={isSaving}
-                            className="rounded-md border px-3 py-1.5 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            Edit
-                          </button>
-
-                          {/* Activate / Deactivate */}
-                          <button
-                            type="button"
-                            onClick={() => handleToggleStatus(service)}
-                            disabled={updateServiceMutation.isPending}
-                            className="rounded-md border px-3 py-1.5 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            {service.isActive ? "Deactivate" : "Activate"}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Pagination */}
-          {pagination && pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between border-t p-6">
-              <p className="text-sm text-muted-foreground">
-                Page {pagination.page} of {pagination.totalPages}
-              </p>
-
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  disabled={page === 1}
-                  onClick={() => setPage((current) => current - 1)}
-                  className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
-                >
-                  Previous
-                </button>
-
-                <button
-                  type="button"
-                  disabled={page === pagination.totalPages}
-                  onClick={() => setPage((current) => current + 1)}
-                  className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+                {isSaving
+                  ? "Saving..."
+                  : selectedService
+                    ? "Update Service"
+                    : "Create Service"}
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </RoleGuard>
+  );
+};
+
+// =========================================================
+// SMALL ICON
+// =========================================================
+
+const BriefcaseIcon = () => {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      className="h-5 w-5"
+      aria-hidden="true"
+    >
+      <rect x="3" y="7" width="18" height="13" rx="2" />
+
+      <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+
+      <path d="M3 12h18" />
+
+      <path d="M10 12v2h4v-2" />
+    </svg>
   );
 };
 

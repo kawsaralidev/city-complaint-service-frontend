@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+
 import {
   BriefcaseBusiness,
   ClipboardList,
@@ -12,6 +13,7 @@ import {
   Settings,
   Users,
 } from "lucide-react";
+
 import { usePathname } from "next/navigation";
 
 interface DashboardSidebarMenuProps {
@@ -38,8 +40,8 @@ const DashboardSidebarMenu = ({
         onClick={onClose}
         className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
           isActive("/")
-            ? "bg-secondary/10 font-medium text-secondary"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            ? "bg-secondary-foreground/10 font-medium text-secondary-foreground"
+            : "text-secondary-foreground/70 hover:bg-secondary-foreground/10 hover:text-secondary-foreground"
         }`}
       >
         <House className="h-[18px] w-[18px]" />
@@ -48,12 +50,12 @@ const DashboardSidebarMenu = ({
 
       {/* Dashboard */}
       <Link
-        href="/dashboard"
+        href="/dashboard/admin-dashboard"
         onClick={onClose}
         className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
-          isActive("/dashboard")
-            ? "bg-secondary/10 font-medium text-secondary"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          isActive("/dashboard/admin-dashboard")
+            ? "bg-secondary-foreground/15 font-medium text-secondary-foreground"
+            : "text-secondary-foreground/70 hover:bg-secondary-foreground/15 hover:text-secondary-foreground"
         }`}
       >
         <LayoutDashboard className="h-[18px] w-[18px]" />
@@ -69,8 +71,8 @@ const DashboardSidebarMenu = ({
             onClick={onClose}
             className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
               isActive("/dashboard/admin-dashboard/users")
-                ? "bg-secondary/10 font-medium text-secondary"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "bg-secondary-foreground/15 font-medium text-secondary-foreground"
+                : "text-secondary-foreground/70 hover:bg-secondary-foreground/15 hover:text-secondary-foreground"
             }`}
           >
             <Users className="h-[18px] w-[18px]" />
@@ -83,8 +85,8 @@ const DashboardSidebarMenu = ({
             onClick={onClose}
             className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
               isActive("/dashboard/admin-dashboard/categories")
-                ? "bg-secondary/10 font-medium text-secondary"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "bg-secondary-foreground/15 font-medium text-secondary-foreground"
+                : "text-secondary-foreground/70 hover:bg-secondary-foreground/15 hover:text-secondary-foreground"
             }`}
           >
             <FolderTree className="h-[18px] w-[18px]" />
@@ -97,8 +99,8 @@ const DashboardSidebarMenu = ({
             onClick={onClose}
             className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
               isActive("/dashboard/admin-dashboard/complaints")
-                ? "bg-secondary/10 font-medium text-secondary"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "bg-secondary-foreground/15 font-medium text-secondary-foreground"
+                : "text-secondary-foreground/70 hover:bg-secondary-foreground/15 hover:text-secondary-foreground"
             }`}
           >
             <MessageSquareWarning className="h-[18px] w-[18px]" />
@@ -111,8 +113,8 @@ const DashboardSidebarMenu = ({
             onClick={onClose}
             className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
               isActive("/dashboard/admin-dashboard/services")
-                ? "bg-secondary/10 font-medium text-secondary"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "bg-secondary-foreground/15 font-medium text-secondary-foreground"
+                : "text-secondary-foreground/70 hover:bg-secondary-foreground/15 hover:text-secondary-foreground"
             }`}
           >
             <BriefcaseBusiness className="h-[18px] w-[18px]" />
@@ -125,8 +127,8 @@ const DashboardSidebarMenu = ({
             onClick={onClose}
             className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
               isActive("/dashboard/admin-dashboard/service-requests")
-                ? "bg-secondary/10 font-medium text-secondary"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "bg-secondary-foreground/15 font-medium text-secondary-foreground"
+                : "text-secondary-foreground/70 hover:bg-secondary-foreground/15 hover:text-secondary-foreground"
             }`}
           >
             <ClipboardList className="h-[18px] w-[18px]" />
@@ -139,12 +141,26 @@ const DashboardSidebarMenu = ({
             onClick={onClose}
             className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
               isActive("/dashboard/admin-dashboard/payments")
-                ? "bg-secondary/10 font-medium text-secondary"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "bg-secondary-foreground/15 font-medium text-secondary-foreground"
+                : "text-secondary-foreground/70 hover:bg-secondary-foreground/15 hover:text-secondary-foreground"
             }`}
           >
             <CreditCard className="h-[18px] w-[18px]" />
             <span>Payments</span>
+          </Link>
+
+          {/* Reports */}
+          <Link
+            href="/dashboard/admin-dashboard/reports"
+            onClick={onClose}
+            className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
+              isActive("/dashboard/admin-dashboard/reports")
+                ? "bg-secondary-foreground/15 font-medium text-secondary-foreground"
+                : "text-secondary-foreground/70 hover:bg-secondary-foreground/15 hover:text-secondary-foreground"
+            }`}
+          >
+            <CreditCard className="h-[18px] w-[18px]" />
+            <span>Reports</span>
           </Link>
         </>
       )}
@@ -158,8 +174,8 @@ const DashboardSidebarMenu = ({
             onClick={onClose}
             className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
               isActive("/dashboard/officer-dashboard/complaints")
-                ? "bg-secondary/10 font-medium text-secondary"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "bg-secondary-foreground/15 font-medium text-secondary-foreground"
+                : "text-secondary-foreground/70 hover:bg-secondary-foreground/15 hover:text-secondary-foreground"
             }`}
           >
             <MessageSquareWarning className="h-[18px] w-[18px]" />
@@ -172,8 +188,8 @@ const DashboardSidebarMenu = ({
             onClick={onClose}
             className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
               isActive("/dashboard/officer-dashboard/service-requests")
-                ? "bg-secondary/10 font-medium text-secondary"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "bg-secondary-foreground/15 font-medium text-secondary-foreground"
+                : "text-secondary-foreground/70 hover:bg-secondary-foreground/15 hover:text-secondary-foreground"
             }`}
           >
             <ClipboardList className="h-[18px] w-[18px]" />
@@ -191,8 +207,8 @@ const DashboardSidebarMenu = ({
             onClick={onClose}
             className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
               isActive("/dashboard/citizen-dashboard/complaints")
-                ? "bg-secondary/10 font-medium text-secondary"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "bg-secondary-foreground/15 font-medium text-secondary-foreground"
+                : "text-secondary-foreground/70 hover:bg-secondary-foreground/15 hover:text-secondary-foreground"
             }`}
           >
             <MessageSquareWarning className="h-[18px] w-[18px]" />
@@ -205,8 +221,8 @@ const DashboardSidebarMenu = ({
             onClick={onClose}
             className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
               isActive("/dashboard/citizen-dashboard/service-request")
-                ? "bg-secondary/10 font-medium text-secondary"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "bg-secondary-foreground/15 font-medium text-secondary-foreground"
+                : "text-secondary-foreground/70 hover:bg-secondary-foreground/15 hover:text-secondary-foreground"
             }`}
           >
             <ClipboardList className="h-[18px] w-[18px]" />
@@ -219,8 +235,8 @@ const DashboardSidebarMenu = ({
             onClick={onClose}
             className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
               isActive("/dashboard/citizen-dashboard/payments")
-                ? "bg-secondary/10 font-medium text-secondary"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "bg-secondary-foreground/15 font-medium text-secondary-foreground"
+                : "text-secondary-foreground/70 hover:bg-secondary-foreground/15 hover:text-secondary-foreground"
             }`}
           >
             <CreditCard className="h-[18px] w-[18px]" />
@@ -236,8 +252,8 @@ const DashboardSidebarMenu = ({
           onClick={onClose}
           className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
             isActive("/dashboard/settings")
-              ? "bg-secondary/10 font-medium text-secondary"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              ? "bg-secondary-foreground/15 font-medium text-secondary-foreground"
+              : "text-secondary-foreground/70 hover:bg-secondary-foreground/15 hover:text-secondary-foreground"
           }`}
         >
           <Settings className="h-[18px] w-[18px]" />

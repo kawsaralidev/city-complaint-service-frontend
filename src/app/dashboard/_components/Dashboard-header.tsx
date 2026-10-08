@@ -10,7 +10,7 @@ interface DashboardHeaderProps {
 
 const DashboardHeader = ({ onMenuClick }: DashboardHeaderProps) => {
   return (
-    <header className="flex h-16 items-center justify-between border-b border-secondary bg-background px-4 sm:px-6">
+    <header className="flex h-16 items-center justify-between shadow-[0_2px_5px_rgba(128,128,128,0.18)] bg-background px-4 sm:px-6">
       <div className="flex items-center gap-3">
         <button
           type="button"

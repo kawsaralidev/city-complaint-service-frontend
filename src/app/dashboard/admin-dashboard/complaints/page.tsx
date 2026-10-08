@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Table,
@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  ArrowUpDown,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
@@ -21,11 +22,13 @@ import {
   Search,
   UserRound,
 } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { useCategories } from "@/hooks/category.hook";
 import { useComplaints, useDeleteComplaint } from "@/hooks/complaint.hook";
 
 import type { Complaint, ComplaintStatus } from "@/types/complaint";
+
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Category } from "@/types/dashboard";
@@ -111,48 +114,172 @@ const formatDate = (date: string) => {
 };
 
 const ComplaintsPage = () => {
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const [status, setStatus] = useState<ComplaintStatus | undefined>(undefined);
+  /*
+   * ============================================================
+   * URL STATE
+   * ============================================================
+   */
 
-  const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
+  const searchFromUrl = searchParams.get("search") ?? "";
 
-  const [page, setPage] = useState(1);
+  const statusFromUrl = searchParams.get("status");
+
+  const categoryFromUrl = searchParams.get("categoryId") ?? "";
+
+  const sortFromUrl = searchParams.get("sortOrder") === "asc" ? "asc" : "desc";
+
+  const pageFromUrl = Number(searchParams.get("page") ?? "1");
+
+  const currentPage =
+    Number.isInteger(pageFromUrl) && pageFromUrl > 0 ? pageFromUrl : 1;
+
+  const currentStatus =
+    statusFromUrl &&
+    statusOptions.some((option) => option.value === statusFromUrl)
+      ? (statusFromUrl as ComplaintStatus)
+      : undefined;
+
+  const [searchInput, setSearchInput] = useState(searchFromUrl);
 
   const [deletingComplaintId, setDeletingComplaintId] = useState<string | null>(
     null,
   );
 
-  // Debounce search before sending request
+  /*
+   * Keep search input synchronized with browser
+   * back / forward navigation.
+   */
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearch(searchInput.trim());
-      setPage(1);
-    }, 400);
+    setSearchInput(searchFromUrl);
+  }, [searchFromUrl]);
 
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+  /*
+   * ============================================================
+   * UPDATE URL
+   * ============================================================
+   */
 
-  const deleteComplaintMutation = useDeleteComplaint();
+  const updateUrl = (updates: {
+    search?: string;
+    status?: string;
+    categoryId?: string;
+    sortOrder?: "asc" | "desc";
+    page?: number;
+  }) => {
+    const params = new URLSearchParams(searchParams.toString());
 
-  // Get complaints from backend
+    /*
+     * Search
+     */
+    if (updates.search !== undefined) {
+      const trimmedSearch = updates.search.trim();
+
+      if (trimmedSearch) {
+        params.set("search", trimmedSearch);
+      } else {
+        params.delete("search");
+      }
+
+      params.delete("page");
+    }
+
+    /*
+     * Status
+     */
+    if (updates.status !== undefined) {
+      if (updates.status) {
+        params.set("status", updates.status);
+      } else {
+        params.delete("status");
+      }
+
+      params.delete("page");
+    }
+
+    /*
+     * Category
+     */
+    if (updates.categoryId !== undefined) {
+      if (updates.categoryId) {
+        params.set("categoryId", updates.categoryId);
+      } else {
+        params.delete("categoryId");
+      }
+
+      params.delete("page");
+    }
+
+    /*
+     * Sort
+     */
+    if (updates.sortOrder !== undefined) {
+      params.set("sortOrder", updates.sortOrder);
+
+      params.delete("page");
+    }
+
+    /*
+     * Page
+     */
+    if (updates.page !== undefined) {
+      if (updates.page <= 1) {
+        params.delete("page");
+      } else {
+        params.set("page", String(updates.page));
+      }
+    }
+
+    const queryString = params.toString();
+
+    router.push(queryString ? `${pathname}?${queryString}` : pathname);
+  };
+
+  /*
+   * ============================================================
+   * GET COMPLAINTS
+   * ============================================================
+   */
+
   const {
     data: complaintsResponse,
     isLoading,
     isFetching,
     error,
   } = useComplaints({
-    page,
+    page: currentPage,
     limit: PAGE_LIMIT,
-    search: search || undefined,
-    status,
-    categoryId,
+    search: searchFromUrl || undefined,
+    status: currentStatus,
+    categoryId: categoryFromUrl || undefined,
+    sortOrder: sortFromUrl,
   });
 
-  // Get categories for category filter
+  /*
+   * ============================================================
+   * GET CATEGORIES
+   * ============================================================
+   */
+
   const { data: categoriesResponse, isLoading: categoriesLoading } =
     useCategories();
+
+  /*
+   * ============================================================
+   * DELETE MUTATION
+   * ============================================================
+   */
+
+  const deleteComplaintMutation = useDeleteComplaint();
+
+  /*
+   * ============================================================
+   * DATA
+   * ============================================================
+   */
 
   const complaints = complaintsResponse?.data ?? [];
 
@@ -162,7 +289,9 @@ const ComplaintsPage = () => {
 
   const totalPages = pagination?.totalPages ?? 1;
 
-  // Categories returned from API
+  /*
+   * Categories returned from API
+   */
   const categories: Category[] = Array.isArray(categoriesResponse)
     ? categoriesResponse
     : [];
@@ -171,18 +300,82 @@ const ComplaintsPage = () => {
     (category) => category.type === "COMPLAINT",
   );
 
-  const handleStatusChange = (value: string) => {
-    setStatus(value ? (value as ComplaintStatus) : undefined);
+  /*
+   * ============================================================
+   * SEARCH
+   * ============================================================
+   */
 
-    setPage(1);
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    updateUrl({
+      search: searchInput,
+    });
   };
+
+  /*
+   * ============================================================
+   * STATUS FILTER
+   * ============================================================
+   */
+
+  const handleStatusChange = (value: string) => {
+    updateUrl({
+      status: value,
+    });
+  };
+
+  /*
+   * ============================================================
+   * CATEGORY FILTER
+   * ============================================================
+   */
+
+  const handleCategoryChange = (value: string) => {
+    updateUrl({
+      categoryId: value,
+    });
+  };
+
+  /*
+   * ============================================================
+   * SORT
+   * ============================================================
+   */
+
+  const handleSortChange = (value: "asc" | "desc") => {
+    updateUrl({
+      sortOrder: value,
+    });
+  };
+
+  /*
+   * ============================================================
+   * CLEAR ALL FILTERS
+   * ============================================================
+   */
+
+  const handleClearFilters = () => {
+    setSearchInput("");
+
+    router.push(pathname);
+  };
+
+  /*
+   * ============================================================
+   * DELETE COMPLAINT
+   * ============================================================
+   */
 
   const handleDeleteComplaint = (complaintId: string) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this complaint?",
     );
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
 
     setDeletingComplaintId(complaintId);
 
@@ -193,29 +386,49 @@ const ComplaintsPage = () => {
     });
   };
 
-  const handleCategoryChange = (value: string) => {
-    setCategoryId(value || undefined);
-    setPage(1);
-  };
+  /*
+   * ============================================================
+   * PAGINATION
+   * ============================================================
+   */
 
   const handlePreviousPage = () => {
-    if (page > 1) {
-      setPage((currentPage) => currentPage - 1);
+    if (currentPage <= 1) {
+      return;
     }
+
+    updateUrl({
+      page: currentPage - 1,
+    });
   };
 
   const handleNextPage = () => {
-    if (page < totalPages) {
-      setPage((currentPage) => currentPage + 1);
+    if (currentPage >= totalPages) {
+      return;
     }
+
+    updateUrl({
+      page: currentPage + 1,
+    });
   };
+
+  /*
+   * Active filter check
+   */
+  const hasActiveFilters =
+    Boolean(searchFromUrl) ||
+    Boolean(currentStatus) ||
+    Boolean(categoryFromUrl) ||
+    sortFromUrl === "asc";
 
   return (
     <RoleGuard requiredRole="ADMIN">
       <div className="space-y-6 pb-8 p-7">
-        {/* Page Header */}
+        {/* ======================================================
+            PAGE HEADER
+        ======================================================= */}
+
         <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm">
-          {/* Decorative background */}
           <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
 
           <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
@@ -253,11 +466,14 @@ const ComplaintsPage = () => {
           </div>
         </div>
 
-        {/* Filters */}
+        {/* ======================================================
+            FILTERS
+        ======================================================= */}
+
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm md:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
             {/* Search */}
-            <div className="relative flex-1">
+            <form onSubmit={handleSearch} className="relative flex-1">
               <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-muted-foreground" />
 
               <input
@@ -265,21 +481,28 @@ const ComplaintsPage = () => {
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
                 placeholder="Search complaints..."
-                className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-10 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10"
+                className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-24 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10"
               />
 
-              {isFetching && (
+              {isFetching ? (
                 <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
                 </div>
+              ) : (
+                <button
+                  type="submit"
+                  className="absolute right-1.5 top-1/2 inline-flex h-8 -translate-y-1/2 items-center justify-center rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                >
+                  Search
+                </button>
               )}
-            </div>
+            </form>
 
-            {/* Status Filter */}
+            {/* Status */}
             <select
-              value={status ?? ""}
+              value={currentStatus ?? ""}
               onChange={(event) => handleStatusChange(event.target.value)}
-              className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 lg:w-44"
+              className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 xl:w-44"
             >
               <option value="">All Status</option>
 
@@ -290,12 +513,12 @@ const ComplaintsPage = () => {
               ))}
             </select>
 
-            {/* Category Filter */}
+            {/* Category */}
             <select
-              value={categoryId ?? ""}
+              value={categoryFromUrl}
               onChange={(event) => handleCategoryChange(event.target.value)}
               disabled={categoriesLoading}
-              className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-60 lg:w-48"
+              className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-60 xl:w-48"
             >
               <option value="">
                 {categoriesLoading ? "Loading categories..." : "All Categories"}
@@ -307,37 +530,73 @@ const ComplaintsPage = () => {
                 </option>
               ))}
             </select>
+
+            {/* Sort */}
+            <div className="relative">
+              <ArrowUpDown className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+
+              <select
+                value={sortFromUrl}
+                onChange={(event) =>
+                  handleSortChange(
+                    event.target.value === "asc" ? "asc" : "desc",
+                  )
+                }
+                className="h-11 w-full appearance-none rounded-xl border border-border bg-background pl-10 pr-8 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 xl:w-44"
+              >
+                <option value="desc">Newest First</option>
+
+                <option value="asc">Oldest First</option>
+              </select>
+            </div>
           </div>
 
           {/* Active Filters */}
-          {(search || status || categoryId) && (
+          {hasActiveFilters && (
             <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
               <span className="text-xs text-muted-foreground">
                 Active filters:
               </span>
 
-              {search && (
+              {searchFromUrl && (
                 <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                  Search: {search}
+                  Search: {searchFromUrl}
                 </span>
               )}
 
-              {status && (
+              {currentStatus && (
                 <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                  Status: {formatStatus(status)}
+                  Status: {formatStatus(currentStatus)}
                 </span>
               )}
 
-              {categoryId && (
+              {categoryFromUrl && (
                 <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                  Category
+                  Category selected
                 </span>
               )}
+
+              {sortFromUrl === "asc" && (
+                <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                  Oldest first
+                </span>
+              )}
+
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="ml-auto text-xs font-semibold text-destructive transition-colors hover:underline"
+              >
+                Clear all
+              </button>
             </div>
           )}
         </div>
 
-        {/* Error */}
+        {/* ======================================================
+            ERROR
+        ======================================================= */}
+
         {error && (
           <div className="flex justify-center">
             <ErrorState
@@ -350,7 +609,11 @@ const ComplaintsPage = () => {
             />
           </div>
         )}
-        {/* Complaints Table */}
+
+        {/* ======================================================
+            COMPLAINT TABLE
+        ======================================================= */}
+
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
           {/* Table Header */}
           <div className="flex flex-col gap-1 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -374,7 +637,9 @@ const ComplaintsPage = () => {
           {/* Loading */}
           {isLoading ? (
             <div className="space-y-3 p-5">
-              {Array.from({ length: 6 }).map((_, index) => (
+              {Array.from({
+                length: 6,
+              }).map((_, index) => (
                 <div
                   key={index}
                   className="h-16 animate-pulse rounded-xl bg-muted"
@@ -382,12 +647,12 @@ const ComplaintsPage = () => {
               ))}
             </div>
           ) : complaints.length === 0 ? (
-            /* Empty State */
+            /* Empty */
             <div className="flex min-h-[300px] items-center justify-center px-5">
               <EmptyState
                 title="No complaints found"
                 description={
-                  search || status || categoryId
+                  searchFromUrl || currentStatus || categoryFromUrl
                     ? "Try changing your search or filters to find what you are looking for."
                     : "There are currently no complaints to display."
                 }
@@ -396,8 +661,8 @@ const ComplaintsPage = () => {
           ) : (
             <>
               {/* Responsive Table */}
-              <div className="w-full min-w-0">
-                <Table className="w-full table-fixed">
+              <div className="w-full min-w-0 overflow-x-auto">
+                <Table className="min-w-[1000px] w-full table-fixed">
                   <TableHeader>
                     <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
                       <TableHead className="w-[22%] px-2 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:px-3 lg:px-4">
@@ -523,31 +788,11 @@ const ComplaintsPage = () => {
                             <Link
                               href={`/dashboard/admin-dashboard/complaints/${complaint.id}`}
                               title="View complaint"
-                              className="
-                  inline-flex
-                  h-8
-                  w-8
-                  shrink-0
-                  items-center
-                  justify-center
-                  rounded-md
-                  border
-                  border-border
-                  bg-background
-                  text-foreground
-                  transition-colors
-                  hover:border-primary/30
-                  hover:bg-primary/10
-                  hover:text-primary
-                  lg:h-9
-                  lg:w-auto
-                  lg:gap-1
-                  lg:px-2.5
-                "
+                              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-background text-foreground transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary lg:h-9 lg:w-auto lg:gap-1 lg:px-2.5"
                             >
                               <Eye className="h-3.5 w-3.5" />
 
-                              <span className="hidden lg:inline text-xs">
+                              <span className="hidden text-xs lg:inline">
                                 View
                               </span>
                             </Link>
@@ -571,34 +816,21 @@ const ComplaintsPage = () => {
                                   }
                                   disabled={!canDelete || isDeleting}
                                   onClick={() => {
-                                    if (!canDelete) return;
+                                    if (!canDelete) {
+                                      return;
+                                    }
 
                                     handleDeleteComplaint(complaint.id);
                                   }}
-                                  className={`
-                      inline-flex
-                      h-8
-                      w-8
-                      shrink-0
-                      items-center
-                      justify-center
-                      rounded-md
-                      border
-                      transition-colors
-                      lg:h-9
-                      lg:w-auto
-                      lg:gap-1
-                      lg:px-2.5
-                      ${
-                        canDelete
-                          ? "border-red-200 bg-red-50 text-red-600 hover:border-red-300 hover:bg-red-100"
-                          : "cursor-not-allowed border-border bg-muted text-muted-foreground opacity-50"
-                      }
-                    `}
+                                  className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border transition-colors lg:h-9 lg:w-auto lg:gap-1 lg:px-2.5 ${
+                                    canDelete
+                                      ? "border-red-200 bg-red-50 text-red-600 hover:border-red-300 hover:bg-red-100"
+                                      : "cursor-not-allowed border-border bg-muted text-muted-foreground opacity-50"
+                                  }`}
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />
 
-                                  <span className="hidden lg:inline text-xs">
+                                  <span className="hidden text-xs lg:inline">
                                     {isDeleting ? "Deleting..." : "Delete"}
                                   </span>
                                 </button>
@@ -612,22 +844,41 @@ const ComplaintsPage = () => {
                 </Table>
               </div>
 
-              {/* Pagination */}
+              {/* ====================================================
+                  PAGINATION
+              ===================================================== */}
+
               <div className="flex flex-col gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xs text-muted-foreground">
-                  Page{" "}
-                  <span className="font-semibold text-foreground">{page}</span>{" "}
-                  of{" "}
-                  <span className="font-semibold text-foreground">
-                    {totalPages}
-                  </span>
-                </p>
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    Showing{" "}
+                    <span className="font-semibold text-foreground">
+                      {complaints.length}
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-semibold text-foreground">
+                      {totalComplaints}
+                    </span>{" "}
+                    complaints
+                  </p>
+
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    Page{" "}
+                    <span className="font-semibold text-foreground">
+                      {currentPage}
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-semibold text-foreground">
+                      {totalPages}
+                    </span>
+                  </p>
+                </div>
 
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={handlePreviousPage}
-                    disabled={page === 1 || isFetching}
+                    disabled={currentPage === 1 || isFetching}
                     className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -635,13 +886,13 @@ const ComplaintsPage = () => {
                   </button>
 
                   <div className="flex h-9 min-w-9 items-center justify-center rounded-lg bg-secondary px-3 text-xs font-semibold text-primary-foreground">
-                    {page}
+                    {currentPage}
                   </div>
 
                   <button
                     type="button"
                     onClick={handleNextPage}
-                    disabled={page >= totalPages || isFetching}
+                    disabled={currentPage >= totalPages || isFetching}
                     className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Next
