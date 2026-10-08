@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import {
+  BarChart3,
   BriefcaseBusiness,
   ClipboardList,
   CreditCard,
@@ -150,6 +151,7 @@ const DashboardSidebarMenu = ({
           </Link>
 
           {/* Reports */}
+
           <Link
             href="/dashboard/admin-dashboard/reports"
             onClick={onClose}
@@ -159,8 +161,22 @@ const DashboardSidebarMenu = ({
                 : "text-secondary-foreground/70 hover:bg-secondary-foreground/15 hover:text-secondary-foreground"
             }`}
           >
-            <CreditCard className="h-[18px] w-[18px]" />
+            <BarChart3 className="h-[18px] w-[18px]" />
             <span>Reports</span>
+          </Link>
+
+          {/* Audit logs */}
+          <Link
+            href="/dashboard/admin-dashboard/audit-logs"
+            onClick={onClose}
+            className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
+              isActive("/dashboard/admin-dashboard/audit-logs")
+                ? "bg-secondary-foreground/15 font-medium text-secondary-foreground"
+                : "text-secondary-foreground/70 hover:bg-secondary-foreground/15 hover:text-secondary-foreground"
+            }`}
+          >
+            <ClipboardList className="h-[18px] w-[18px]" />
+            <span>Audit logs</span>
           </Link>
         </>
       )}

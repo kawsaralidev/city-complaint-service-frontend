@@ -6,3 +6,4 @@ export * from "./service.api";
 export * from "./service-request.api";
 export * from "./user.api";
 export * from "./payment.api";
+export * from "./audit-log.api";
