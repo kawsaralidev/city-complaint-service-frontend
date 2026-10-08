@@ -699,7 +699,7 @@ const ComplaintsPage = () => {
                   <div className="mt-auto pt-5">
                     <Link
                       href={`/complaints/${complaint.id}`}
-                      className="group/button flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
+                      className="group/button flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-sm font-semibold text-primary-foreground transition-all duration-200 hover:bg-secondary/90 hover:shadow-lg hover:shadow-secondary/15"
                     >
                       View Complaint
                       <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover/button:translate-x-1" />

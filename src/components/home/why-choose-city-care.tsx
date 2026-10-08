@@ -38,7 +38,7 @@ const features = [
 
 export default function WhyChooseCityCare() {
   return (
-    <section className="relative overflow-hidden bg-muted/30 py-20 sm:py-24 lg:py-28">
+    <section className="relative overflow-hidden bg-background py-16 sm:py-20 lg:py-12">
       {/* Background decoration */}
       <div className="pointer-events-none absolute -left-40 top-20 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
 

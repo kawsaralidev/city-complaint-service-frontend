@@ -10,7 +10,7 @@ import {
 
 export default function CityCareCTA() {
   return (
-    <section className="relative overflow-hidden bg-background py-20 sm:py-24 lg:py-28">
+    <section className="relative overflow-hidden bg-background py-16 sm:py-20 lg:py-17">
       {/* Background glow */}
       <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
 
@@ -89,7 +89,7 @@ export default function CityCareCTA() {
           </div>
 
           {/* Service CTA */}
-          <div className="group relative overflow-hidden rounded-[2rem] bg-primary p-7 text-primary-foreground shadow-xl shadow-primary/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/15 sm:p-9">
+          <div className="group relative overflow-hidden rounded-[2rem] bg-secondary p-7 text-primary-foreground shadow-xl shadow-primary/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/15 sm:p-9">
             {/* Decorative circles */}
             <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full border border-white/10 transition-transform duration-500 group-hover:scale-125" />
 

@@ -35,7 +35,7 @@ const steps = [
 
 export default function HowItWorksSection() {
   return (
-    <section className="relative overflow-hidden bg-card py-16 sm:py-20 lg:py-24">
+    <section className="relative overflow-hidden bg-background py-16 sm:py-20 lg:py-14">
       {/* Subtle background */}
       <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/5 blur-3xl" />
 

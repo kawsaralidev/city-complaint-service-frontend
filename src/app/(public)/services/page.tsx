@@ -549,7 +549,7 @@ const ServicesPage = () => {
                   <div className="mt-auto pt-5">
                     <Link
                       href={`/services/${service.id}`}
-                      className="group/button flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition-all duration-200 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/15"
+                      className="group/button flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-sm font-semibold text-primary-foreground transition-all duration-200 hover:bg-secondary/90 hover:shadow-lg hover:shadow-secondary/15"
                     >
                       View Service
                       <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover/button:translate-x-1" />

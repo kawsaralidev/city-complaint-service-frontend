@@ -15,6 +15,7 @@ import {
 
 import { useRouter } from "next/navigation";
 import { useActiveServices } from "@/hooks/service.hook";
+import Image from "next/image";
 
 const serviceIcons = [
   Building2,
@@ -41,7 +42,7 @@ const PopularServicesSection = () => {
   const services = (data?.data ?? []).slice(0, 6);
 
   return (
-    <section className="relative overflow-hidden bg-background py-16 sm:py-20 lg:py-24">
+    <section className="relative overflow-hidden bg-background py-16 sm:py-20 lg:py-10">
       {/* Subtle Background */}
       <div className="pointer-events-none absolute -right-32 top-20 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
 
@@ -138,9 +139,8 @@ const PopularServicesSection = () => {
               const Icon = getServiceIcon(index);
 
               return (
-                <Link
+                <div
                   key={service.id}
-                  href={`/dashboard/citizen-dashboard/services/${service.id}`}
                   className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-xl hover:shadow-secondary/5"
                 >
                   {/* Top Accent */}
@@ -151,10 +151,11 @@ const PopularServicesSection = () => {
                       ======================================== */}
                   <div className="relative h-44 w-full overflow-hidden bg-muted">
                     {service.imageUrl ? (
-                      <img
+                      <Image
                         src={service.imageUrl}
                         alt={service.name}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-primary/5">
@@ -214,7 +215,7 @@ const PopularServicesSection = () => {
                       </div>
                     </div>
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>
