@@ -352,159 +352,161 @@ const StatusChart = ({ title, description, data, icon }: StatusChartProps) => {
   const total = data.reduce((sum, item) => sum + item.count, 0);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-[0_5px_20px_rgba(15,23,42,0.07)]">
-      {/* Header */}
-      <div className="border-b border-border bg-muted/20 px-5 py-4 sm:px-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
-            {icon}
-          </div>
+    <RoleGuard requiredRole="ADMIN">
+      <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-[0_5px_20px_rgba(15,23,42,0.07)]">
+        {/* Header */}
+        <div className="border-b border-border bg-muted/20 px-5 py-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+              {icon}
+            </div>
 
-          <div>
-            <h2 className="font-semibold text-foreground">{title}</h2>
+            <div>
+              <h2 className="font-semibold text-foreground">{title}</h2>
 
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {description}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {data.length === 0 ? (
-        <div className="p-8">
-          <EmptyState
-            title={`No ${title.toLowerCase()} data`}
-            description="There is no status data available yet."
-          />
-        </div>
-      ) : (
-        <div className="p-5 sm:p-6">
-          {/* Chart */}
-          <div className="relative h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={data}
-                  dataKey="count"
-                  nameKey="status"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={65}
-                  outerRadius={92}
-                  paddingAngle={3}
-                  stroke="hsl(var(--background))"
-                  strokeWidth={3}
-                >
-                  {data.map((item, index) => (
-                    <Cell
-                      key={`${item.status}-${index}`}
-                      fill={getChartColor(item.status, index)}
-                    />
-                  ))}
-                </Pie>
-
-                <Tooltip
-                  cursor={false}
-                  content={({ active, payload }) => {
-                    if (!active || !payload || payload.length === 0) {
-                      return null;
-                    }
-
-                    const item = payload[0];
-
-                    const status = String(item?.name ?? "");
-                    const value = Number(item?.value ?? 0);
-
-                    const color = getChartColor(
-                      status,
-                      data.findIndex((entry) => entry.status === status),
-                    );
-
-                    return (
-                      <div
-                        className="min-w-[170px] rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-[0_12px_35px_rgba(15,23,42,0.18)] dark:border-slate-700 dark:bg-slate-900"
-                        style={{
-                          position: "relative",
-                          zIndex: 1000,
-                        }}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="h-2.5 w-2.5 rounded-full"
-                            style={{ backgroundColor: color }}
-                          />
-
-                          <span className="text-sm font-semibold text-slate-900 dark:text-white">
-                            {formatStatus(status)}
-                          </span>
-                        </div>
-
-                        <div className="mt-2 flex items-end justify-between gap-5">
-                          <span className="text-xs text-slate-500 dark:text-slate-400">
-                            Total
-                          </span>
-
-                          <span className="text-lg font-bold text-slate-900 dark:text-white">
-                            {value}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-
-            {/* Center value */}
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-foreground">{total}</p>
-
-                <p className="text-[11px] text-muted-foreground">Total</p>
-              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {description}
+              </p>
             </div>
           </div>
-
-          {/* Clear Legend */}
-          <div className="mt-5 grid gap-2 sm:grid-cols-2">
-            {data.map((item, index) => {
-              const color = getChartColor(item.status, index);
-
-              const percentage =
-                total > 0 ? Math.round((item.count / total) * 100) : 0;
-
-              return (
-                <div
-                  key={`${item.status}-legend`}
-                  className="flex items-center justify-between rounded-lg border border-border bg-muted/20 px-3 py-2.5"
-                >
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span
-                      className="h-3 w-3 shrink-0 rounded-full ring-2 ring-white dark:ring-slate-900"
-                      style={{ backgroundColor: color }}
-                    />
-
-                    <span className="truncate text-xs font-medium text-foreground">
-                      {formatStatus(item.status)}
-                    </span>
-                  </div>
-
-                  <div className="ml-2 flex shrink-0 items-center gap-2">
-                    <span className="text-[11px] text-muted-foreground">
-                      {percentage}%
-                    </span>
-
-                    <span className="min-w-6 rounded-md bg-background px-1.5 py-0.5 text-center text-xs font-bold text-foreground">
-                      {item.count}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </div>
-      )}
-    </div>
+
+        {data.length === 0 ? (
+          <div className="p-8">
+            <EmptyState
+              title={`No ${title.toLowerCase()} data`}
+              description="There is no status data available yet."
+            />
+          </div>
+        ) : (
+          <div className="p-5 sm:p-6">
+            {/* Chart */}
+            <div className="relative h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data}
+                    dataKey="count"
+                    nameKey="status"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={65}
+                    outerRadius={92}
+                    paddingAngle={3}
+                    stroke="hsl(var(--background))"
+                    strokeWidth={3}
+                  >
+                    {data.map((item, index) => (
+                      <Cell
+                        key={`${item.status}-${index}`}
+                        fill={getChartColor(item.status, index)}
+                      />
+                    ))}
+                  </Pie>
+
+                  <Tooltip
+                    cursor={false}
+                    content={({ active, payload }) => {
+                      if (!active || !payload || payload.length === 0) {
+                        return null;
+                      }
+
+                      const item = payload[0];
+
+                      const status = String(item?.name ?? "");
+                      const value = Number(item?.value ?? 0);
+
+                      const color = getChartColor(
+                        status,
+                        data.findIndex((entry) => entry.status === status),
+                      );
+
+                      return (
+                        <div
+                          className="min-w-[170px] rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-[0_12px_35px_rgba(15,23,42,0.18)] dark:border-slate-700 dark:bg-slate-900"
+                          style={{
+                            position: "relative",
+                            zIndex: 1000,
+                          }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="h-2.5 w-2.5 rounded-full"
+                              style={{ backgroundColor: color }}
+                            />
+
+                            <span className="text-sm font-semibold text-slate-900 dark:text-white">
+                              {formatStatus(status)}
+                            </span>
+                          </div>
+
+                          <div className="mt-2 flex items-end justify-between gap-5">
+                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                              Total
+                            </span>
+
+                            <span className="text-lg font-bold text-slate-900 dark:text-white">
+                              {value}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+
+              {/* Center value */}
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-foreground">{total}</p>
+
+                  <p className="text-[11px] text-muted-foreground">Total</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Clear Legend */}
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+              {data.map((item, index) => {
+                const color = getChartColor(item.status, index);
+
+                const percentage =
+                  total > 0 ? Math.round((item.count / total) * 100) : 0;
+
+                return (
+                  <div
+                    key={`${item.status}-legend`}
+                    className="flex items-center justify-between rounded-lg border border-border bg-muted/20 px-3 py-2.5"
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span
+                        className="h-3 w-3 shrink-0 rounded-full ring-2 ring-white dark:ring-slate-900"
+                        style={{ backgroundColor: color }}
+                      />
+
+                      <span className="truncate text-xs font-medium text-foreground">
+                        {formatStatus(item.status)}
+                      </span>
+                    </div>
+
+                    <div className="ml-2 flex shrink-0 items-center gap-2">
+                      <span className="text-[11px] text-muted-foreground">
+                        {percentage}%
+                      </span>
+
+                      <span className="min-w-6 rounded-md bg-background px-1.5 py-0.5 text-center text-xs font-bold text-foreground">
+                        {item.count}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </RoleGuard>
   );
 };
 

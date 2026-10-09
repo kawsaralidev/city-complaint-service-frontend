@@ -57,7 +57,7 @@ export const useUpdateUserRole = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["users"],
+        queryKey: ["admin-users"],
       });
     },
   });

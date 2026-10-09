@@ -4,6 +4,7 @@ import { ReactNode, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { useCurrentUser } from "@/hooks/auth.hook";
+import { ApiError } from "@/lib/api-error";
 
 type UserRole = "ADMIN" | "OFFICER" | "CITIZEN";
 
@@ -20,32 +21,57 @@ const RoleGuard = ({
 }: RoleGuardProps) => {
   const router = useRouter();
 
-  const { data: userResponse, isLoading } = useCurrentUser();
+  const { data: userResponse, isLoading, isError, error } = useCurrentUser();
 
   const user = userResponse?.data;
 
+  const isUnauthorized = error instanceof ApiError && error.status === 401;
+
   useEffect(() => {
-    if (isLoading) {
+    if (isLoading || isError) {
+      if (isUnauthorized) {
+        router.replace("/login");
+      }
+
       return;
     }
 
-    // Not logged in
     if (!user) {
       router.replace("/login");
       return;
     }
 
-    // Logged in, but wrong role
     if (user.role !== requiredRole) {
       router.replace("/dashboard");
     }
-  }, [isLoading, user, requiredRole, router]);
+  }, [isLoading, isError, isUnauthorized, user, requiredRole, router]);
 
   if (isLoading) {
-    return loadingFallback;
+    return (
+      loadingFallback ?? (
+        <div className="flex min-h-[200px] items-center justify-center">
+          <p>Loading...</p>
+        </div>
+      )
+    );
   }
 
-  if (user?.role !== requiredRole) {
+  if (isError) {
+    if (isUnauthorized) {
+      return null;
+    }
+
+    return (
+      <div className="flex min-h-[200px] flex-col items-center justify-center gap-2 p-6 text-center">
+        <h2 className="text-lg font-semibold">Unable to verify your session</h2>
+        <p className="text-sm text-muted-foreground">
+          A server or network error occurred. Please try again.
+        </p>
+      </div>
+    );
+  }
+
+  if (!user || user.role !== requiredRole) {
     return null;
   }
 

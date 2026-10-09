@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { User } from "lucide-react";
 import { useEffect, useState } from "react";
+
 import { toast } from "@/components/ui/toast";
 import { useUpdateMyProfile } from "@/hooks/user.hook";
 
@@ -28,12 +29,24 @@ const EditProfileDialog = ({
   const { mutate: updateProfile, isPending } = useUpdateMyProfile();
 
   useEffect(() => {
-    if (open) {
-      setName(currentName);
-      setImage(undefined);
-      setImagePreview(currentImage || null);
+    if (!open) {
+      return;
     }
+
+    setName(currentName);
+    setImage(undefined);
+    setImagePreview(currentImage || null);
   }, [open, currentName, currentImage]);
+
+  useEffect(() => {
+    if (!imagePreview || !imagePreview.startsWith("blob:")) {
+      return;
+    }
+
+    return () => {
+      URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
 
   if (!open) {
     return null;
@@ -43,6 +56,16 @@ const EditProfileDialog = ({
     const selectedFile = event.target.files?.[0];
 
     if (!selectedFile) {
+      return;
+    }
+
+    if (!selectedFile.type.startsWith("image/")) {
+      toast.add({
+        title: "Please select a valid image file",
+        type: "error",
+      });
+
+      event.target.value = "";
       return;
     }
 
@@ -58,6 +81,15 @@ const EditProfileDialog = ({
     if (!trimmedName) {
       toast.add({
         title: "Name is required",
+        type: "error",
+      });
+
+      return;
+    }
+
+    if (trimmedName.length < 2 || trimmedName.length > 100) {
+      toast.add({
+        title: "Name must be between 2 and 100 characters",
         type: "error",
       });
 
@@ -92,10 +124,28 @@ const EditProfileDialog = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="w-full max-w-md rounded-xl border border-border bg-background shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      {/* Backdrop */}
+      <button
+        type="button"
+        aria-label="Close edit profile dialog"
+        disabled={isPending}
+        onClick={onClose}
+        className="absolute inset-0 h-full w-full bg-black/50"
+      />
+
+      {/* Dialog */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-profile-title"
+        className="relative z-10 w-full max-w-md rounded-xl border border-border bg-background shadow-xl"
+      >
         <div className="border-b border-border px-5 py-4">
-          <h2 className="text-lg font-semibold text-foreground">
+          <h2
+            id="edit-profile-title"
+            className="text-lg font-semibold text-foreground"
+          >
             Edit Profile
           </h2>
 
@@ -106,6 +156,7 @@ const EditProfileDialog = ({
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-5 px-5 py-5">
+            {/* Profile Image */}
             <div className="flex flex-col items-center gap-3">
               <div className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-secondary text-secondary-foreground">
                 {imagePreview ? (
@@ -139,6 +190,7 @@ const EditProfileDialog = ({
               />
             </div>
 
+            {/* Full Name */}
             <div className="space-y-2">
               <label
                 htmlFor="profile-name"
@@ -150,15 +202,17 @@ const EditProfileDialog = ({
               <input
                 id="profile-name"
                 type="text"
+                autoComplete="name"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 disabled={isPending}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="Enter your name"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
           </div>
 
+          {/* Actions */}
           <div className="flex justify-end gap-3 border-t border-border px-5 py-4">
             <button
               type="button"

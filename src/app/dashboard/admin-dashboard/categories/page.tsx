@@ -3,7 +3,7 @@
 import { Pencil, Plus, Power, X } from "lucide-react";
 import { useState } from "react";
 
-import CategoryForm from "@/components/category/CategoryForm";
+import CategoryForm from "@/components/form/CategoryForm";
 import { useCategories, useUpdateCategoryStatus } from "@/hooks/category.hook";
 
 import type { Category } from "@/types/dashboard";

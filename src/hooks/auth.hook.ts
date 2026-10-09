@@ -97,7 +97,11 @@ export function useLogout() {
   return useMutation({
     mutationFn: logoutUser,
 
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Clear cached data belonging to the previous user
+      queryClient.clear();
+
+      // Update the current user to logged-out state
       queryClient.setQueryData(currentUserQueryKey, {
         success: true,
         message: "Logout successful.",

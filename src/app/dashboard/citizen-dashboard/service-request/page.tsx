@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -110,7 +111,13 @@ const CitizenServiceRequestsPage = () => {
 
   const paymentMutation = useCreatePayment();
 
-  const [currentPage, setCurrentPage] = useState(1);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const requestedPage = Number(searchParams.get("page"));
+  const parsedPage =
+    Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
 
   const requestList = serviceRequests ?? [];
 
@@ -123,6 +130,56 @@ const CitizenServiceRequestsPage = () => {
   const totalRequests = requestList.length;
 
   const totalPages = Math.ceil(totalRequests / ITEMS_PER_PAGE);
+  const currentPage = totalPages > 0 ? Math.min(parsedPage, totalPages) : 1;
+
+  const handlePageChange = (page: number) => {
+    const nextPage = Math.min(Math.max(page, 1), Math.max(totalPages, 1));
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (nextPage === 1) {
+      params.delete("page");
+    } else {
+      params.set("page", String(nextPage));
+    }
+
+    const queryString = params.toString();
+    router.push(queryString ? `${pathname}?${queryString}` : pathname, {
+      scroll: false,
+    });
+  };
+
+  // Keep the URL valid if the requested page no longer exists.
+  useEffect(() => {
+    if (totalPages === 0) {
+      if (searchParams.has("page")) {
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("page");
+        const queryString = params.toString();
+        router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+          scroll: false,
+        });
+      }
+      return;
+    }
+
+    if (
+      parsedPage !== currentPage ||
+      (currentPage === 1 && searchParams.has("page"))
+    ) {
+      const params = new URLSearchParams(searchParams.toString());
+
+      if (currentPage === 1) {
+        params.delete("page");
+      } else {
+        params.set("page", String(currentPage));
+      }
+
+      const queryString = params.toString();
+      router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+        scroll: false,
+      });
+    }
+  }, [currentPage, parsedPage, pathname, router, searchParams, totalPages]);
 
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
 
@@ -927,11 +984,7 @@ const CitizenServiceRequestsPage = () => {
                     {/* Previous */}
                     <button
                       type="button"
-                      onClick={() =>
-                        setCurrentPage((previousPage) =>
-                          Math.max(previousPage - 1, 1),
-                        )
-                      }
+                      onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
                       aria-label="Previous page"
@@ -948,7 +1001,7 @@ const CitizenServiceRequestsPage = () => {
                           <button
                             key={pageNumber}
                             type="button"
-                            onClick={() => setCurrentPage(pageNumber)}
+                            onClick={() => handlePageChange(pageNumber)}
                             className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-2.5 text-xs font-semibold transition-colors ${
                               currentPage === pageNumber
                                 ? "bg-primary text-primary-foreground shadow-sm"
@@ -968,11 +1021,7 @@ const CitizenServiceRequestsPage = () => {
                     {/* Next */}
                     <button
                       type="button"
-                      onClick={() =>
-                        setCurrentPage((previousPage) =>
-                          Math.min(previousPage + 1, totalPages),
-                        )
-                      }
+                      onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === totalPages}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
                       aria-label="Next page"

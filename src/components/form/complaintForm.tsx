@@ -1,11 +1,16 @@
 "use client";
 
 import { useState } from "react";
-
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { FileText, ImagePlus, MapPin, Send, Tag } from "lucide-react";
 
 import { useCategories } from "@/hooks/category.hook";
 import { useCreateComplaint } from "@/hooks/complaint.hook";
+import {
+  complaintSchema,
+  type ComplaintFormValues,
+} from "@/lib/validations/complaint.schema";
 
 interface ComplaintFormProps {
   onCancel?: () => void;
@@ -13,55 +18,47 @@ interface ComplaintFormProps {
 
 const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
   const { data: categories, isLoading: categoriesLoading } = useCategories();
-
   const createComplaintMutation = useCreateComplaint();
 
-  const [title, setTitle] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [location, setLocation] = useState("");
-  const [description, setDescription] = useState("");
   const [image, setImage] = useState<File | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm<ComplaintFormValues>({
+    resolver: zodResolver(complaintSchema),
+    mode: "onChange",
+    defaultValues: {
+      title: "",
+      categoryId: "",
+      location: "",
+      description: "",
+    },
+  });
 
   const complaintCategories =
     categories?.filter(
       (category) => category.type === "COMPLAINT" && category.isActive,
     ) ?? [];
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const description = watch("description");
 
-    if (!title.trim()) {
-      return;
-    }
-
-    if (!categoryId) {
-      return;
-    }
-
-    if (!location.trim()) {
-      return;
-    }
-
-    if (!description.trim()) {
-      return;
-    }
-
+  const onSubmit = (values: ComplaintFormValues) => {
     createComplaintMutation.mutate(
       {
-        title: title.trim(),
-        categoryId,
-        location: location.trim(),
-        description: description.trim(),
+        title: values.title,
+        categoryId: values.categoryId,
+        location: values.location,
+        description: values.description,
         image,
       },
       {
         onSuccess: () => {
-          setTitle("");
-          setCategoryId("");
-          setLocation("");
-          setDescription("");
+          reset();
           setImage(null);
-
           onCancel?.();
         },
       },
@@ -71,8 +68,8 @@ const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
   const isSubmitting = createComplaintMutation.isPending;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Title */}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+      {/* Complaint Title */}
       <div className="space-y-2">
         <label
           htmlFor="complaint-title"
@@ -85,14 +82,26 @@ const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
         <input
           id="complaint-title"
           type="text"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
           placeholder="e.g. Damaged road near the main market"
-          className="h-11 w-full rounded-xl border border-input bg-background px-3.5 text-sm text-foreground outline-none transition-all duration-200 placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10"
+          disabled={isSubmitting}
+          aria-invalid={Boolean(errors.title)}
+          aria-describedby={errors.title ? "complaint-title-error" : undefined}
+          {...register("title")}
+          className="h-11 w-full rounded-xl border border-input bg-background px-3.5 text-sm text-foreground outline-none transition-all duration-200 placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:opacity-60"
         />
+
+        {errors.title && (
+          <p
+            id="complaint-title-error"
+            role="alert"
+            className="text-xs text-destructive"
+          >
+            {errors.title.message}
+          </p>
+        )}
       </div>
 
-      {/* Category */}
+      {/* Complaint Category */}
       <div className="space-y-2">
         <label
           htmlFor="complaint-category"
@@ -104,9 +113,12 @@ const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
 
         <select
           id="complaint-category"
-          value={categoryId}
-          onChange={(event) => setCategoryId(event.target.value)}
           disabled={categoriesLoading || isSubmitting}
+          aria-invalid={Boolean(errors.categoryId)}
+          aria-describedby={
+            errors.categoryId ? "complaint-category-error" : undefined
+          }
+          {...register("categoryId")}
           className="h-11 w-full rounded-xl border border-input bg-background px-3.5 text-sm text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <option value="">
@@ -121,6 +133,16 @@ const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
             </option>
           ))}
         </select>
+
+        {errors.categoryId && (
+          <p
+            id="complaint-category-error"
+            role="alert"
+            className="text-xs text-destructive"
+          >
+            {errors.categoryId.message}
+          </p>
+        )}
 
         {!categoriesLoading && complaintCategories.length === 0 && (
           <p className="text-xs text-muted-foreground">
@@ -142,12 +164,25 @@ const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
         <input
           id="complaint-location"
           type="text"
-          value={location}
-          onChange={(event) => setLocation(event.target.value)}
           placeholder="Enter the location of the problem"
           disabled={isSubmitting}
-          className="h-11 w-full rounded-xl border border-input bg-background px-3.5 text-sm text-foreground outline-none transition-all duration-200 placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
+          aria-invalid={Boolean(errors.location)}
+          aria-describedby={
+            errors.location ? "complaint-location-error" : undefined
+          }
+          {...register("location")}
+          className="h-11 w-full rounded-xl border border-input bg-background px-3.5 text-sm text-foreground outline-none transition-all duration-200 placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:opacity-60"
         />
+
+        {errors.location && (
+          <p
+            id="complaint-location-error"
+            role="alert"
+            className="text-xs text-destructive"
+          >
+            {errors.location.message}
+          </p>
+        )}
       </div>
 
       {/* Description */}
@@ -162,20 +197,33 @@ const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
 
         <textarea
           id="complaint-description"
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
           placeholder="Describe the problem clearly and provide any useful details..."
           rows={5}
           disabled={isSubmitting}
-          className="w-full resize-none rounded-xl border border-input bg-background px-3.5 py-3 text-sm leading-6 text-foreground outline-none transition-all duration-200 placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
+          aria-invalid={Boolean(errors.description)}
+          aria-describedby={
+            errors.description ? "complaint-description-error" : undefined
+          }
+          {...register("description")}
+          className="w-full resize-none rounded-xl border border-input bg-background px-3.5 py-3 text-sm leading-6 text-foreground outline-none transition-all duration-200 placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:opacity-60"
         />
+
+        {errors.description && (
+          <p
+            id="complaint-description-error"
+            role="alert"
+            className="text-xs text-destructive"
+          >
+            {errors.description.message}
+          </p>
+        )}
 
         <p className="text-right text-xs text-muted-foreground">
           {description.length} characters
         </p>
       </div>
 
-      {/* Image */}
+      {/* Optional Image */}
       <div className="space-y-2">
         <label
           htmlFor="complaint-image"
@@ -219,7 +267,10 @@ const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
 
       {/* API Error */}
       {createComplaintMutation.error && (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+        <p
+          role="alert"
+          className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+        >
           {createComplaintMutation.error.message ||
             "Failed to create complaint. Please try again."}
         </p>
@@ -241,10 +292,9 @@ const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
         <button
           type="submit"
           disabled={isSubmitting || categoriesLoading}
-          className="group inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
+          className="group inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <Send className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-
+          <Send className="h-4 w-4" />
           {isSubmitting ? "Submitting..." : "Submit Complaint"}
         </button>
       </div>

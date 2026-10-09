@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Activity,
   ChevronLeft,
@@ -11,7 +12,6 @@ import {
 
 import { useAuditLogs } from "@/hooks/audit-log.hook";
 import type { AuditLog } from "@/types/audit-log";
-
 import RoleGuard from "../../guard/role-guard";
 
 const PAGE_LIMIT = 10;
@@ -49,13 +49,130 @@ const ENTITY_OPTIONS = [
   "Service",
 ] as const;
 
+const getPositiveInteger = (value: string | null, fallback = 1) => {
+  if (!value || !/^\d+$/.test(value)) return fallback;
+
+  const number = Number(value);
+
+  return Number.isSafeInteger(number) && number > 0 ? number : fallback;
+};
+
 const AuditLogsPage = () => {
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
-  const [action, setAction] = useState("ALL");
-  const [entity, setEntity] = useState("ALL");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [page, setPage] = useState(1);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const queryString = searchParams.toString();
+
+  const page = getPositiveInteger(searchParams.get("page"));
+  const search = searchParams.get("search")?.trim() ?? "";
+  const requestedAction = searchParams.get("action") ?? "ALL";
+  const requestedEntity = searchParams.get("entity") ?? "ALL";
+  const requestedSort = searchParams.get("sortOrder");
+
+  const action = ACTION_OPTIONS.includes(
+    requestedAction as (typeof ACTION_OPTIONS)[number],
+  )
+    ? requestedAction
+    : "ALL";
+
+  const entity = ENTITY_OPTIONS.includes(
+    requestedEntity as (typeof ENTITY_OPTIONS)[number],
+  )
+    ? requestedEntity
+    : "ALL";
+
+  const sortOrder: "asc" | "desc" = requestedSort === "asc" ? "asc" : "desc";
+
+  const [searchInput, setSearchInput] = useState(search);
+
+  useEffect(() => {
+    setSearchInput(search);
+  }, [search]);
+
+  // URL update helper
+  const updateUrl = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(queryString);
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === "") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+
+    const nextQuery = params.toString();
+    const nextUrl = nextQuery ? `${pathname}?${nextQuery}` : pathname;
+
+    if (nextUrl !== `${pathname}${queryString ? `?${queryString}` : ""}`) {
+      router.replace(nextUrl, { scroll: false });
+    }
+  };
+
+  // অপ্রয়োজনীয় বা invalid query parameters পরিষ্কার করা।
+  useEffect(() => {
+    const params = new URLSearchParams(queryString);
+    let changed = false;
+
+    const rawPage = params.get("page");
+
+    if (rawPage !== null) {
+      const validPage = getPositiveInteger(rawPage);
+
+      if (String(validPage) !== rawPage) {
+        if (validPage === 1) {
+          params.delete("page");
+        } else {
+          params.set("page", String(validPage));
+        }
+
+        changed = true;
+      }
+    }
+
+    if (
+      params.has("action") &&
+      !ACTION_OPTIONS.includes(
+        params.get("action") as (typeof ACTION_OPTIONS)[number],
+      )
+    ) {
+      params.delete("action");
+      changed = true;
+    }
+
+    if (
+      params.has("entity") &&
+      !ENTITY_OPTIONS.includes(
+        params.get("entity") as (typeof ENTITY_OPTIONS)[number],
+      )
+    ) {
+      params.delete("entity");
+      changed = true;
+    }
+
+    if (
+      params.has("sortOrder") &&
+      params.get("sortOrder") !== "asc" &&
+      params.get("sortOrder") !== "desc"
+    ) {
+      params.delete("sortOrder");
+      changed = true;
+    }
+
+    if (params.has("search") && !params.get("search")?.trim()) {
+      params.delete("search");
+      changed = true;
+    }
+
+    if (changed) {
+      const nextQuery = params.toString();
+
+      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
+        scroll: false,
+      });
+    }
+  }, [pathname, queryString, router]);
 
   const { data, isLoading, isError } = useAuditLogs({
     page,
@@ -68,17 +185,31 @@ const AuditLogsPage = () => {
 
   const auditLogs = data?.data ?? [];
   const pagination = data?.pagination;
+  const totalPages = Math.max(pagination?.totalPages ?? 1, 1);
 
-  const totalPages = pagination?.totalPages ?? 1;
+  useEffect(() => {
+    if (!isLoading && page > totalPages) {
+      const params = new URLSearchParams(queryString);
+
+      if (totalPages > 1) {
+        params.set("page", String(totalPages));
+      } else {
+        params.delete("page");
+      }
+
+      const nextQuery = params.toString();
+      const nextUrl = nextQuery ? `${pathname}?${nextQuery}` : pathname;
+
+      router.replace(nextUrl, { scroll: false });
+    }
+  }, [isLoading, page, totalPages, queryString, pathname, router]);
 
   const pageNumbers = useMemo(() => {
     if (totalPages <= 5) {
       return Array.from({ length: totalPages }, (_, index) => index + 1);
     }
 
-    if (page <= 3) {
-      return [1, 2, 3, 4, 5];
-    }
+    if (page <= 3) return [1, 2, 3, 4, 5];
 
     if (page >= totalPages - 2) {
       return [
@@ -94,29 +225,44 @@ const AuditLogsPage = () => {
   }, [page, totalPages]);
 
   const handleSearch = () => {
-    setSearch(searchInput.trim());
-    setPage(1);
+    updateUrl({
+      search: searchInput.trim() || null,
+      page: null,
+    });
   };
 
   const handleClearSearch = () => {
     setSearchInput("");
-    setSearch("");
-    setPage(1);
+    updateUrl({ search: null, page: null });
   };
 
   const handleActionChange = (value: string) => {
-    setAction(value);
-    setPage(1);
+    updateUrl({
+      action: value === "ALL" ? null : value,
+      page: null,
+    });
   };
 
   const handleEntityChange = (value: string) => {
-    setEntity(value);
-    setPage(1);
+    updateUrl({
+      entity: value === "ALL" ? null : value,
+      page: null,
+    });
   };
 
   const handleSortChange = (value: "asc" | "desc") => {
-    setSortOrder(value);
-    setPage(1);
+    updateUrl({
+      sortOrder: value === "desc" ? null : value,
+      page: null,
+    });
+  };
+
+  const handlePageChange = (nextPage: number) => {
+    const safePage = Math.max(1, Math.min(nextPage, totalPages));
+
+    updateUrl({
+      page: safePage === 1 ? null : String(safePage),
+    });
   };
 
   const formatDate = (date: string) => {
@@ -188,7 +334,6 @@ const AuditLogsPage = () => {
           <section className="rounded-2xl border border-border bg-background p-4 shadow-sm sm:p-5">
             <div className="mb-4 flex items-center gap-2">
               <Filter className="h-4 w-4 text-primary" />
-
               <h2 className="text-sm font-semibold">Filters</h2>
             </div>
 
@@ -316,7 +461,6 @@ const AuditLogsPage = () => {
             <div className="flex flex-col gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="font-semibold">Activity History</h2>
-
                 <p className="mt-1 text-xs text-muted-foreground">
                   {pagination?.total ?? 0} total log
                   {pagination?.total === 1 ? "" : "s"}
@@ -324,7 +468,7 @@ const AuditLogsPage = () => {
               </div>
 
               <div className="text-xs text-muted-foreground">
-                Page {page} of {Math.max(totalPages, 1)}
+                Page {page} of {totalPages}
               </div>
             </div>
 
@@ -337,11 +481,8 @@ const AuditLogsPage = () => {
                         <div className="h-4 w-32 rounded bg-muted" />
                         <div className="h-3 w-44 rounded bg-muted" />
                       </div>
-
                       <div className="h-6 w-28 rounded-full bg-muted" />
-
                       <div className="h-6 w-24 rounded-full bg-muted" />
-
                       <div className="h-4 w-40 rounded bg-muted" />
                     </div>
                   </div>
@@ -387,13 +528,9 @@ const AuditLogsPage = () => {
                     <thead>
                       <tr className="border-b border-border bg-muted/30 text-left">
                         <th className="px-5 py-3 font-semibold">User</th>
-
                         <th className="px-5 py-3 font-semibold">Action</th>
-
                         <th className="px-5 py-3 font-semibold">Entity</th>
-
                         <th className="px-5 py-3 font-semibold">Entity ID</th>
-
                         <th className="px-5 py-3 font-semibold">Date</th>
                       </tr>
                     </thead>
@@ -409,7 +546,6 @@ const AuditLogsPage = () => {
                               <p className="font-medium">
                                 {log.user?.name || "Unknown User"}
                               </p>
-
                               <p className="mt-0.5 text-xs text-muted-foreground">
                                 {log.user?.email || "—"}
                               </p>
@@ -418,9 +554,7 @@ const AuditLogsPage = () => {
 
                           <td className="px-5 py-4">
                             <span
-                              className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getActionStyle(
-                                log.action,
-                              )}`}
+                              className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getActionStyle(log.action)}`}
                             >
                               {formatAction(log.action)}
                             </span>
@@ -456,16 +590,13 @@ const AuditLogsPage = () => {
                           <p className="font-medium">
                             {log.user?.name || "Unknown User"}
                           </p>
-
                           <p className="mt-1 text-xs text-muted-foreground">
                             {log.user?.email || "—"}
                           </p>
                         </div>
 
                         <span
-                          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${getActionStyle(
-                            log.action,
-                          )}`}
+                          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${getActionStyle(log.action)}`}
                         >
                           {formatAction(log.action)}
                         </span>
@@ -476,7 +607,6 @@ const AuditLogsPage = () => {
                           <p className="text-xs text-muted-foreground">
                             Entity
                           </p>
-
                           <p className="mt-1 font-medium">
                             {formatEntity(log.entity)}
                           </p>
@@ -484,7 +614,6 @@ const AuditLogsPage = () => {
 
                         <div>
                           <p className="text-xs text-muted-foreground">Date</p>
-
                           <p className="mt-1 text-xs">
                             {formatDate(log.createdAt)}
                           </p>
@@ -495,7 +624,6 @@ const AuditLogsPage = () => {
                         <p className="text-xs text-muted-foreground">
                           Entity ID
                         </p>
-
                         <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
                           {log.entityId || "—"}
                         </p>
@@ -522,7 +650,7 @@ const AuditLogsPage = () => {
                     <button
                       type="button"
                       disabled={page <= 1}
-                      onClick={() => setPage((current) => current - 1)}
+                      onClick={() => handlePageChange(page - 1)}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-sm transition hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
                       aria-label="Previous page"
                     >
@@ -533,7 +661,9 @@ const AuditLogsPage = () => {
                       <button
                         key={pageNumber}
                         type="button"
-                        onClick={() => setPage(pageNumber)}
+                        onClick={() => handlePageChange(pageNumber)}
+                        aria-current={pageNumber === page ? "page" : undefined}
+                        aria-label={`Go to page ${pageNumber}`}
                         className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-2 text-sm transition ${
                           pageNumber === page
                             ? "bg-primary font-semibold text-primary-foreground"
@@ -547,7 +677,7 @@ const AuditLogsPage = () => {
                     <button
                       type="button"
                       disabled={page >= totalPages}
-                      onClick={() => setPage((current) => current + 1)}
+                      onClick={() => handlePageChange(page + 1)}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-sm transition hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
                       aria-label="Next page"
                     >

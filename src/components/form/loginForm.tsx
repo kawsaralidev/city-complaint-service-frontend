@@ -28,14 +28,24 @@ export function LoginForm() {
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const getRedirectUrl = () => {
+  const getRedirectUrl = (role: "CITIZEN" | "OFFICER" | "ADMIN") => {
     const redirect = searchParams.get("redirect");
 
     if (redirect && redirect.startsWith("/") && !redirect.startsWith("//")) {
       return redirect;
     }
 
-    return "/";
+    switch (role) {
+      case "ADMIN":
+        return "/dashboard/admin-dashboard";
+
+      case "OFFICER":
+        return "/dashboard/officer-dashboard";
+
+      case "CITIZEN":
+      default:
+        return "/dashboard/citizen-dashboard";
+    }
   };
 
   const onSubmit = async (data: LoginFormData) => {
@@ -49,12 +59,7 @@ export function LoginForm() {
 
       const user = response.data.user;
 
-      if (user.role === "CITIZEN") {
-        router.push(getRedirectUrl());
-        return;
-      }
-
-      router.push("/");
+      router.push(getRedirectUrl(user.role));
     } catch (error) {
       console.error("Login failed:", error);
 
@@ -79,12 +84,7 @@ export function LoginForm() {
 
       const user = response.data.user;
 
-      if (user.role === "CITIZEN") {
-        router.push(getRedirectUrl());
-        return;
-      }
-
-      router.push("/");
+      router.push(getRedirectUrl(user.role));
     } catch (error) {
       toast.add({
         title:
