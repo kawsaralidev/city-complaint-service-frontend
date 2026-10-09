@@ -13,7 +13,7 @@ import {
 
 import { useForgotPassword } from "@/hooks/auth.hook";
 
-import { toast } from "@/components/ui/toast";
+import { toast } from "sonner";
 
 const ForgotPasswordForm = () => {
   const forgotPasswordMutation = useForgotPassword();
@@ -30,18 +30,11 @@ const ForgotPasswordForm = () => {
     try {
       await forgotPasswordMutation.mutateAsync(data.email);
 
-      toast.add({
-        title: "Password reset link sent to your email.",
-        type: "success",
-      });
+      toast.success("Password reset link sent to your email.");
     } catch (error) {
-      toast.add({
-        title:
-          error instanceof Error
+      toast.error(error instanceof Error
             ? error.message
-            : "Unable to send the password reset link. Please try again.",
-        type: "error",
-      });
+            : "Unable to send the password reset link. Please try again.");
     }
   };
 

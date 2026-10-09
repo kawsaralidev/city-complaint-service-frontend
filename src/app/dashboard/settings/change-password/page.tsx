@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Eye, EyeOff, KeyRound } from "lucide-react";
 
 import { useChangePassword } from "@/hooks/user.hook";
-import { toast } from "@/components/ui/toast";
+import { toast } from "sonner";
 import {
   changePasswordSchema,
   type ChangePasswordFormValues,
@@ -39,23 +39,16 @@ const ChangePasswordPage = () => {
     try {
       await changePasswordMutation.mutateAsync(data);
 
-      toast.add({
-        title: "Password changed successfully.",
-        type: "success",
-      });
+      toast.success("Password changed successfully.");
 
       reset();
       setShowCurrentPassword(false);
       setShowNewPassword(false);
       setShowConfirmPassword(false);
     } catch (error) {
-      toast.add({
-        title:
-          error instanceof Error
+      toast.error(error instanceof Error
             ? error.message
-            : "Failed to change password. Please try again.",
-        type: "error",
-      });
+            : "Failed to change password. Please try again.");
     }
   };
 

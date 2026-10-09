@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "@/components/ui/toast";
+import { toast } from "sonner";
 import { useVerifyRegisterEmail } from "@/hooks/auth.hook";
 
 export function VerifyRegisterEmailForm() {
@@ -46,10 +46,7 @@ export function VerifyRegisterEmailForm() {
       sessionStorage.removeItem("registrationEmail");
       sessionStorage.removeItem("registrationRedirect");
 
-      toast.add({
-        title: "Registration successful.",
-        type: "success",
-      });
+      toast.success("Registration successful.");
 
       if (redirect && redirect.startsWith("/") && !redirect.startsWith("//")) {
         router.push(redirect);
@@ -57,13 +54,9 @@ export function VerifyRegisterEmailForm() {
         router.push("/");
       }
     } catch (error) {
-      toast.add({
-        title:
-          error instanceof Error
+      toast.error(error instanceof Error
             ? error.message
-            : "Failed to verify email. Please try again.",
-        type: "error",
-      });
+            : "Failed to verify email. Please try again.");
     }
   };
 

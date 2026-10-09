@@ -19,7 +19,7 @@ import {
 
 import { useResetPassword } from "@/hooks/auth.hook";
 
-import { toast } from "@/components/ui/toast";
+import { toast } from "sonner";
 
 const ResetPasswordForm = () => {
   const searchParams = useSearchParams();
@@ -52,22 +52,15 @@ const ResetPasswordForm = () => {
         data,
       });
 
-      toast.add({
-        title: "Password reset successfully.",
-        type: "success",
-      });
+      toast.success("Password reset successfully.");
 
       setTimeout(() => {
         router.push("/login");
       }, 1000);
     } catch (error) {
-      toast.add({
-        title:
-          error instanceof Error
+      toast.error(error instanceof Error
             ? error.message
-            : "Unable to reset your password. The link may be expired or invalid.",
-        type: "error",
-      });
+            : "Unable to reset your password. The link may be expired or invalid.");
     }
   };
 

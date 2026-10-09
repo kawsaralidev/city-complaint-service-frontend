@@ -4,7 +4,7 @@ import Image from "next/image";
 import { User } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { toast } from "@/components/ui/toast";
+import { toast } from "sonner";
 import { useUpdateMyProfile } from "@/hooks/user.hook";
 
 interface EditProfileDialogProps {
@@ -60,10 +60,7 @@ const EditProfileDialog = ({
     }
 
     if (!selectedFile.type.startsWith("image/")) {
-      toast.add({
-        title: "Please select a valid image file",
-        type: "error",
-      });
+      toast.error("Please select a valid image file");
 
       event.target.value = "";
       return;
@@ -79,19 +76,13 @@ const EditProfileDialog = ({
     const trimmedName = name.trim();
 
     if (!trimmedName) {
-      toast.add({
-        title: "Name is required",
-        type: "error",
-      });
+      toast.error("Name is required");
 
       return;
     }
 
     if (trimmedName.length < 2 || trimmedName.length > 100) {
-      toast.add({
-        title: "Name must be between 2 and 100 characters",
-        type: "error",
-      });
+      toast.error("Name must be between 2 and 100 characters");
 
       return;
     }
@@ -103,21 +94,14 @@ const EditProfileDialog = ({
       },
       {
         onSuccess: () => {
-          toast.add({
-            title: "Profile updated successfully",
-            type: "success",
-          });
+          toast.success("Profile updated successfully");
 
           onClose();
         },
         onError: (error) => {
-          toast.add({
-            title:
-              error instanceof Error
+          toast.error(error instanceof Error
                 ? error.message
-                : "Failed to update profile",
-            type: "error",
-          });
+                : "Failed to update profile");
         },
       },
     );

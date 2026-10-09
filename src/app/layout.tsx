@@ -2,7 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import { QueryProvider } from "@/providers/query-provider";
-import { Toaster } from "@/components/ui/toast";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -34,7 +34,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <QueryProvider>{children}</QueryProvider>
-        <Toaster />
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );

@@ -17,7 +17,7 @@ import {
 import { useRegister } from "@/hooks/auth.hook";
 
 import GoogleAuthButton from "@/app/(public)/(authentication)/google-auth/google-auth-button";
-import { toast } from "@/components/ui/toast";
+import { toast } from "sonner";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -43,10 +43,7 @@ export function RegisterForm() {
         password: data.password,
       });
 
-      toast.add({
-        title: "OTP sent to your email.",
-        type: "success",
-      });
+      toast.success("OTP sent to your email.");
 
       // Save email for OTP verification
       sessionStorage.setItem("registrationEmail", response.data.email);
@@ -61,13 +58,9 @@ export function RegisterForm() {
 
       router.push("/verify-register-email");
     } catch (error) {
-      toast.add({
-        title:
-          error instanceof Error
+      toast.error(error instanceof Error
             ? error.message
-            : "Registration failed. Please try again.",
-        type: "error",
-      });
+            : "Registration failed. Please try again.");
     }
   };
 

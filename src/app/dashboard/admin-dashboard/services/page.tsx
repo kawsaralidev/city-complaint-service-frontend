@@ -52,7 +52,7 @@ import {
 
 import RoleGuard from "../../guard/role-guard";
 
-import { toast } from "@/components/ui/toast";
+import { toast } from "sonner";
 
 import Image from "next/image";
 
@@ -409,22 +409,15 @@ const AdminServicesPage = () => {
 
         {
           onSuccess: () => {
-            toast.add({
-              title: "Service updated successfully.",
-              type: "success",
-            });
+            toast.success("Service updated successfully.");
 
             resetForm();
           },
 
           onError: (error) => {
-            toast.add({
-              title:
-                error instanceof Error
+            toast.error(error instanceof Error
                   ? error.message
-                  : "Failed to update service.",
-              type: "error",
-            });
+                  : "Failed to update service.");
           },
         },
       );
@@ -442,22 +435,15 @@ const AdminServicesPage = () => {
 
       {
         onSuccess: () => {
-          toast.add({
-            title: "Service created successfully.",
-            type: "success",
-          });
+          toast.success("Service created successfully.");
 
           resetForm();
         },
 
         onError: (error) => {
-          toast.add({
-            title:
-              error instanceof Error
+          toast.error(error instanceof Error
                 ? error.message
-                : "Failed to create service.",
-            type: "error",
-          });
+                : "Failed to create service.");
         },
       },
     );
@@ -479,22 +465,15 @@ const AdminServicesPage = () => {
 
       {
         onSuccess: () => {
-          toast.add({
-            title: service.isActive
+          toast.success(service.isActive
               ? "Service deactivated successfully."
-              : "Service activated successfully.",
-            type: "success",
-          });
+              : "Service activated successfully.");
         },
 
         onError: (error) => {
-          toast.add({
-            title:
-              error instanceof Error
+          toast.error(error instanceof Error
                 ? error.message
-                : "Failed to update service status.",
-            type: "error",
-          });
+                : "Failed to update service status.");
         },
       },
     );

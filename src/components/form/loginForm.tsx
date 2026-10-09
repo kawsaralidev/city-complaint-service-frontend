@@ -13,7 +13,7 @@ import { useDemoLogin, useLogin } from "@/hooks/auth.hook";
 import GoogleAuthButton from "@/app/(public)/(authentication)/google-auth/google-auth-button";
 
 import { Separator } from "@/components/ui/separator";
-import { toast } from "@/components/ui/toast";
+import { toast } from "sonner";
 
 export function LoginForm() {
   const router = useRouter();
@@ -52,10 +52,7 @@ export function LoginForm() {
     try {
       const response = await loginMutation.mutateAsync(data);
 
-      toast.add({
-        title: "Login successful.",
-        type: "success",
-      });
+      toast.success("Login successful.");
 
       const user = response.data.user;
 
@@ -63,13 +60,9 @@ export function LoginForm() {
     } catch (error) {
       console.error("Login failed:", error);
 
-      toast.add({
-        title:
-          error instanceof Error
+      toast.error(error instanceof Error
             ? error.message
-            : "Login failed. Please check your email and password.",
-        type: "error",
-      });
+            : "Login failed. Please check your email and password.");
     }
   };
 
@@ -77,22 +70,15 @@ export function LoginForm() {
     try {
       const response = await demoLoginMutation.mutateAsync(role);
 
-      toast.add({
-        title: `${role} demo login successful.`,
-        type: "success",
-      });
+      toast.success(`${role} demo login successful.`);
 
       const user = response.data.user;
 
       router.push(getRedirectUrl(user.role));
     } catch (error) {
-      toast.add({
-        title:
-          error instanceof Error
+      toast.error(error instanceof Error
             ? error.message
-            : "Demo login failed. Please try again.",
-        type: "error",
-      });
+            : "Demo login failed. Please try again.");
     }
   };
 
