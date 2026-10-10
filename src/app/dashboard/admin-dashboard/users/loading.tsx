@@ -20,7 +20,7 @@ export default function AdminUsersLoading() {
       </div>
 
       {/* Search */}
-      <div className="mb-6 rounded-xl border border-border bg-background p-4 shadow-sm">
+      <div className="mb-6 rounded-xl  bg-background p-4 shadow-sm">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
@@ -29,7 +29,7 @@ export default function AdminUsersLoading() {
       </div>
 
       {/* Users Table */}
-      <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+      <div className="overflow-hidden rounded-xl bg-background shadow-sm">
         <div className="overflow-x-auto">
           <Table className="min-w-[950px] table-fixed">
             <TableHeader>

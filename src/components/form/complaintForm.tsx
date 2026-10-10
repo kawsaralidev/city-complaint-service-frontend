@@ -11,6 +11,8 @@ import {
   complaintSchema,
   type ComplaintFormValues,
 } from "@/lib/validations/complaint.schema";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface ComplaintFormProps {
   onCancel?: () => void;
@@ -18,6 +20,7 @@ interface ComplaintFormProps {
 
 const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
   const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const router = useRouter();
   const createComplaintMutation = useCreateComplaint();
 
   const [image, setImage] = useState<File | null>(null);
@@ -59,7 +62,12 @@ const ComplaintForm = ({ onCancel }: ComplaintFormProps) => {
         onSuccess: () => {
           reset();
           setImage(null);
+
+          toast.success("Complaint created successfully!");
+
           onCancel?.();
+
+          router.push("/dashboard/citizen-dashboard/complaints");
         },
       },
     );
