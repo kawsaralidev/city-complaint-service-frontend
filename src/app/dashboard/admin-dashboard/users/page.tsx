@@ -232,31 +232,21 @@ const AdminUsersPage = () => {
 
             <div className="relative flex flex-col gap-6 p-5 sm:p-7 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/10 sm:h-14 sm:w-14">
-                  <UsersRound className="h-6 w-6 sm:h-7 sm:w-7" />
-                </div>
-
                 <div>
-                  <div className="mb-1 flex items-center gap-2">
-                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                      Administration
-                    </span>
-
-                    <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
-
-                    <span className="text-xs text-muted-foreground">
+                  <div>
+                    <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-xs font-medium text-secondary">
                       User Management
-                    </span>
+                    </div>
+
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                      Usres
+                    </h1>
+
+                    <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+                      Manage citizens, officers, account status, and
+                      verification from one place.
+                    </p>
                   </div>
-
-                  <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                    Users
-                  </h1>
-
-                  <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
-                    Manage citizens, officers, account status, and verification
-                    from one place.
-                  </p>
                 </div>
               </div>
 
@@ -453,8 +443,8 @@ const AdminUsersPage = () => {
               DESKTOP TABLE
           ========================================================= */}
           <section className="hidden overflow-hidden rounded-2xl border border-border bg-background shadow-sm md:block">
-            <div className="overflow-x-auto">
-              <Table className="min-w-[1050px]">
+            <div className="w-full min-w-0 overflow-x-hidden">
+              <Table className="w-full table-fixed border-collapse">
                 <TableHeader>
                   <TableRow className="border-border bg-muted/30 hover:bg-muted/30">
                     <TableHead className="w-[30%] px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">

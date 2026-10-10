@@ -73,7 +73,7 @@ const DashboardSidebar = ({ open, onClose }: DashboardSidebarProps) => {
         <DashboardSidebarMenu role={role} mounted={mounted} onClose={onClose} />
 
         {/* User Area */}
-        <div className="shrink-0 border-t border-secondary-foreground/10 p-3">
+        <div className="shrink-0 border-t border-secondary-foreground/10 p-2">
           <div className="flex items-center gap-3 rounded-lg px-2 py-2">
             {/* User Avatar */}
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary-foreground text-sm font-medium text-secondary">

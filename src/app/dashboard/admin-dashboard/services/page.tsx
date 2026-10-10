@@ -415,9 +415,11 @@ const AdminServicesPage = () => {
           },
 
           onError: (error) => {
-            toast.error(error instanceof Error
-                  ? error.message
-                  : "Failed to update service.");
+            toast.error(
+              error instanceof Error
+                ? error.message
+                : "Failed to update service.",
+            );
           },
         },
       );
@@ -441,9 +443,11 @@ const AdminServicesPage = () => {
         },
 
         onError: (error) => {
-          toast.error(error instanceof Error
-                ? error.message
-                : "Failed to create service.");
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Failed to create service.",
+          );
         },
       },
     );
@@ -465,15 +469,19 @@ const AdminServicesPage = () => {
 
       {
         onSuccess: () => {
-          toast.success(service.isActive
+          toast.success(
+            service.isActive
               ? "Service deactivated successfully."
-              : "Service activated successfully.");
+              : "Service activated successfully.",
+          );
         },
 
         onError: (error) => {
-          toast.error(error instanceof Error
-                ? error.message
-                : "Failed to update service status.");
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Failed to update service status.",
+          );
         },
       },
     );
@@ -565,7 +573,7 @@ const AdminServicesPage = () => {
 
   return (
     <RoleGuard requiredRole="ADMIN">
-      <div className="min-h-full bg-background">
+      <div className="relative overflow-hidden shadow-sm">
         <div className="space-y-7 p-4 pb-8 sm:p-6 lg:p-7">
           {/* =====================================================
               HERO
@@ -579,12 +587,11 @@ const AdminServicesPage = () => {
             <div className="relative p-6 sm:p-7 lg:p-8">
               <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                 <div className="min-w-0">
-                  <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary">
-                    <BriefcaseIcon />
-                    Service Management
+                  <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-xs font-medium text-secondary">
+                    Service Management{" "}
                   </div>
 
-                  <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
+                  <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
                     City Services
                   </h1>
 

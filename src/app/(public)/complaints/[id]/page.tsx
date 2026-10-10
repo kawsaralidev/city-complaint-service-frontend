@@ -624,16 +624,16 @@ const ComplaintDetailsPage = () => {
 
             <aside className="lg:pt-8">
               <div className="lg:sticky lg:top-8">
-                <div className="rounded-[28px] bg-emerald-500 p-6">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-black/10">
-                    <FileWarning className="h-5 w-5 text-slate-950" />
+                <div className="rounded-[28px] bg-slate-950  p-6">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-black/10 bg-primary">
+                    <FileWarning className="h-5 w-5 text-white " />
                   </div>
 
-                  <h3 className="mt-5 text-xl font-bold text-slate-950">
+                  <h3 className="mt-5 text-xl font-bold text-white">
                     See another issue?
                   </h3>
 
-                  <p className="mt-2 text-sm leading-6 text-slate-900/65">
+                  <p className="mt-2 text-sm leading-6 text-white">
                     Help make your community better by reporting another issue
                     through CityCare.
                   </p>
@@ -642,7 +642,7 @@ const ComplaintDetailsPage = () => {
                     type="button"
                     onClick={handleReportIssue}
                     disabled={isUserLoading}
-                    className="mt-6 w-full rounded-xl bg-slate-950 py-5 text-white hover:bg-slate-800"
+                    className="mt-6 w-full rounded-xl bg-primary py-5 text-white hover:bg-slate-700"
                   >
                     {isUserLoading
                       ? "Checking account..."
@@ -652,7 +652,7 @@ const ComplaintDetailsPage = () => {
                   </Button>
 
                   {!isUserLoading && user && user.role !== "CITIZEN" && (
-                    <p className="mt-3 text-center text-xs text-slate-800/60">
+                    <p className="mt-3 text-center text-xs text-white">
                       Only citizens can submit complaints.
                     </p>
                   )}

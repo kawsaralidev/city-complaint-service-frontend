@@ -814,23 +814,22 @@ const AdminReportsPage = () => {
               HEADER
           ================================================= */}
 
-          <section className="relative overflow-hidden rounded-3xl border border-secondary/20 bg-gradient-to-br from-secondary/10 via-background to-primary/10 p-6 shadow-sm sm:p-8">
+          <section className="relative overflow-hidden rounded-3xl border border-secondary/20 bg-gradient-to-br p-6 shadow-sm sm:p-8">
             <div className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
 
-            <div className="absolute -bottom-20 left-1/3 h-48 w-48 rounded-full bg-secondary/10 blur-3xl" />
+            <div className="absolute -bottom-20 left-1/3 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
 
             <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-secondary/20 bg-secondary/10 px-3 py-1.5 text-xs font-semibold text-secondary">
-                  <span className="h-1.5 w-1.5 rounded-full bg-secondary" />
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-xs font-medium text-secondary">
                   Admin Reports
                 </div>
 
-                <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                   {currentReportLabel}
                 </h1>
 
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+                <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
                   Analyse platform activity, operational performance and payment
                   information using real system data.
                 </p>

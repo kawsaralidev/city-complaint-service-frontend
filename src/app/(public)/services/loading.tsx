@@ -1,60 +1,116 @@
-const ServicesLoading = () => {
+import { Search, SlidersHorizontal } from "lucide-react";
+
+export default function ServicesLoading() {
   return (
     <main className="min-h-screen bg-background">
-      <div className="mx-auto w-full max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="space-y-3">
-          <div className="h-9 w-48 animate-pulse rounded-lg bg-muted" />
+      {/* Page Header */}
+      <section className="border-b border-border bg-background">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-3xl space-y-4 text-center">
+            <div className="mx-auto h-8 w-64 max-w-full animate-pulse rounded-lg bg-muted" />
 
-          <div className="h-5 w-full max-w-2xl animate-pulse rounded-md bg-muted" />
+            <div className="mx-auto h-4 w-full max-w-xl animate-pulse rounded bg-muted" />
+
+            <div className="mx-auto h-4 w-3/4 max-w-md animate-pulse rounded bg-muted" />
+          </div>
         </div>
+      </section>
 
-        {/* Search & Filters */}
-        <div className="rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
-          <div className="flex flex-col gap-4 md:flex-row">
-            <div className="h-11 w-full animate-pulse rounded-xl bg-muted md:flex-1" />
+      {/* Main Content */}
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Search and Filters */}
+        <div className="mb-8 flex flex-col gap-4 lg:flex-row">
+          <div className="flex min-h-12 flex-1 items-center gap-3 rounded-xl border border-border bg-background px-4">
+            <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
 
-            <div className="h-11 w-full animate-pulse rounded-xl bg-muted md:w-40" />
+            <div className="h-4 w-full max-w-sm animate-pulse rounded bg-muted" />
+          </div>
 
-            <div className="h-11 w-full animate-pulse rounded-xl bg-muted md:w-40" />
+          <div className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 sm:min-w-40">
+            <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+
+            <div className="h-4 w-24 animate-pulse rounded bg-muted" />
           </div>
         </div>
 
-        {/* Service Cards */}
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, index) => (
+        {/* Category Filters */}
+        <div className="mb-8 flex flex-wrap gap-3">
+          {Array.from({ length: 5 }).map((_, index) => (
             <div
               key={index}
-              className="overflow-hidden rounded-2xl border bg-card shadow-sm"
+              className={`h-10 animate-pulse rounded-full bg-muted ${
+                index === 0 ? "w-24" : "w-28"
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Results Heading */}
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <div className="h-5 w-40 animate-pulse rounded bg-muted" />
+
+          <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+        </div>
+
+        {/* Service Cards */}
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <article
+              key={index}
+              className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
             >
-              <div className="h-48 animate-pulse bg-muted" />
+              {/* Service Image */}
+              <div className="aspect-[16/9] w-full animate-pulse bg-muted" />
 
-              <div className="space-y-4 p-5">
-                <div className="h-6 w-3/4 animate-pulse rounded-md bg-muted" />
+              {/* Service Information */}
+              <div className="flex flex-1 flex-col p-5">
+                {/* Category and Fee */}
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div className="h-6 w-24 animate-pulse rounded-full bg-muted" />
 
-                <div className="space-y-2">
+                  <div className="h-5 w-20 animate-pulse rounded bg-muted" />
+                </div>
+
+                {/* Title */}
+                <div className="mb-3 space-y-2">
+                  <div className="h-5 w-full animate-pulse rounded bg-muted" />
+
+                  <div className="h-5 w-2/3 animate-pulse rounded bg-muted" />
+                </div>
+
+                {/* Description */}
+                <div className="mb-5 space-y-2">
                   <div className="h-4 w-full animate-pulse rounded bg-muted" />
 
-                  <div className="h-4 w-5/6 animate-pulse rounded bg-muted" />
+                  <div className="h-4 w-full animate-pulse rounded bg-muted" />
+
+                  <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
                 </div>
 
-                <div className="flex items-center justify-between pt-2">
-                  <div className="h-5 w-20 animate-pulse rounded-md bg-muted" />
+                {/* Service Details */}
+                <div className="mb-5 mt-auto flex items-center justify-between gap-3 border-t border-border pt-4">
+                  <div className="h-4 w-24 animate-pulse rounded bg-muted" />
 
-                  <div className="h-9 w-24 animate-pulse rounded-lg bg-muted" />
+                  <div className="h-4 w-20 animate-pulse rounded bg-muted" />
                 </div>
+
+                {/* View Service Button */}
+                <div className="h-11 w-full animate-pulse rounded-xl bg-muted" />
               </div>
-            </div>
+            </article>
           ))}
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-center">
-          <div className="h-10 w-56 animate-pulse rounded-lg bg-muted" />
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-9 w-9 animate-pulse rounded-lg bg-muted"
+            />
+          ))}
         </div>
-      </div>
+      </section>
     </main>
   );
-};
-
-export default ServicesLoading;
+}

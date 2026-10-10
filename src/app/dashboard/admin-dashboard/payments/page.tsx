@@ -280,7 +280,7 @@ const AdminPaymentsPage = () => {
 
   return (
     <RoleGuard requiredRole="ADMIN">
-      <div className="min-h-full bg-background">
+      <div className="relative overflow-hidden shadow-sm">
         <div className="mx-auto w-full max-w-[1600px] space-y-6 p-4 sm:p-6 lg:p-7">
           {/* =================================================
               HEADER

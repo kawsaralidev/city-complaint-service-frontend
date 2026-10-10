@@ -483,6 +483,14 @@ const AdminServiceRequestsPage = () => {
     });
   };
 
+  const handleSearchs = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    updateUrl({
+      search: searchInput,
+    });
+  };
+
   /*
    * ============================================================
    * RENDER
@@ -541,27 +549,44 @@ const AdminServiceRequestsPage = () => {
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm md:p-5">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {/* Search */}
-            <form onSubmit={handleSearch} className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+
+            {/* Search */}
+            <form
+              onSubmit={handleSearchs}
+              className="relative flex h-10 w-full items-center overflow-hidden rounded-xl border border-border bg-background transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15"
+            >
+              <Search className="ml-3 h-4 w-4 shrink-0 text-muted-foreground" />
 
               <input
                 type="text"
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
                 placeholder="Search requests..."
-                className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-10 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                aria-label="Search service requests"
+                className="h-full min-w-0 flex-1 bg-transparent px-2 text-sm text-foreground outline-none placeholder:text-muted-foreground"
               />
 
               {searchInput && (
                 <button
                   type="button"
                   onClick={handleClearSearch}
-                  className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground"
                   aria-label="Clear search"
+                  title="Clear search"
+                  className="mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   <X className="h-4 w-4" />
                 </button>
               )}
+
+              <button
+                type="submit"
+                aria-label="Search service requests"
+                title="Search"
+                disabled={isFetching}
+                className="mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Search className="h-4 w-4" />
+              </button>
             </form>
 
             {/* Status */}

@@ -449,43 +449,32 @@ const CitizenDashboardPage = () => {
               </div>
             </div>
 
-            {/* Pending */}
+            {/* Total Service Requests */}
             <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-amber-200 hover:shadow-lg hover:shadow-amber-500/5">
               <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-amber-100 blur-2xl transition-transform duration-500 group-hover:scale-150" />
 
               <div className="relative flex items-start justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
-                    Pending
+                    Total Service Requests
                   </p>
 
                   <p className="mt-2 text-3xl font-bold tracking-tight text-foreground">
-                    {pendingComplaints}
+                    {totalRequests}
                   </p>
 
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Waiting for review
+                    Your submitted service requests
                   </p>
                 </div>
 
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 transition-all duration-300 group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-white">
-                  <Clock3 className="h-5 w-5" />
+                  <Wrench className="h-5 w-5" />
                 </div>
               </div>
 
               <div className="relative mt-4 h-1.5 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-amber-400 transition-all duration-700"
-                  style={{
-                    width:
-                      totalComplaints > 0
-                        ? `${Math.min(
-                            (pendingComplaints / totalComplaints) * 100,
-                            100,
-                          )}%`
-                        : "0%",
-                  }}
-                />
+                <div className="h-full w-full rounded-full bg-amber-400 transition-all duration-700" />
               </div>
             </div>
 
@@ -862,186 +851,6 @@ const CitizenDashboardPage = () => {
                   })}
                 </div>
               )}
-            </div>
-          </section>
-
-          {/* ======================================================
-            SERVICE REQUEST STATUS OVERVIEW
-        ======================================================= */}
-
-          <section className="grid gap-6 lg:grid-cols-2">
-            {/* Request Progress */}
-            <div className="relative overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/5 via-card to-card p-5 shadow-sm sm:p-6">
-              <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-primary/10 blur-3xl" />
-
-              <div className="relative">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <Wrench className="h-5 w-5" />
-                    </div>
-
-                    <div>
-                      <h3 className="text-sm font-bold text-foreground">
-                        Service Request Progress
-                      </h3>
-
-                      <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                        See where your service requests currently stand.
-                      </p>
-                    </div>
-                  </div>
-
-                  <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
-                    {activeRequests} Active
-                  </span>
-                </div>
-
-                <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <div className="rounded-xl border border-border bg-background/80 p-3">
-                    <p className="text-[10px] text-muted-foreground">Total</p>
-
-                    <p className="mt-1 text-xl font-bold text-foreground">
-                      {totalRequests}
-                    </p>
-                  </div>
-
-                  <div className="rounded-xl border border-amber-200/70 bg-amber-50/50 p-3">
-                    <p className="text-[10px] text-amber-700/70">Pending</p>
-
-                    <p className="mt-1 text-xl font-bold text-amber-700">
-                      {pendingRequests}
-                    </p>
-                  </div>
-
-                  <div className="rounded-xl border border-blue-200/70 bg-blue-50/50 p-3">
-                    <p className="text-[10px] text-blue-700/70">Active</p>
-
-                    <p className="mt-1 text-xl font-bold text-blue-700">
-                      {activeRequests}
-                    </p>
-                  </div>
-
-                  <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/50 p-3">
-                    <p className="text-[10px] text-emerald-700/70">Completed</p>
-
-                    <p className="mt-1 text-xl font-bold text-emerald-700">
-                      {completedRequests}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-              <div className="border-b border-border px-5 py-4 sm:px-6">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
-                    <Plus className="h-4.5 w-4.5" />
-                  </div>
-
-                  <div>
-                    <h2 className="text-base font-bold text-foreground">
-                      Quick Actions
-                    </h2>
-
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      Frequently used citizen services
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid gap-3 p-4 sm:grid-cols-2">
-                {/* Create Complaint */}
-                <Link
-                  href="/dashboard/citizen-dashboard/complaints"
-                  className="group flex items-center gap-3 rounded-xl border border-border bg-background p-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                    <FilePlus2 className="h-5 w-5" />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground">
-                      Create Complaint
-                    </p>
-
-                    <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                      Report a new city issue
-                    </p>
-                  </div>
-
-                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
-                </Link>
-
-                {/* My Complaints */}
-                <Link
-                  href="/dashboard/citizen-dashboard/complaints"
-                  className="group flex items-center gap-3 rounded-xl border border-border bg-background p-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary/30 hover:bg-secondary/5 hover:shadow-sm"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary/10 text-secondary transition-colors group-hover:bg-secondary group-hover:text-secondary-foreground">
-                    <ClipboardList className="h-5 w-5" />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground">
-                      My Complaints
-                    </p>
-
-                    <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                      Track submitted complaints
-                    </p>
-                  </div>
-
-                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
-                </Link>
-
-                {/* Service Requests */}
-                <Link
-                  href="/dashboard/citizen-dashboard/service-request"
-                  className="group flex items-center gap-3 rounded-xl border border-border bg-background p-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-200 hover:bg-amber-50/40 hover:shadow-sm"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 transition-colors group-hover:bg-amber-500 group-hover:text-white">
-                    <Wrench className="h-5 w-5" />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground">
-                      Service Requests
-                    </p>
-
-                    <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                      Track requested city services
-                    </p>
-                  </div>
-
-                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
-                </Link>
-
-                {/* Payments */}
-                <Link
-                  href="/dashboard/citizen-dashboard/payments"
-                  className="group flex items-center gap-3 rounded-xl border border-border bg-background p-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50/40 hover:shadow-sm"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-500 group-hover:text-white">
-                    <ReceiptText className="h-5 w-5" />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground">
-                      Payments
-                    </p>
-
-                    <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                      View your payment history
-                    </p>
-                  </div>
-
-                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
-                </Link>
-              </div>
             </div>
           </section>
         </div>

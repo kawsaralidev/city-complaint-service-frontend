@@ -69,7 +69,7 @@ export function RegisterForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       {/* Name */}
-      <div className="space-y-2">
+      <div className="space-y-2 ">
         <label htmlFor="name" className="text-sm font-medium text-foreground">
           Full Name
         </label>

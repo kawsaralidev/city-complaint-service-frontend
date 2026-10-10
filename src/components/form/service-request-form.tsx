@@ -546,7 +546,7 @@ const ServiceRequestForm = ({ serviceId }: ServiceRequestFormProps) => {
                         placeholder="Enter the exact location"
                         {...register("location")}
                         className={[
-                          "h-12 w-full rounded-xl bg-muted/30 px-4 text-sm outline-none transition-all",
+                          "h-12 w-full rounded-xl bg-muted/30 border border-slate-300 px-4 text-sm outline-none transition-all",
                           "placeholder:text-muted-foreground/60",
                           "focus:bg-background focus:ring-4 focus:ring-primary/10",
                           errors.location
@@ -570,7 +570,7 @@ const ServiceRequestForm = ({ serviceId }: ServiceRequestFormProps) => {
                     <div>
                       <label
                         htmlFor="description"
-                        className="mb-2.5 flex items-center gap-2 text-sm font-semibold"
+                        className="mb-2.5 flex items-center  gap-2 text-sm font-semibold"
                       >
                         <FileText className="h-4 w-4 text-primary" />
                         Request description
@@ -582,7 +582,7 @@ const ServiceRequestForm = ({ serviceId }: ServiceRequestFormProps) => {
                         placeholder="Describe the problem or explain what you need..."
                         {...register("description")}
                         className={[
-                          "w-full resize-none rounded-xl bg-muted/30 px-4 py-3.5 text-sm leading-6 outline-none transition-all",
+                          "w-full border border-slate-300 resize-none rounded-xl bg-muted/30 px-4 py-3.5 text-sm leading-6 outline-none transition-all",
                           "placeholder:text-muted-foreground/60",
                           "focus:bg-background focus:ring-4 focus:ring-primary/10",
                           errors.description

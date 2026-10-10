@@ -3,17 +3,20 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-
 import {
   ArrowRight,
+  Check,
   CheckCircle2,
   Clock3,
+  CreditCard,
+  FileText,
   MapPin,
   ShieldCheck,
   Sparkles,
+  UserRound,
+  Wrench,
 } from "lucide-react";
 
-import { useCurrentUser } from "@/hooks/auth.hook";
 import { useServiceById } from "@/hooks/service.hook";
 
 const ServiceDetailsPage = () => {
@@ -21,36 +24,17 @@ const ServiceDetailsPage = () => {
   const router = useRouter();
 
   const id = params.id;
-
   const serviceId = Array.isArray(id) ? id[0] : id;
 
   const { data: service, isLoading, isError } = useServiceById(serviceId ?? "");
 
-  const { data: userResponse, isLoading: isUserLoading } = useCurrentUser();
-
-  const user = userResponse?.data;
-
+  // Public service details page:
+  // Do not redirect to login while viewing the service.
+  // Authentication should be handled by the request flow.
   const handleRequestService = () => {
-    if (!serviceId || isUserLoading) {
-      return;
-    }
+    if (!serviceId) return;
 
-    const requestUrl = `/services/${serviceId}/request`;
-
-    // User is not logged in
-    if (!user) {
-      router.push(`/login?redirect=${encodeURIComponent(requestUrl)}`);
-
-      return;
-    }
-
-    // Only citizens can request a service
-    if (user.role !== "CITIZEN") {
-      return;
-    }
-
-    // Logged-in citizen goes directly to request form
-    router.push(requestUrl);
+    router.push(`/services/${serviceId}/request`);
   };
 
   if (isLoading) {
@@ -59,11 +43,8 @@ const ServiceDetailsPage = () => {
         <div className="mx-auto max-w-6xl px-4 py-16">
           <div className="animate-pulse space-y-6">
             <div className="h-6 w-32 rounded bg-slate-200" />
-
             <div className="h-[420px] rounded-3xl bg-slate-200" />
-
             <div className="h-10 w-2/3 rounded bg-slate-200" />
-
             <div className="h-20 rounded bg-slate-200" />
           </div>
         </div>
@@ -100,9 +81,42 @@ const ServiceDetailsPage = () => {
     );
   }
 
+  const progressSteps = [
+    {
+      title: "Request Submitted",
+      description: "Submit your service request",
+      icon: FileText,
+    },
+    {
+      title: "Admin Approval",
+      description: "The request is reviewed and approved",
+      icon: ShieldCheck,
+    },
+    {
+      title: "Payment",
+      description: "Complete the required service fee",
+      icon: CreditCard,
+    },
+    {
+      title: "Officer Assigned",
+      description: "An officer is assigned to the request",
+      icon: UserRound,
+    },
+    {
+      title: "In Progress",
+      description: "The service work begins",
+      icon: Wrench,
+    },
+    {
+      title: "Completed",
+      description: "The service request is completed",
+      icon: CheckCircle2,
+    },
+  ];
+
   return (
     <main className="min-h-screen bg-slate-50">
-      {/* Hero Section */}
+      {/* Service Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-slate-50" />
 
@@ -129,10 +143,10 @@ const ServiceDetailsPage = () => {
             </span>
           </div>
 
-          {/* Main Hero Card */}
+          {/* Main Service Card */}
           <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_20px_60px_-20px_rgba(15,23,42,0.18)]">
             <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
-              {/* Image */}
+              {/* Service Image */}
               <div className="relative min-h-[300px] lg:min-h-[470px]">
                 {service.imageUrl ? (
                   <Image
@@ -148,10 +162,8 @@ const ServiceDetailsPage = () => {
                   </div>
                 )}
 
-                {/* Image Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
 
-                {/* Active Badge */}
                 <div className="absolute left-5 top-5">
                   <div className="flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-xs font-semibold text-emerald-700 shadow-lg backdrop-blur">
                     <span className="h-2 w-2 rounded-full bg-emerald-500" />
@@ -159,7 +171,6 @@ const ServiceDetailsPage = () => {
                   </div>
                 </div>
 
-                {/* Bottom Image Text */}
                 <div className="absolute bottom-6 left-6 right-6 text-white">
                   <p className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-white/80">
                     CityCare Service
@@ -171,7 +182,7 @@ const ServiceDetailsPage = () => {
                 </div>
               </div>
 
-              {/* Service Information */}
+              {/* Service Details */}
               <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-10">
                 <div className="mb-6">
                   <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
@@ -189,7 +200,7 @@ const ServiceDetailsPage = () => {
                   </p>
                 </div>
 
-                {/* Price */}
+                {/* Service Fee */}
                 <div className="mb-6 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-5">
                   <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
                     Service Fee
@@ -206,24 +217,18 @@ const ServiceDetailsPage = () => {
                   </div>
                 </div>
 
-                {/* CTA */}
+                {/* Request Button */}
                 <button
                   type="button"
                   onClick={handleRequestService}
-                  disabled={isUserLoading}
-                  className="group flex w-full items-center justify-center gap-3 rounded-xl bg-emerald-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60 sm:text-base"
+                  className="group flex w-full items-center justify-center gap-3 rounded-xl bg-emerald-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-xl sm:text-base"
                 >
-                  {isUserLoading
-                    ? "Checking account..."
-                    : "Request This Service"}
-
-                  {!isUserLoading && (
-                    <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
-                  )}
+                  Request This Service
+                  <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
                 </button>
 
                 <p className="mt-3 text-center text-xs text-slate-400">
-                  You can submit your request online in just a few steps.
+                  Submit your request online in just a few steps.
                 </p>
               </div>
             </div>
@@ -231,57 +236,102 @@ const ServiceDetailsPage = () => {
         </div>
       </section>
 
-      {/* Service Benefits */}
-      <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <p className="text-sm font-semibold text-emerald-600">
-            Why use this service?
-          </p>
+      {/* Service Journey Timeline */}
+      <section className="mx-auto max-w-6xl px-4 pb-14 sm:px-6 lg:px-8">
+        <div className="rounded-3xl  bg-white p-6 shadow-sm sm:p-8 lg:p-10">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600">
+              Progress
+            </p>
 
-          <h2 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
-            Simple, secure and convenient
-          </h2>
-        </div>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+              Service request journey
+            </h2>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Easy & Fast */}
-          <div className="group rounded-2xl border border-slate-200 bg-white p-6 transition duration-200 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg">
-            <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 transition group-hover:bg-emerald-600 group-hover:text-white">
-              <Clock3 className="h-5 w-5" />
-            </div>
-
-            <h3 className="font-semibold text-slate-900">Easy & Fast</h3>
-
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              Submit your service request online without unnecessary paperwork.
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base">
+              Learn how your request moves from submission and admin approval to
+              payment, officer assignment and completion.
             </p>
           </div>
 
-          {/* Secure Process */}
-          <div className="group rounded-2xl border border-slate-200 bg-white p-6 transition duration-200 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg">
-            <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition group-hover:bg-blue-600 group-hover:text-white">
-              <ShieldCheck className="h-5 w-5" />
+          {/* Desktop Timeline */}
+          <div className="relative mt-12 hidden lg:block">
+            <div className="absolute left-[2%] right-[2%] top-4 h-0.5 bg-slate-200" />
+
+            <div className="relative grid grid-cols-6 gap-4">
+              {progressSteps.map((step, index) => {
+                const StepIcon = step.icon;
+                const isFirst = index === 0;
+
+                return (
+                  <div key={step.title} className="relative min-w-0">
+                    <div
+                      className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full ring-8 ring-white ${
+                        isFirst
+                          ? "bg-emerald-500 text-white"
+                          : "border-2 border-emerald-500 bg-white text-emerald-600"
+                      }`}
+                    >
+                      {isFirst ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <StepIcon className="h-4 w-4" />
+                      )}
+                    </div>
+
+                    <h3 className="mt-5 text-sm font-semibold leading-5 text-slate-900">
+                      {step.title}
+                    </h3>
+
+                    <p className="mt-2 text-xs leading-5 text-slate-500">
+                      {step.description}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
-
-            <h3 className="font-semibold text-slate-900">Secure Process</h3>
-
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              Your request and payment information are handled through a secure
-              process.
-            </p>
           </div>
 
-          {/* City-wide Support */}
-          <div className="group rounded-2xl border border-slate-200 bg-white p-6 transition duration-200 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg">
-            <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-purple-50 text-purple-600 transition group-hover:bg-purple-600 group-hover:text-white">
-              <MapPin className="h-5 w-5" />
-            </div>
+          {/* Tablet and Mobile Timeline */}
+          <div className="mt-8 space-y-0 lg:hidden">
+            {progressSteps.map((step, index) => {
+              const StepIcon = step.icon;
+              const isLast = index === progressSteps.length - 1;
 
-            <h3 className="font-semibold text-slate-900">City-wide Support</h3>
+              return (
+                <div key={step.title} className="flex gap-4">
+                  <div className="flex w-8 shrink-0 flex-col items-center">
+                    <div
+                      className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full ${
+                        index === 0
+                          ? "bg-emerald-500 text-white"
+                          : "border-2 border-emerald-500 bg-white text-emerald-600"
+                      }`}
+                    >
+                      {index === 0 ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <StepIcon className="h-4 w-4" />
+                      )}
+                    </div>
 
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              Access municipal services conveniently from your location.
-            </p>
+                    {!isLast && (
+                      <div className="my-1 min-h-10 w-0.5 flex-1 bg-emerald-200" />
+                    )}
+                  </div>
+
+                  <div className={isLast ? "pb-0" : "pb-7"}>
+                    <h3 className="text-sm font-semibold text-slate-900">
+                      {step.title}
+                    </h3>
+
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      {step.description}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -306,14 +356,10 @@ const ServiceDetailsPage = () => {
           <button
             type="button"
             onClick={handleRequestService}
-            disabled={isUserLoading}
-            className="group flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+            className="group flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600 sm:w-auto"
           >
-            {isUserLoading ? "Checking account..." : "Get Started"}
-
-            {!isUserLoading && (
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            )}
+            Get Started
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </button>
         </div>
       </section>
