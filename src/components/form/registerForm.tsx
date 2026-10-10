@@ -58,9 +58,11 @@ export function RegisterForm() {
 
       router.push("/verify-register-email");
     } catch (error) {
-      toast.error(error instanceof Error
-            ? error.message
-            : "Registration failed. Please try again.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Registration failed. Please try again.",
+      );
     }
   };
 
